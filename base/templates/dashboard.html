@@ -1,0 +1,345 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-light-peach: #fad4b6;
+            --color-peach: #fbbe99;
+            --color-coral: #ed8764;
+            --color-dark-coral: #dd6d49;
+            --color-brown: #883526;
+            --color-dark-brown: #49241b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        body {
+            background-color: #f7f7f7;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Geist', sans-serif;
+        }
+
+        .profile-card {
+            background-color: var(--color-light-peach);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-pic {
+            width: 80px;
+            height: 80px;
+            background-color: #eee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+        }
+
+        .profile-info {
+            flex-grow: 1;
+        }
+
+        .info-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .info-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .info-column {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .info-row {
+            margin-bottom: 15px;
+        }
+
+        .info-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            background-color: var(--color-light-peach);
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .role-switcher {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .role-dropdown {
+            padding: 10px 15px;
+            background-color: var(--color-peach);
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            width: 200px;
+            cursor: pointer;
+        }
+
+        .role-dropdown option {
+            font-weight: 600;
+            background-color: white;
+            color: #333;
+        }
+
+        .user-email {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-email svg {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dashboard</h1>
+            <div class="user-info">
+                <span id="username">{{ user_data.0.username }}</span>
+            </div>
+        </header>
+
+        <div class="role-switcher">
+            <select class="role-dropdown" id="roleDropdown" onchange="changeRole(this.value)">
+                <option value="pengunjung" {% if request.GET.role == 'pengunjung' or not request.GET.role %}selected{% endif %}>Pengunjung</option>
+                <option value="dokter hewan" {% if request.GET.role == 'dokter hewan' %}selected{% endif %}>Dokter Hewan</option>
+                <option value="penjaga hewan" {% if request.GET.role == 'penjaga hewan' %}selected{% endif %}>Penjaga Hewan</option>
+                <option value="pelatih hewan" {% if request.GET.role == 'pelatih hewan' %}selected{% endif %}>Pelatih Hewan</option>
+                <option value="staf admin" {% if request.GET.role == 'staf admin' %}selected{% endif %}>Staf Admin</option>
+            </select>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-pic">
+                <span>👤</span>
+            </div>
+            <div class="profile-info">
+                <h2>
+                    {{ user_data.0.nama_depan }} {{ user_data.0.nama_tengah }} {{ user_data.0.nama_belakang }}
+                </h2>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>Informasi Profil</h2>
+            
+            <div class="info-container">
+                <!-- Left Column - Always contain the first 5 fields -->
+                <div class="info-column">
+                    <div class="info-row">
+                        <div class="info-label">Nama Lengkap</div>
+                        <div class="info-value">{{ user_data.0.nama_depan }} {{ user_data.0.nama_tengah }} {{ user_data.0.nama_belakang }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Username</div>
+                        <div class="info-value">{{ user_data.0.username }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Peran</div>
+                        <div class="info-value">{{ user_data.0.role }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Email</div>
+                        <div class="info-value user-email">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 6L12 13L2 6" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            {{ user_data.0.email }}
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Nomor Telepon</div>
+                        <div class="info-value">{{ user_data.0.no_telepon }}</div>
+                    </div>
+                </div>
+                
+                <!-- Right Column - All additional fields -->
+                <div class="info-column">
+                    {% if user_data.0.role == 'Pengunjung' %}
+                    <div class="info-row">
+                        <div class="info-label">Alamat</div>
+                        <div class="info-value">{{ user_data.0.alamat }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Tanggal Lahir</div>
+                        <div class="info-value">{{ user_data.0.tgl_lahir }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Riwayat Kunjungan</div>
+                        <div class="info-value">{{ user_data.0.tgl_lahir }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Informasi Tiket Yang telah Dibeli</div>
+                        <div class="info-value">{{ user_data.0.tgl_lahir }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_data.0.role == 'Dokter Hewan' %}
+                    <div class="info-row">
+                        <div class="info-label">Spesialisasi</div>
+                        <div class="info-value">{{ user_data.0.spesialisasi }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Nomor STR</div>
+                        <div class="info-value">{{ user_data.0.no_STR }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Jumlah Hewan yang Ditangani</div>
+                        <div class="info-value">{{ user_data.0.jumlah_hewan }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_data.0.role == 'Penjaga Hewan' %}
+                    <div class="info-row">
+                        <div class="info-label">ID Staf</div>
+                        <div class="info-value">{{ user_data.0.id_staf }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Jumlah Hewan yang Diberi Pakan</div>
+                        <div class="info-value">{{ user_data.0.jumlah_hewan }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_data.0.role == 'Staf Admin' %}
+                    <div class="info-row">
+                        <div class="info-label">ID Staf</div>
+                        <div class="info-value">{{ user_data.0.id_staf }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Ringkasan Penjualan Tiket Hari Ini</div>
+                        <div class="info-value">{{ user_data.0.id_staf }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Jumlah Pengunjung Hari Ini</div>
+                        <div class="info-value">{{ user_data.0.id_staf }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Laporan Pendapatan Mingguan</div>
+                        <div class="info-value">{{ user_data.0.id_staf }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_data.0.role == 'Pelatih Hewan' %}
+                    <div class="info-row">
+                        <div class="info-label">ID Staf</div>
+                        <div class="info-value">{{ user_data.0.id_staf }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Jadwal Hari ini</div>
+                        <div class="info-value">{{ user_data.0.jadwal_hari_ini }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Jumlah Hewan yang Dilatih</div>
+                        <div class="info-value">10</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">Status Latihan Terakhir:</div>
+                        <div class="info-value">Selesai</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function changeRole(role) {
+            window.location.href = '?role=' + role;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const role = this.textContent.toLowerCase();
+                    document.getElementById('roleDropdown').value = role;
+                    
+                    window.location.href = '?role=' + role;
+                });
+            });
+            
+            const currentRole = document.getElementById('roleDropdown').value;
+            navTabs.forEach(tab => {
+                if (tab.textContent.toLowerCase() === currentRole) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

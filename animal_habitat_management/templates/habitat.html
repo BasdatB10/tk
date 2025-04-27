@@ -5,6 +5,8 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+	<script src="{% static 'alerts/alert.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'alerts/alert.css' %}">
 	<script src="https://cdn.tailwindcss.com"></script>
 	<title>Manajemen Habitat - SIZOPI</title>
 	<style>
@@ -66,7 +68,7 @@
                 <!-- Buttons -->
                 <div class="flex justify-between mt-4">
                     <button type="button" id="cancelButton" class="text-palette5 font-semibold text-sm">< Kembali</button>
-                    <button type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Selesai dan Tambah Habitat</button>
+                    <button onclick="showAlert('Habitat berhasil ditambahkan!')" type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Selesai dan Tambah Habitat</button>
                 </div>
             </form>
         </div>

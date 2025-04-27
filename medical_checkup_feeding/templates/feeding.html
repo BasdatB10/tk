@@ -1,0 +1,824 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Pemberian Pakan | SIZOPI</title>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .bg-texture {
+            background-image: url("{% static 'images/texture-bg.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .form-container {
+            max-width: 700px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 6px 10px;
+            margin-top: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        input::placeholder, textarea::placeholder, select::placeholder {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: none;
+        }
+
+        .form-button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+
+        .form-button:hover {
+            background-color: #ED8764;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .form-grid input, .form-grid textarea, .form-grid select {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            font-size: 0.8rem;
+            width: calc(100% - 16px);
+        }
+        
+        .alert {
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th, table td {
+            border: 1px solid #e0e0e0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .action-button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            margin-right: 0.25rem;
+        }
+        
+        .status-waiting {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .status-completed {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid #883526;
+            color: #883526;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="relative bg-white text-gray-800">
+    <div id="bg" class="bg-texture absolute inset-0 -z-10"></div>
+    <div class="min-h-screen px-8 py-10 flex flex-col items-center max-w-7xl mx-auto">
+        <div class="main-container space-y-6 w-full">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
+                Pemberian Pakan
+            </h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Animal selection -->
+            <div class="flex items-center gap-4">
+                <label for="animal-select" class="text-lg font-semibold text-[#49241B]">Pilih Hewan:</label>
+                <select id="animal-select" class="w-64 text-lg">
+                    <option value="" disabled selected>-- Pilih Hewan --</option>
+                    <option value="1">Simba - Singa (A001)</option>
+                    <option value="2">Bona - Harimau Sumatera (A002)</option>
+                    <option value="3">Koko - Gorila (A003)</option>
+                    <option value="4">Nala - Gajah (A004)</option>
+                </select>
+            </div>
+            
+            <!-- Animal info -->
+            <div id="animal-info" class="bg-gray-50 p-6 rounded-lg shadow-sm mb-6 hidden">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">ID Hewan</p>
+                        <p class="font-semibold text-lg" id="animal-id">A001</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Nama</p>
+                        <p class="font-semibold text-lg" id="animal-name">Simba</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Spesies</p>
+                        <p class="font-semibold text-lg" id="animal-species">Singa</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Usia</p>
+                        <p class="font-semibold text-lg" id="animal-age">5 tahun</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="border-b border-gray-200">
+                <ul class="flex flex-wrap -mb-px" id="tabs">
+                    <li class="mr-2">
+                        <button id="schedule-tab" class="inline-block p-4 tab-active">Jadwal Pemberian Pakan</button>
+                    </li>
+                    <li class="mr-2">
+                        <button id="history-tab" class="inline-block p-4">Riwayat Pemberian Pakan</button>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Schedules Tab -->
+            <div id="schedules-content" class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-[#883526]">Jadwal Pemberian Pakan</h3>
+                    <button id="add-schedule-btn" class="form-button bg-[#FBBE99] text-white font-semibold">
+                        + Tambah Jadwal Pemberian Pakan
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Jenis Pakan</th>
+                                <th>Jumlah Pakan (gram)</th>
+                                <th>Jadwal</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedules-table-body">
+                            <!-- Feeding schedules will be inserted here -->
+                        </tbody>
+                    </table>
+                    <p id="no-schedules-message" class="text-center text-gray-500 py-4 hidden">
+                        Belum ada jadwal pemberian pakan untuk hewan ini.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- History Tab -->
+            <div id="history-content" class="space-y-6 hidden">
+                <h3 class="text-xl font-bold text-[#883526]">Riwayat Pemberian Pakan</h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Nama Individu</th>
+                                <th>Spesies</th>
+                                <th>Asal</th>
+                                <th>Tanggal Lahir</th>
+                                <th>Habitat</th>
+                                <th>Status Kesehatan</th>
+                                <th>Jenis Pakan</th>
+                                <th>Jumlah (gram)</th>
+                                <th>Jadwal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            <!-- Feeding history will be inserted here -->
+                        </tbody>
+                    </table>
+                    <p id="no-history-message" class="text-center text-gray-500 py-4 hidden">
+                        Belum ada riwayat pemberian pakan.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Feeding Schedule Modal -->
+    <div id="add-schedule-modal" class="modal hidden">
+        <div class="form-container bg-white">
+            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
+                Tambah Jadwal Pemberian Pakan
+            </h3>
+            <form id="add-schedule-form" class="space-y-6">
+                <div>
+                    <label for="food-type" class="text-sm text-[#49241B]">Jenis Pakan:</label>
+                    <input type="text" id="food-type" name="food_type" class="text-lg" required />
+                </div>
+                
+                <div>
+                    <label for="food-amount" class="text-sm text-[#49241B]">Jumlah Pakan (gram):</label>
+                    <input type="number" id="food-amount" name="food_amount" min="1" class="text-lg" required />
+                </div>
+                
+                <div>
+                    <label for="schedule-datetime" class="text-sm text-[#49241B]">Jadwal:</label>
+                    <input type="datetime-local" id="schedule-datetime" name="schedule_datetime" class="text-lg" required />
+                </div>
+                
+                <div class="flex justify-center gap-4 pt-4">
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                        SIMPAN
+                    </button>
+                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
+                        BATAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Feeding Schedule Modal -->
+    <div id="edit-schedule-modal" class="modal hidden">
+        <div class="form-container bg-white">
+            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
+                Edit Jadwal Pemberian Pakan
+            </h3>
+            <form id="edit-schedule-form" class="space-y-6">
+                <input type="hidden" id="edit-schedule-id" name="schedule_id" />
+                
+                <div>
+                    <label for="edit-food-type" class="text-sm text-[#49241B]">Jenis Pakan Baru:</label>
+                    <input type="text" id="edit-food-type" name="food_type" class="text-lg" required />
+                </div>
+                
+                <div>
+                    <label for="edit-food-amount" class="text-sm text-[#49241B]">Jumlah Pakan Baru (gram):</label>
+                    <input type="number" id="edit-food-amount" name="food_amount" min="1" class="text-lg" required />
+                </div>
+                
+                <div>
+                    <label for="edit-schedule-datetime" class="text-sm text-[#49241B]">Jadwal Baru:</label>
+                    <input type="datetime-local" id="edit-schedule-datetime" name="schedule_datetime" class="text-lg" required />
+                </div>
+                
+                <div class="flex justify-center gap-4 pt-4">
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                        SIMPAN
+                    </button>
+                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
+                        BATAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-schedule-modal" class="modal hidden">
+        <div class="form-container bg-white">
+            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
+                Hapus Jadwal Pemberian Pakan
+            </h3>
+            <p class="text-center text-lg mb-6">Apakah anda yakin ingin menghapus data pemberian pakan ini?</p>
+            <form id="delete-schedule-form" class="space-y-6">
+                <input type="hidden" id="delete-schedule-id" name="schedule_id" />
+                
+                <div class="flex justify-center gap-4 pt-4">
+                    <button type="submit" class="form-button bg-[#dc3545] text-white font-semibold">
+                        YA
+                    </button>
+                    <button type="button" class="form-button bg-[#6c757d] text-white font-semibold close-modal">
+                        TIDAK
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data to simulate feeding schedules
+        const animalData = {
+            "1": {
+                id: "A001",
+                name: "Simba",
+                species: "Singa",
+                age: "5 tahun",
+                origin: "Afrika Timur",
+                birthDate: "2020-03-15",
+                habitat: "Savana",
+                healthStatus: "Sehat",
+                schedules: [
+                    {
+                        id: 1,
+                        foodType: "Daging Sapi",
+                        amount: 1200,
+                        schedule: "2025-03-07T14:00:00",
+                        status: "waiting" // waiting/completed
+                    },
+                    {
+                        id: 2,
+                        foodType: "Daging Ayam",
+                        amount: 800,
+                        schedule: "2025-03-05T08:30:00",
+                        status: "completed"
+                    }
+                ]
+            },
+            "2": {
+                id: "A002",
+                name: "Bona",
+                species: "Harimau Sumatera",
+                age: "7 tahun",
+                origin: "Sumatera",
+                birthDate: "2018-04-20",
+                habitat: "Hutan Hujan Tropis",
+                healthStatus: "Sehat",
+                schedules: [
+                    {
+                        id: 3,
+                        foodType: "Daging Sapi",
+                        amount: 1500,
+                        schedule: "2025-03-08T16:00:00",
+                        status: "waiting"
+                    }
+                ]
+            },
+            "3": {
+                id: "A003",
+                name: "Koko",
+                species: "Gorila",
+                age: "10 tahun",
+                origin: "Afrika Tengah",
+                birthDate: "2015-06-10",
+                habitat: "Hutan Hujan Tropis",
+                healthStatus: "Sehat",
+                schedules: [
+                    {
+                        id: 4,
+                        foodType: "Pisang",
+                        amount: 150,
+                        schedule: "2025-03-07T14:00:00",
+                        status: "waiting"
+                    }
+                ]
+            },
+            "4": {
+                id: "A004",
+                name: "Nala",
+                species: "Gajah",
+                age: "12 tahun",
+                origin: "Asia",
+                birthDate: "2013-02-18",
+                habitat: "Savana",
+                healthStatus: "Sehat",
+                schedules: []
+            }
+        };
+        
+        // History records from completed feedings
+        let feedingHistory = [
+            {
+                id: 1,
+                animalId: "1",
+                foodType: "Daging Ayam",
+                amount: 800,
+                schedule: "2025-03-05T08:30:00"
+            },
+            {
+                id: 2,
+                animalId: "2",
+                foodType: "Daging Sapi",
+                amount: 1300,
+                schedule: "2025-03-01T09:00:00"
+            }
+        ];
+        
+        // DOM Elements
+        const animalSelect = document.getElementById('animal-select');
+        const animalInfo = document.getElementById('animal-info');
+        const scheduleTab = document.getElementById('schedule-tab');
+        const historyTab = document.getElementById('history-tab');
+        const schedulesContent = document.getElementById('schedules-content');
+        const historyContent = document.getElementById('history-content');
+        const schedulesTableBody = document.getElementById('schedules-table-body');
+        const historyTableBody = document.getElementById('history-table-body');
+        const noSchedulesMessage = document.getElementById('no-schedules-message');
+        const noHistoryMessage = document.getElementById('no-history-message');
+        
+        const addScheduleBtn = document.getElementById('add-schedule-btn');
+        const addScheduleModal = document.getElementById('add-schedule-modal');
+        const editScheduleModal = document.getElementById('edit-schedule-modal');
+        const deleteScheduleModal = document.getElementById('delete-schedule-modal');
+        
+        // Event Listeners
+        animalSelect.addEventListener('change', function() {
+            const animalId = this.value;
+            if (animalId) {
+                displayAnimalInfo(animalId);
+                loadFeedingSchedules(animalId);
+                animalInfo.classList.remove('hidden');
+            } else {
+                animalInfo.classList.add('hidden');
+                noSchedulesMessage.classList.remove('hidden');
+                schedulesTableBody.innerHTML = '';
+            }
+        });
+        
+        // Tab switching
+        scheduleTab.addEventListener('click', function() {
+            historyTab.classList.remove('tab-active');
+            scheduleTab.classList.add('tab-active');
+            historyContent.classList.add('hidden');
+            schedulesContent.classList.remove('hidden');
+        });
+        
+        historyTab.addEventListener('click', function() {
+            scheduleTab.classList.remove('tab-active');
+            historyTab.classList.add('tab-active');
+            schedulesContent.classList.add('hidden');
+            historyContent.classList.remove('hidden');
+            loadFeedingHistory();
+        });
+        
+        // Show add schedule modal
+        addScheduleBtn.addEventListener('click', function() {
+            const animalId = animalSelect.value;
+            if (!animalId) {
+                alert('Silakan pilih hewan terlebih dahulu.');
+                return;
+            }
+            
+            // Reset form
+            document.getElementById('add-schedule-form').reset();
+            
+            // Set minimum datetime to now
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const minDatetime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('schedule-datetime').min = minDatetime;
+            
+            // Show modal
+            addScheduleModal.classList.remove('hidden');
+        });
+        
+        // Close modals
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                addScheduleModal.classList.add('hidden');
+                editScheduleModal.classList.add('hidden');
+                deleteScheduleModal.classList.add('hidden');
+            });
+        });
+        
+        // Form submissions
+        document.getElementById('add-schedule-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const animalId = animalSelect.value;
+            const foodType = document.getElementById('food-type').value;
+            const amount = parseInt(document.getElementById('food-amount').value);
+            const schedule = document.getElementById('schedule-datetime').value;
+            
+            // Add new schedule to data
+            const newScheduleId = Math.max(0, ...Object.values(animalData).flatMap(a => a.schedules.map(s => s.id))) + 1;
+            const newSchedule = {
+                id: newScheduleId,
+                foodType: foodType,
+                amount: amount,
+                schedule: schedule,
+                status: "waiting"
+            };
+            
+            animalData[animalId].schedules.push(newSchedule);
+            
+            // Reload schedules and close modal
+            loadFeedingSchedules(animalId);
+            addScheduleModal.classList.add('hidden');
+            
+            // Show success message
+            alert('Jadwal pemberian pakan berhasil ditambahkan!');
+        });
+        
+        document.getElementById('edit-schedule-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const animalId = animalSelect.value;
+            const scheduleId = parseInt(document.getElementById('edit-schedule-id').value);
+            const foodType = document.getElementById('edit-food-type').value;
+            const amount = parseInt(document.getElementById('edit-food-amount').value);
+            const schedule = document.getElementById('edit-schedule-datetime').value;
+            
+            // Find and update the schedule
+            const scheduleIndex = animalData[animalId].schedules.findIndex(s => s.id === scheduleId);
+            if (scheduleIndex !== -1) {
+                const status = animalData[animalId].schedules[scheduleIndex].status;
+                animalData[animalId].schedules[scheduleIndex] = {
+                    id: scheduleId,
+                    foodType: foodType,
+                    amount: amount,
+                    schedule: schedule,
+                    status: status
+                };
+            }
+            
+            // Reload schedules and close modal
+            loadFeedingSchedules(animalId);
+            editScheduleModal.classList.add('hidden');
+            
+            // Show success message
+            alert('Jadwal pemberian pakan berhasil diperbarui!');
+        });
+        
+        document.getElementById('delete-schedule-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const animalId = animalSelect.value;
+            const scheduleId = parseInt(document.getElementById('delete-schedule-id').value);
+            
+            // Find and remove the schedule
+            const scheduleIndex = animalData[animalId].schedules.findIndex(s => s.id === scheduleId);
+            if (scheduleIndex !== -1) {
+                animalData[animalId].schedules.splice(scheduleIndex, 1);
+            }
+            
+            // Reload schedules and close modal
+            loadFeedingSchedules(animalId);
+            deleteScheduleModal.classList.add('hidden');
+            
+            // Show success message
+            alert('Jadwal pemberian pakan berhasil dihapus!');
+        });
+        
+        // Functions
+        function displayAnimalInfo(animalId) {
+            const animal = animalData[animalId];
+            document.getElementById('animal-id').textContent = animal.id;
+            document.getElementById('animal-name').textContent = animal.name;
+            document.getElementById('animal-species').textContent = animal.species;
+            document.getElementById('animal-age').textContent = animal.age;
+        }
+        
+        function loadFeedingSchedules(animalId) {
+            const schedules = animalData[animalId].schedules;
+            schedulesTableBody.innerHTML = '';
+            
+            if (schedules.length === 0) {
+                noSchedulesMessage.classList.remove('hidden');
+            } else {
+                noSchedulesMessage.classList.add('hidden');
+                
+                schedules.forEach(schedule => {
+                    const row = document.createElement('tr');
+                    
+                    // Format datetime
+                    const dateObj = new Date(schedule.schedule);
+                    const formattedDate = dateObj.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    const formattedTime = dateObj.toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const formattedDateTime = `${formattedDate} ${formattedTime}`;
+                    
+                    // Prepare status text
+                    const statusClass = schedule.status === 'waiting' ? 'status-waiting' : 'status-completed';
+                    const statusText = schedule.status === 'waiting' ? 'Menunggu Pemberian' : 'Selesai Diberikan';
+                    
+                    // Prepare action buttons
+                    let actionButtons = `
+                        <button class="action-button bg-[#FBBE99] text-white edit-schedule" data-id="${schedule.id}">Edit</button>
+                        <button class="action-button bg-[#dc3545] text-white delete-schedule" data-id="${schedule.id}">Hapus</button>
+                    `;
+                    
+                    if (schedule.status === 'waiting') {
+                        actionButtons = `
+                            <button class="action-button bg-[#28a745] text-white feed-animal" data-id="${schedule.id}">Beri Pakan</button>
+                            ${actionButtons}
+                        `;
+                    }
+                    
+                    // Create row content
+                    row.innerHTML = `
+                        <td>${schedule.foodType}</td>
+                        <td>${schedule.amount}</td>
+                        <td>${formattedDateTime}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                        <td>${actionButtons}</td>
+                    `;
+                    
+                    schedulesTableBody.appendChild(row);
+                });
+                
+                // Add event listeners to buttons
+                document.querySelectorAll('.edit-schedule').forEach(button => {
+                    button.addEventListener('click', function() {
+                        openEditModal(animalId, parseInt(this.dataset.id));
+                    });
+                });
+                
+                document.querySelectorAll('.delete-schedule').forEach(button => {
+                    button.addEventListener('click', function() {
+                        openDeleteModal(parseInt(this.dataset.id));
+                    });
+                });
+                
+                document.querySelectorAll('.feed-animal').forEach(button => {
+                    button.addEventListener('click', function() {
+                        feedAnimal(animalId, parseInt(this.dataset.id));
+                    });
+                });
+            }
+        }
+        
+        function loadFeedingHistory() {
+            historyTableBody.innerHTML = '';
+            
+            if (feedingHistory.length === 0) {
+                noHistoryMessage.classList.remove('hidden');
+            } else {
+                noHistoryMessage.classList.add('hidden');
+                
+                feedingHistory.forEach(record => {
+                    const animal = animalData[record.animalId];
+                    const row = document.createElement('tr');
+                    
+                    // Format datetime
+                    const dateObj = new Date(record.schedule);
+                    const formattedDateTime = dateObj.toLocaleString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    // Format birth date
+                    const birthDate = new Date(animal.birthDate).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    
+                    // Create row content
+                    row.innerHTML = `
+                        <td>${animal.name}</td>
+                        <td>${animal.species}</td>
+                        <td>${animal.origin}</td>
+                        <td>${birthDate}</td>
+                        <td>${animal.habitat}</td>
+                        <td>${animal.healthStatus}</td>
+                        <td>${record.foodType}</td>
+                        <td>${record.amount}</td>
+                        <td>${formattedDateTime}</td>
+                    `;
+                    
+                    historyTableBody.appendChild(row);
+                });
+            }
+        }
+        
+        function openEditModal(animalId, scheduleId) {
+            const schedule = animalData[animalId].schedules.find(s => s.id === scheduleId);
+            if (schedule) {
+                document.getElementById('edit-schedule-id').value = scheduleId;
+                document.getElementById('edit-food-type').value = schedule.foodType;
+                document.getElementById('edit-food-amount').value = schedule.amount;
+                document.getElementById('edit-schedule-datetime').value = schedule.schedule;
+                
+                // Set minimum datetime to now
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                
+                const minDatetime = `${year}-${month}-${day}T${hours}:${minutes}`;
+                document.getElementById('edit-schedule-datetime').min = minDatetime;
+                
+                editScheduleModal.classList.remove('hidden');
+            }
+        }
+        
+        function openDeleteModal(scheduleId) {
+            document.getElementById('delete-schedule-id').value = scheduleId;
+            deleteScheduleModal.classList.remove('hidden');
+        }
+        
+        function feedAnimal(animalId, scheduleId) {
+            const scheduleIndex = animalData[animalId].schedules.findIndex(s => s.id === scheduleId);
+            if (scheduleIndex !== -1) {
+                const schedule = animalData[animalId].schedules[scheduleIndex];
+                
+                // Update status
+                schedule.status = "completed";
+                
+                // Add to history
+                const historyRecord = {
+                    id: feedingHistory.length > 0 ? Math.max(...feedingHistory.map(h => h.id)) + 1 : 1,
+                    animalId: animalId,
+                    foodType: schedule.foodType,
+                    amount: schedule.amount,
+                    schedule: schedule.schedule
+                };
+                
+                feedingHistory.push(historyRecord);
+                
+                // Reload schedules
+                loadFeedingSchedules(animalId);
+                
+                // Show success message
+                alert(`Pemberian pakan ${schedule.foodType} berhasil dilakukan untuk ${animalData[animalId].name}!`);
+            }
+        }
+        
+        // Initialize first tab content
+        loadFeedingHistory();
+    </script>
+</body>
+</html>

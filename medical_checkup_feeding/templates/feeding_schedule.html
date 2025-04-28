@@ -13,6 +13,17 @@
             font-weight: 600;
             letter-spacing: -0.02em;
         }
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        .navbar-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
         .bg-texture {
             background-image: url("{% static 'images/texture-bg.jpg' %}");
             background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0.15;
@@ -123,6 +134,7 @@
     </style>
 </head>
 <body class="relative bg-white text-gray-800">
+    {% include "navbar_penjaga_hewan.html" %}
     <div id="bg" class="bg-texture absolute inset-0 -z-10"></div>
     <div class="min-h-screen px-8 py-10 flex flex-col items-center max-w-7xl mx-auto">
         <div class="main-container space-y-6 w-full">

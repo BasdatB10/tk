@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .navbar {
+      transition: all 0.3s ease;
+    }
+    .navbar-fixed {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    body {
+      font-family: 'Manrope', sans-serif;
+      background-color: #FFF3EA;
+    }
+    .navbar a {
+      padding: 8px 16px; /* Mengurangi padding untuk tombol agar tidak terlalu besar */
+      border-radius: 8px; /* Sudut melengkung */
+      border: 2px solid transparent; /* Border transparan awal */
+      color: white;
+      background-color: #DD6D49; /* Background seperti tombol logout */
+      text-align: center; /* Agar teks rata tengah */
+      font-weight: 600; /* Memberikan ketebalan pada teks */
+      transition: all 0.3s ease; /* Transisi halus */
+    }
+    .navbar a:hover {
+      background-color: #883526; /* Background lebih gelap saat hover */
+      border-color: #883526; /* Border juga berubah warna saat hover */
+    }
+    .active-link {
+      background-color: #ED8764; /* Warna latar belakang aktif */
+      border-color: #ED8764; /* Warna border aktif */
+    }
+  </style>
+</head>
+<body>
+  <nav id="navbar" class="navbar bg-[#FAD4B6] p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="text-4xl font-extrabold text-[#49241B]" style="font-family: 'Manrope', sans-serif;">
+        SIZOPI
+      </div>
+
+      <div class="flex space-x-4">
+        <a href="#" class="px-4 py-2 rounded-md active-link hover:bg-[#883526] hover:border-[#883526] transition">Dashboard</a>
+        <a href="#" class="px-4 py-2 rounded-md hover:bg-[#883526] hover:border-[#883526] transition">Kelola Pengunjung</a>
+        <a href="#" class="px-4 py-2 rounded-md hover:bg-[#883526] hover:border-[#883526] transition">Kelola Adopsi</a>
+        <a href="#" class="px-4 py-2 rounded-md hover:bg-[#883526] hover:border-[#883526] transition">Kelola Adopter</a>
+        <a href="#" class="px-4 py-2 rounded-md hover:bg-[#883526] hover:border-[#883526] transition">Pengaturan Profil</a>
+        <a href="#" class="px-4 py-2 rounded-md bg-[#DD6D49] text-white hover:bg-[#883526] hover:border-[#883526] transition">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto mt-8 p-6">
+    <h1 class="text-3xl font-bold text-[#49241B] mb-4">Dashboard</h1>
+    <p class="text-[#49241B]">Selamat datang di panel admin. Silakan pilih menu di navbar untuk mengelola sistem.</p>
+  </div>
+
+  <script>
+    // Script untuk membuat navbar tetap saat di-scroll
+    window.onscroll = function() {
+      const navbar = document.getElementById('navbar');
+      const sticky = navbar.offsetTop;
+      
+      if (window.pageYOffset > sticky) {
+        navbar.classList.add('navbar-fixed');
+        // Tambahkan elemen dummy untuk mencegah konten melompat
+        if (!document.getElementById('navbar-placeholder')) {
+          const placeholder = document.createElement('div');
+          placeholder.id = 'navbar-placeholder';
+          placeholder.style.height = navbar.offsetHeight + 'px';
+          document.body.insertBefore(placeholder, navbar);
+        }
+      } else {
+        navbar.classList.remove('navbar-fixed');
+        // Hapus elemen placeholder jika ada
+        const placeholder = document.getElementById('navbar-placeholder');
+        if (placeholder) {
+          placeholder.remove();
+        }
+      }
+    };
+  </script>
+</body>
+</html>

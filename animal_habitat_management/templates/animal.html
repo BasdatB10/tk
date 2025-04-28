@@ -1,0 +1,230 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+	<script src="{% static 'alerts/alert.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'alerts/alert.css' %}">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<title>Manajemen Satwa - SIZOPI</title>
+	<style>
+		body {
+			font-family: 'Manrope', sans-serif;
+			font-weight: 600;
+			letter-spacing: -0.02em;
+		}
+	</style>
+	<script>
+		tailwind.config = {
+			theme: {
+				extend: {
+					colors: {
+						palette1: '#FAD4B6',
+						palette2: '#FBBE99',
+						palette3: '#ED8764',
+						palette4: '#DD6D49',
+						palette5: '#883526',
+						palette6: '#49241B',
+					}
+				}
+			}
+		}
+	</script>
+</head>
+<body class="relative min-h-screen bg-white overflow-x-auto">
+	<div class="absolute inset-0 -z-10">
+		<img src="{% static 'images/animal-bg.jpeg' %}" alt="Animal Background" class="w-full h-full object-cover opacity-5 saturate-50" />
+	</div>
+
+    <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 z-40"></div>
+    <div id="formModal" class="hidden fixed inset-0 flex items-center justify-center z-50 fade">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-xl">
+            <h2 class="text-2xl font-bold text-center text-palette5 mb-4">Form Tambah Satwa</h2>
+            <form id="addAnimalForm" class="space-y-3">
+                <div>
+                    <label class="block text-palette6 text-sm mb-1">Nama Individu</label>
+                    <input type="text" placeholder="Masukkan Nama Individu di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                </div>
+                <div>
+                    <label class="block text-palette6 text-sm mb-1">Spesies</label>
+                    <input type="text" placeholder="Masukkan Spesies di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                </div>
+                <div>
+                    <label class="block text-palette6 text-sm mb-1">Asal Hewan</label>
+                    <input type="text" placeholder="Masukkan Asal Hewan di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                </div>
+                <div>
+                    <label class="block text-palette6 text-sm mb-1">Tanggal Lahir</label>
+                    <input type="date" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                </div>
+                <div>
+                    <label class="block text-palette6 text-sm mb-1">Status Kesehatan</label>
+                    <select class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3">
+                        <option selected disabled>Pilih Status</option>
+                        <option>Sehat</option>
+                        <option>Sakit</option>
+                        <option>Dalam Pemantauan</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-palette6 text-sm mb-1">Nama Habitat</label>
+                    <select class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3">
+                        <option selected disabled>Pilih Habitat</option>
+                        <option>Sabana</option>
+                        <option>Hutan Tropis</option>
+                        <option>Bambu Grove</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-palette6 text-sm mb-1">URL Foto Satwa</label>
+                    <input type="text" placeholder="Masukkan URL Foto Satwa di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                </div>
+
+                <div class="flex justify-between mt-4">
+                    <button type="button" id="cancelButton" class="text-palette5 font-semibold text-sm">< Kembali</button>
+                    <button onclick="showAlert('Satwa berhasil ditambahkan!')" type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Selesai dan Tambah Satwa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+	<div id="mainContent" class="max-w-7xl mx-auto p-6">
+		<h1 class="text-6xl font-extrabold text-palette5 text-center mb-10 drop-shadow-lg">Manajemen Satwa</h1>
+		<div class="flex flex-col items-center mb-10 drop-shadow-lg">
+			<div class="flex gap-12 justify-center">
+				<div class="text-center">
+					<div class="text-5xl font-extrabold text-palette5">XXX</div>
+					<div class="text-base text-palette6 mt-2">Jumlah Satwa</div>
+				</div>
+				<div class="text-center">
+					<div class="text-5xl font-extrabold text-green-600">XXX</div>
+					<div class="text-base text-palette6 mt-2">Satwa Sehat</div>
+				</div>
+				<div class="text-center">
+					<div class="text-5xl font-extrabold text-red-500">XXX</div>
+					<div class="text-base text-palette6 mt-2">Satwa Sakit</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="overflow-x-auto bg-white rounded-2xl shadow-2xl p-6">
+			<div class="flex justify-between items-center mb-6">
+				<div class="flex items-center gap-4">
+					<span class="text-palette6 text-base font-semibold">Tampilan Data Hewan 1-3</span>
+					<div class="flex gap-2">
+						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">1</button>
+						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">2</button>
+						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">3</button>
+					</div>
+				</div>
+				<button id="openFormButton" class="bg-palette5 hover:bg-palette6 text-white px-6 py-2 rounded-2xl shadow">
+                    Tambah Satwa
+                </button>
+			</div>
+
+			<table class="min-w-full table-auto">
+				<thead class="bg-palette2">
+					<tr>
+						<th class="px-6 py-4 text-center font-bold">Nama Individu</th>
+						<th class="px-6 py-4 text-center font-bold">Spesies</th>
+						<th class="px-6 py-4 text-center font-bold">Asal Hewan</th>
+						<th class="px-6 py-4 text-center font-bold">Tanggal Lahir</th>
+						<th class="px-6 py-4 text-center font-bold">Status Kesehatan</th>
+						<th class="px-6 py-4 text-center font-bold">Habitat</th>
+						<th class="px-6 py-4 text-center font-bold">Foto</th>
+						<th class="px-10 py-4 text-center font-bold">Aksi</th>
+					</tr>
+				</thead>
+				<tbody>
+					<!-- Row 1 -->
+					<tr class="bg-palette1">
+						<td class="px-6 py-4 text-center">Raja</td>
+						<td class="px-6 py-4 text-center">Panthera leo</td>
+						<td class="px-6 py-4 text-center">Afrika</td>
+						<td class="px-6 py-4 text-center">2016-05-12</td>
+						<td class="px-6 py-4 text-green-600 text-center">Sehat</td>
+						<td class="px-6 py-4 text-center">Sabana</td>
+						<td class="px-6 py-4 text-center">
+							<img src="https://via.placeholder.com/80" alt="Foto Raja" class="rounded-lg w-20 h-20 object-cover mx-auto" />
+						</td>
+						<td class="px-10 py-4 text-center">
+							<div class="flex justify-center gap-2">
+								<button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
+								<button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
+							</div>
+						</td>
+					</tr>
+					<!-- Row 2 -->
+					<tr class="bg-white">
+						<td class="px-6 py-4 text-center">Luna</td>
+						<td class="px-6 py-4 text-center">Elephas maximus</td>
+						<td class="px-6 py-4 text-center">Asia</td>
+						<td class="px-6 py-4 text-center">2012-08-30</td>
+						<td class="px-6 py-4 text-red-500 text-center">Sakit</td>
+						<td class="px-6 py-4 text-center">Hutan Tropis</td>
+						<td class="px-6 py-4 text-center">
+							<img src="https://via.placeholder.com/80" alt="Foto Luna" class="rounded-lg w-20 h-20 object-cover mx-auto" />
+						</td>
+						<td class="px-10 py-4 text-center">
+							<div class="flex justify-center gap-2">
+								<button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
+								<button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
+							</div>
+						</td>
+					</tr>
+					<!-- Row 3 -->
+					<tr class="bg-palette1">
+						<td class="px-6 py-4 text-center">Kiki</td>
+						<td class="px-6 py-4 text-center">Ailuropoda melanoleuca</td>
+						<td class="px-6 py-4 text-center">Tiongkok</td>
+						<td class="px-6 py-4 text-center">2018-11-15</td>
+						<td class="px-6 py-4 text-green-600 text-center">Sehat</td>
+						<td class="px-6 py-4 text-center">Bambu Grove</td>
+						<td class="px-6 py-4 text-center">
+							<img src="https://via.placeholder.com/80" alt="Foto Kiki" class="rounded-lg w-20 h-20 object-cover mx-auto" />
+						</td>
+						<td class="px-10 py-4 text-center">
+							<div class="flex justify-center gap-2">
+								<button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
+								<button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+    <script>
+        const openFormButton = document.getElementById('openFormButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const formModal = document.getElementById('formModal');
+        const overlay = document.getElementById('overlay');
+        const body = document.body;
+
+        openFormButton.addEventListener('click', () => {
+            formModal.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+            body.classList.add('overflow-hidden');
+            body.style.paddingRight = '15px';
+        });
+
+        cancelButton.addEventListener('click', () => {
+            formModal.classList.add('hidden');
+            overlay.classList.add('hidden');
+            body.classList.remove('overflow-hidden');
+            body.style.paddingRight = '0';
+        });
+
+        document.getElementById('addAnimalForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            formModal.classList.add('hidden');
+            overlay.classList.add('hidden');
+            body.classList.remove('overflow-hidden');
+            body.style.paddingRight = '0';
+        });
+    </script>
+</body>
+</html>

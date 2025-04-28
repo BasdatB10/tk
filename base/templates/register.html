@@ -1,0 +1,321 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+	<script src="https://cdn.tailwindcss.com"></script>
+	<title>Register | SIZOPI</title>
+	<style>
+		body {
+			font-family: 'Manrope', sans-serif;
+			font-weight: 600;
+			letter-spacing: -0.02em;
+        }
+
+		.bg-texture {
+			background-image: url("{% static 'images/texture-bg.jpg' %}");
+			background-size: cover;
+			background-position: center;
+			background-repeat: no-repeat;
+			opacity: 0.15;
+		}
+
+		.registration-container {
+			max-width: 700px;
+			width: 100%;
+			padding: 2rem;
+			background-color: white;
+			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+			border-radius: 8px;
+		}
+
+		#registration-form h2 {
+			text-align: center;
+		}
+
+		#role-selection h2 {
+			text-align: center;
+		}
+
+		#role-selection p {
+			text-align: center;
+		}
+
+		input, textarea, select {
+			width: 100%;
+			padding: 6px 10px;
+			margin-top: 0.5rem;
+			border: 1px solid #ccc;
+			border-radius: 8px;
+		}
+
+		input::placeholder, textarea::placeholder, select::placeholder {
+			font-size: 0.8rem;
+			color: #888;
+		}
+
+		textarea {
+			min-height: 80px;
+		}
+
+		.form-button {
+			padding: 12px 24px;
+			font-size: 1rem;
+			border-radius: 8px;
+		}
+
+		.form-button:hover {
+			background-color: #ED8764;
+		}
+
+		.form-grid {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 1rem;
+		}
+
+		.form-grid input, .form-grid textarea, .form-grid select {
+			padding-left: 0.5rem;
+			padding-right: 0.5rem;
+			resize: none;
+			font-size: 0.8rem;
+			width: calc(100% - 16px);
+		}
+	</style>
+</head>
+<body class="relative bg-white text-gray-800">
+	<div id="bg" class="bg-texture absolute inset-0 -z-10"></div>
+	<div class="min-h-screen px-8 py-10 grid place-items-center max-w-7xl mx-auto">
+		<div id="registration-container" class="registration-container space-y-6">
+			<div id="role-selection">
+				<h2 class="text-xl md:text-2xl font-extrabold text-[#883526] drop-shadow-md leading-tight">
+					Sebagai apa Anda ingin mendaftar ke SIZOPI?
+				</h2>
+				<div class="flex flex-col gap-6 pt-8">
+					<button id="role-pengunjung" class="form-button bg-[#FBBE99] text-lg text-white font-semibold">
+						Pengunjung
+					</button>
+					<button id="role-dokter-hewan" class="form-button bg-[#FBBE99] text-lg text-white font-semibold">
+						Dokter Hewan
+					</button>
+					<button id="role-staff" class="form-button bg-[#FBBE99] text-lg text-white font-semibold">
+						Staff
+					</button>
+				</div>
+				<div class="mt-8">
+					<p class="text-sm text-[#49241B]">
+						Pilih salah satu untuk melanjutkan proses pendaftaran.
+						<a href="{% url 'base:home' %}" class="text-[#883526] underline hover:text-[#ED8764]">Kembali</a>
+					</p>
+				</div>
+			</div>
+            
+			<div id="registration-form-pengunjung" class="hidden space-y-6">
+				<h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
+					Pendaftaran Pengunjung SIZOPI
+				</h2>
+				<form action="{% url 'base:register' %}" method="POST" class="space-y-6">
+					{% csrf_token %}
+					<div class="form-grid">
+						<input type="text" name="username" placeholder="Username" class="text-lg" required />
+						<input type="password" name="password" placeholder="Password" class="text-lg" required />
+						<input type="password" name="confirm_password" placeholder="Konfirmasi Password" class="text-lg" required />
+						<input type="text" name="first_name" placeholder="Nama Depan" class="text-lg" required />
+						<input type="text" name="middle_name" placeholder="Nama Tengah (opsional)" class="text-lg" />
+						<input type="text" name="last_name" placeholder="Nama Belakang" class="text-lg" required />
+						<input type="email" name="email" placeholder="Email" class="text-lg" required />
+						<input type="tel" name="phone" placeholder="Nomor Telepon" class="text-lg" required />
+						<textarea name="address" placeholder="Alamat Lengkap" class="text-lg" required></textarea>
+						<input type="date" name="dob" class="text-lg h-8" required />
+					</div>
+					<div class="flex justify-center gap-4 pt-4">
+						<button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+							Selesai dan Daftar
+						</button>
+						<a href="{% url 'base:register' %}" class="form-button bg-[#ED8764] text-white font-semibold">
+							Kembali
+						</a>
+					</div>
+                    <p class="text-sm text-center text-[#49241B]">
+                        Sudah punya akun?
+                        <a href="{% url 'base:login' %}" class="text-[#883526] underline hover:text-[#ED8764]">Masuk di sini</a>
+                    </p>
+				</form>
+			</div>
+
+			<div id="registration-form-dokter-hewan" class="hidden space-y-6">
+				<h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
+					Pendaftaran Dokter Hewan SIZOPI
+				</h2>
+				<form action="{% url 'base:register' %}" method="POST" class="space-y-6">
+					{% csrf_token %}
+					<div class="form-grid">
+						<input type="text" name="username" placeholder="Username" class="text-lg" required />
+						<input type="password" name="password" placeholder="Password" class="text-lg" required />
+						<input type="password" name="confirm_password" placeholder="Konfirmasi Password" class="text-lg" required />
+						<input type="text" name="first_name" placeholder="Nama Depan" class="text-lg" required />
+						<input type="text" name="middle_name" placeholder="Nama Tengah (opsional)" class="text-lg" />
+						<input type="text" name="last_name" placeholder="Nama Belakang" class="text-lg" required />
+						<input type="email" name="email" placeholder="Email" class="text-lg" required />
+						<input type="tel" name="phone" placeholder="Nomor Telepon" class="text-lg" required />
+						<input type="text" name="certification_number" placeholder="Nomor Sertifikasi Profesional" class="text-lg" required />
+						<select id="specialization" name="specialization" class="text-lg" required>
+							<option value="" selected disabled>Pilih spesialisasi</option>
+							<option value="mamalia_besar">Mamalia Besar</option>
+							<option value="reptil">Reptil</option>
+							<option value="burung_eksotis">Burung Eksotis</option>
+							<option value="primata">Primata</option>
+							<option value="lainnya">Lainnya</option>
+						</select>
+						<input type="text" name="other_specialization" id="other-specialization" placeholder="Masukkan spesialisasi lainnya" class="text-lg hidden" />
+					</div>
+					<div class="flex justify-center gap-4 pt-4">
+						<button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+							Selesai dan Daftar
+						</button>
+						<a href="{% url 'base:register' %}" class="form-button bg-[#ED8764] text-white font-semibold">
+							Kembali
+						</a>
+					</div>
+                    <p class="text-sm text-center text-[#49241B]">
+                        Sudah punya akun?
+                        <a href="{% url 'base:login' %}" class="text-[#883526] underline hover:text-[#ED8764]">Masuk di sini</a>
+                    </p>
+				</form>
+			</div>
+            
+			<div id="registration-form-staff" class="hidden space-y-6">
+				<h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
+					Pendaftaran Staff SIZOPI
+				</h2>
+				<form action="{% url 'base:register' %}" method="POST" class="space-y-6">
+					{% csrf_token %}
+					<div class="form-grid">
+						<input type="text" name="username" placeholder="Username" class="text-lg" required />
+						<input type="password" name="password" placeholder="Password" class="text-lg" required />
+						<input type="password" name="confirm_password" placeholder="Konfirmasi Password" class="text-lg" required />
+						<input type="text" name="first_name" placeholder="Nama Depan" class="text-lg" required />
+						<input type="text" name="middle_name" placeholder="Nama Tengah (opsional)" class="text-lg" />
+						<input type="text" name="last_name" placeholder="Nama Belakang" class="text-lg" required />
+						<input type="email" name="email" placeholder="Email" class="text-lg" required />
+						<input type="tel" name="phone" placeholder="Nomor Telepon" class="text-lg" required />
+						<select name="role_staff" class="text-lg" required>
+							<option value="" selected disabled>Pilih Peran</option>
+							<option value="penjaga_hewan">Penjaga Hewan</option>
+							<option value="staff_administrasi">Staff Administrasi</option>
+							<option value="pelatih_pertunjukkan">Pelatih Pertunjukkan</option>
+						</select>
+						<input type="text" name="id_staf" placeholder="ID Staf" class="text-lg" readonly required />
+					</div>
+					<div class="flex justify-center gap-4 pt-4">
+						<button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+							Selesai dan Daftar
+						</button>
+						<a href="{% url 'base:register' %}" class="form-button bg-[#ED8764] text-white font-semibold">
+							Kembali
+						</a>
+					</div>
+                    <p class="text-sm text-center text-[#49241B]">
+                        Sudah punya akun?
+                        <a href="{% url 'base:login' %}" class="text-[#883526] underline hover:text-[#ED8764]">Masuk di sini</a>
+                    </p>
+				</form>
+			</div>
+		</div>
+	</div>
+	<script>
+        function updateBg() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            const bgElement = document.getElementById("bg");
+
+            if (role === 'pengunjung') {
+                bgElement.style.backgroundImage = "url('{% static 'images/pengunjung-pic.jpg' %}')";
+            } else if (role === 'dokter-hewan') {
+                bgElement.style.backgroundImage = "url('{% static 'images/dokterhewan-pic.jpg' %}')";
+            } else if (role === 'staff') {
+                bgElement.style.backgroundImage = "url('{% static 'images/staf-pic.jpg' %}')";
+            }
+            bgElement.style.backgroundSize = "cover";
+            bgElement.style.backgroundPosition = "center";
+            bgElement.style.backgroundRepeat = "no-repeat";
+            bgElement.style.opacity = 0.10;
+        }
+
+		document.getElementById("role-pengunjung").addEventListener("click", function() {
+			document.getElementById("role-selection").classList.add("hidden");
+			document.getElementById("registration-form-pengunjung").classList.remove("hidden");
+			document.getElementById("registration-form-dokter-hewan").classList.add("hidden");
+			document.getElementById("registration-form-staff").classList.add("hidden");
+			window.history.pushState({}, "", "?role=pengunjung");
+            updateBg();
+		});
+
+		document.getElementById("role-dokter-hewan").addEventListener("click", function() {
+			document.getElementById("role-selection").classList.add("hidden");
+			document.getElementById("registration-form-pengunjung").classList.add("hidden");
+			document.getElementById("registration-form-dokter-hewan").classList.remove("hidden");
+			document.getElementById("registration-form-staff").classList.add("hidden");
+			window.history.pushState({}, "", "?role=dokter-hewan");
+            updateBg();
+		});
+
+		const specializationSelect = document.getElementById('specialization');
+		const otherInput = document.getElementById('other-specialization');
+
+		specializationSelect.addEventListener('change', function () {
+			if (this.value === 'lainnya') {
+				specializationSelect.classList.add('hidden');
+				otherInput.classList.remove('hidden');
+				otherInput.setAttribute('required', 'true');
+				otherInput.focus();
+
+				otherInput.addEventListener('blur', function handleBlur() {
+					if (otherInput.value.trim() === '') {
+						specializationSelect.value = '';
+						specializationSelect.classList.remove('hidden');
+						otherInput.classList.add('hidden');
+						otherInput.removeAttribute('required');
+						otherInput.removeEventListener('blur', handleBlur);
+					}
+				});
+			}
+		});
+
+		document.querySelector('select[name="role_staff"]').addEventListener('change', function () {
+			const role = this.value;
+			const idStafInput = document.querySelector('input[name="id_staf"]');
+
+			const prefixMap = {
+				penjaga_hewan: 'PJH',
+				staff_administrasi: 'ADM',
+				pelatih_pertunjukkan: 'PLP'
+			};
+
+			const prefix = prefixMap[role];
+			if (!prefix) {
+				idStafInput.value = '';
+				idStafInput.readOnly = false;
+				return;
+			}
+
+			const randomNum = Math.floor(Math.random() * 999) + 1;
+			const formattedNum = String(randomNum).padStart(3, '0');
+			const generatedId = `${prefix}${formattedNum}`;
+			idStafInput.value = generatedId;
+			idStafInput.readOnly = true;
+		});
+
+		document.getElementById("role-staff").addEventListener("click", function() {
+			document.getElementById("role-selection").classList.add("hidden");
+			document.getElementById("registration-form-pengunjung").classList.add("hidden");
+			document.getElementById("registration-form-dokter-hewan").classList.add("hidden");
+			document.getElementById("registration-form-staff").classList.remove("hidden");
+			window.history.pushState({}, "", "?role=staff");
+            updateBg();
+		});
+	</script>
+</body>
+</html>

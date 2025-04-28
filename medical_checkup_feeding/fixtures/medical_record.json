@@ -1,0 +1,91 @@
+[
+    {
+     "id_hewan": "f4c4be4e-5b27-4ae1-a7b2-2385b6713e15",
+     "nama" : "Singa",
+     "username_dh": "Maximilian Benjamin",
+     "tanggal_pemeriksaan": "2022-01-10",
+     "diagnosis": "Infeksi ringan",
+     "pengobatan": "Antibiotik oral",
+     "status_kesehatan": "Sakit",
+     "catatan_tindak_lanjut": "Pantau kondisi harian selama 1 minggu"
+    },
+    {
+     "id_hewan": "740a3023-c34e-4eb7-a07a-b0a35961186c",
+     "nama" : "Panda Raksasa",
+     "username_dh": "Sarah Putri",
+     "tanggal_pemeriksaan": "2023-03-15",
+     "diagnosis": "Gangguan pencernaan",
+     "pengobatan": "Obat lambung",
+     "status_kesehatan": "Sakit"
+    },
+    {
+     "id_hewan": "cb2347d7-d8e0-4f20-bfaa-3a1855d5303f",
+     "nama" : "Komodo",
+     "username_dh": "Andrew Jovian",
+     "tanggal_pemeriksaan": "2024-02-05",
+     "status_kesehatan": "Sehat"
+    },
+    {
+     "id_hewan": "b9e8f4c4-49b4-42fd-882e-1b213c1a55fa",
+     "nama" : "Koala",
+     "username_dh": "Hannah Felicia",
+     "tanggal_pemeriksaan": "2022-08-20",
+     "diagnosis": "Infeksi saluran pernapasan",
+     "pengobatan": "Antibiotik",
+     "status_kesehatan": "Sakit",
+     "catatan_tindak_lanjut": "Diperiksa ulang 2 minggu lagi"
+    },
+    {
+     "id_hewan": "b6328fa4-5246-46b4-9c91-cabe936ff28e",
+     "nama" : "Gajah Asia",
+     "username_dh": "Indra Suryadi",
+     "tanggal_pemeriksaan": "2023-10-11",
+     "status_kesehatan": "Sehat"
+    },
+    {
+     "id_hewan": "a3a7e4a2-ef87-4f3e-83b6-d06b6dce168c",
+     "nama" : "Harimau Sumatra",
+     "username_dh": "Prameswari Lestari",
+     "tanggal_pemeriksaan": "2024-01-01",
+     "diagnosis": "Luka lecet",
+     "pengobatan": "Salep antiseptik",
+     "status_kesehatan": "Sakit",
+     "catatan_tindak_lanjut": "Periksa ulang setelah 3 hari"
+    },
+    {
+     "id_hewan": "409c86f4-f40a-4de6-b8a0-7d0a6ac46239",
+     "nama" : "Kanguru Merah",
+     "username_dh": "Melanie Sukma",
+     "tanggal_pemeriksaan": "2023-06-12",
+     "diagnosis": "Demam",
+     "pengobatan": "Antipiretik",
+     "status_kesehatan": "Sakit"
+    },
+    {
+     "id_hewan": "3b4fba3a-5e9c-4f3e-a508-63bc255b1631",
+     "nama" : "Cheetah",
+     "username_dh": "Zack Wang",
+     "tanggal_pemeriksaan": "2024-04-01",
+     "diagnosis": "Cedera kaki",
+     "pengobatan": "Fisioterapi ringan",
+     "status_kesehatan": "Sakit",
+     "catatan_tindak_lanjut": "Lakukan latihan ringan tiap pagi"
+    },
+    {
+     "id_hewan": "96334245-4de7-4a55-a885-d7dcfd50b00e",
+     "nama" : "Kijang",
+     "username_dh": "Lisa Lestari",
+     "tanggal_pemeriksaan": "2023-09-09",
+     "status_kesehatan": "Sehat"
+    },
+    {
+     "id_hewan": "6211e3ee-0405-4e2a-a72e-e0288f005489",
+     "nama" : "Burung Unta",
+     "username_dh": "Ella Jasmine",
+     "tanggal_pemeriksaan": "2023-05-03",
+     "diagnosis": "Batuk",
+     "pengobatan": "Sirup herbal",
+     "status_kesehatan": "Sakit",
+     "catatan_tindak_lanjut": "Evaluasi ulang dalam 1 minggu"
+    }
+]

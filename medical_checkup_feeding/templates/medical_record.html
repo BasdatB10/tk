@@ -38,6 +38,8 @@
             background-color: white;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
+            position: relative; 
+            z-index: 10000;
         }
 
         input, textarea, select {
@@ -116,7 +118,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 9999; 
         }
         
         .hidden {
@@ -172,17 +174,14 @@
                     </div>
                 {% endfor %}
             {% endif %}
-            
-            <!-- Animal selection and add record button -->
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <label for="animal-select" class="text-lg font-semibold text-[#49241B]">Pilih Hewan:</label>
                     <select id="animal-select" class="w-64 text-lg">
                         <option value="" disabled selected>-- Pilih Hewan --</option>
-                        <option value="1">Simba - Singa (A001)</option>
-                        <option value="2">Bona - Harimau Sumatera (A002)</option>
-                        <option value="3">Koko - Gorila (A003)</option>
-                        <option value="4">Nala - Gajah (A004)</option>
+                        {% for id, name in animals.items %}
+                            <option value="{{ id }}">{{ name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <button id="add-record-btn" class="form-button bg-[#FBBE99] text-white font-semibold">
@@ -190,36 +189,32 @@
                 </button>
             </div>
             
-            <!-- Animal info card -->
+           
             <div id="animal-info" class="bg-gray-50 p-6 rounded-lg shadow-sm hidden">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
                         <p class="text-sm text-gray-500">ID Hewan</p>
-                        <p class="font-semibold text-lg" id="animal-id">A001</p>
+                        <p class="font-semibold text-lg" id="animal-id"></p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500">Nama</p>
-                        <p class="font-semibold text-lg" id="animal-name">Simba</p>
+                        <p class="text-sm text-gray-500">Dokter Hewan Terakhir</p>
+                        <p class="font-semibold text-lg" id="animal-doctor"></p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500">Spesies</p>
-                        <p class="font-semibold text-lg" id="animal-species">Singa</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Usia</p>
-                        <p class="font-semibold text-lg" id="animal-age">5 tahun</p>
+                        <p class="text-sm text-gray-500">Status Kesehatan</p>
+                        <p class="font-semibold text-lg" id="animal-status"></p>
                     </div>
                 </div>
             </div>
             
-            <!-- Medical records table -->
+         
             <div id="medical-records" class="mt-8 hidden">
                 <h3 class="text-xl font-bold text-[#883526] mb-4">Riwayat Pemeriksaan</h3>
                 <table class="w-full">
                     <thead>
                         <tr>
                             <th>Tanggal Pemeriksaan</th>
-                            <th>Nama Dokter</th>
+                            <th>Username Dokter</th>
                             <th>Status Kesehatan</th>
                             <th>Diagnosa</th>
                             <th>Pengobatan</th>
@@ -228,7 +223,6 @@
                         </tr>
                     </thead>
                     <tbody id="records-table-body">
-                        <!-- Records will be added here dynamically -->
                     </tbody>
                 </table>
                 <p id="no-records-message" class="text-center text-gray-500 py-4">Belum ada rekam medis untuk hewan ini.</p>
@@ -236,7 +230,6 @@
         </div>
     </div>
     
-    <!-- Add Record Modal -->
     <div id="add-record-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
@@ -249,15 +242,15 @@
                         <input type="date" id="examination-date" name="examination_date" class="text-lg" required />
                     </div>
                     <div>
-                        <label for="doctor-name" class="text-sm text-[#49241B]">Nama Dokter:</label>
+                        <label for="doctor-name" class="text-sm text-[#49241B]">Username Dokter:</label>
                         <input type="text" id="doctor-name" name="doctor_name" class="text-lg" required />
                     </div>
                     <div>
                         <label for="health-status" class="text-sm text-[#49241B]">Status Kesehatan:</label>
                         <select id="health-status" name="health_status" class="text-lg" required>
                             <option value="" disabled selected>-- Pilih Status --</option>
-                            <option value="sehat">Sehat</option>
-                            <option value="sakit">Sakit</option>
+                            <option value="Sehat">Sehat</option>
+                            <option value="Sakit">Sakit</option>
                         </select>
                     </div>
                 </div>
@@ -273,6 +266,11 @@
                     </div>
                 </div>
                 
+                <div>
+                    <label for="followup" class="text-sm text-[#49241B]">Catatan Tindak Lanjut:</label>
+                    <textarea id="followup" name="followup" class="text-lg w-full"></textarea>
+                </div>
+                
                 <div class="flex justify-center gap-4 pt-4">
                     <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
                         Simpan
@@ -285,14 +283,13 @@
         </div>
     </div>
     
-    <!-- Edit Record Modal -->
     <div id="edit-record-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
                 Edit Rekam Medis
             </h3>
             <form id="edit-record-form" class="space-y-6">
-                <input type="hidden" id="edit-record-id" name="record_id" />
+                <input type="hidden" id="edit-record-index" name="record_index" />
                 
                 <div>
                     <label for="edit-new-followup" class="text-sm text-[#49241B]">Catatan Tindak Lanjut: </label>
@@ -321,7 +318,7 @@
         </div>
     </div>
     
-    <!-- Delete Confirmation Modal -->
+   
     <div id="delete-record-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
@@ -329,7 +326,7 @@
             </h3>
             <p class="text-center text-lg mb-6">Apakah anda yakin ingin menghapus rekam medis ini?</p>
             <form id="delete-record-form" class="space-y-6">
-                <input type="hidden" id="delete-record-id" name="record_id" />
+                <input type="hidden" id="delete-record-index" name="record_index" />
                 
                 <div class="flex justify-center gap-4 pt-4">
                     <button type="submit" class="form-button bg-[#dc3545] text-white font-semibold">
@@ -343,85 +340,33 @@
         </div>
     </div>
     
+    {{ medical_records|json_script:"medical-records-data" }}
     <script>
-        // Sample data to simulate records
-        const animalData = {
-            "1": {
-                id: "A001",
-                name: "Simba",
-                species: "Singa",
-                age: "5 tahun",
-                records: [
-                    {
-                        id: 1,
-                        date: "2025-04-15",
-                        doctor: "Dr. John Doe",
-                        status: "sehat",
-                        diagnosis: "",
-                        treatment: "",
-                        followup: "Vaksinasi berikutnya dijadwalkan 6 bulan kemudian"
-                    },
-                    {
-                        id: 2,
-                        date: "2025-03-10",
-                        doctor: "Dr. Jane Smith",
-                        status: "sakit",
-                        diagnosis: "Infeksi saluran pernapasan ringan",
-                        treatment: "Antibiotik selama 7 hari, istirahat dari pertunjukan",
-                        followup: "Kondisi membaik setelah 4 hari pengobatan"
-                    }
-                ]
-            },
-            "2": {
-                id: "A002",
-                name: "Bona",
-                species: "Harimau Sumatera",
-                age: "7 tahun",
-                records: [
-                    {
-                        id: 3,
-                        date: "2025-04-20",
-                        doctor: "Dr. John Doe",
-                        status: "sehat",
-                        diagnosis: "",
-                        treatment: "",
-                        followup: ""
-                    }
-                ]
-            },
-            "3": {
-                id: "A003",
-                name: "Koko",
-                species: "Gorila",
-                age: "10 tahun",
-                records: []
-            },
-            "4": {
-                id: "A004",
-                name: "Nala",
-                species: "Gajah",
-                age: "12 tahun",
-                records: [
-                    {
-                        id: 4,
-                        date: "2025-04-05",
-                        doctor: "Dr. John Doe",
-                        status: "sakit",
-                        diagnosis: "Luka kecil di kaki depan kanan",
-                        treatment: "Pembersihan luka dan pemasangan perban",
-                        followup: "Luka sembuh dengan baik, perban dilepas setelah 5 hari"
-                    }
-                ]
+        const medicalRecordsData = JSON.parse(document.getElementById('medical-records-data').textContent);
+        const animalData = {};
+        medicalRecordsData.forEach((record, index) => {
+            if (!animalData[record.id_hewan]) {
+                animalData[record.id_hewan] = {
+                    id: record.id_hewan,
+                    records: []
+                };
             }
-        };
+            animalData[record.id_hewan].records.push({
+                index: index,
+                date: record.tanggal_pemeriksaan,
+                doctor: record.username_dh,
+                status: record.status_kesehatan,
+                diagnosis: record.diagnosis || "",
+                treatment: record.pengobatan || "",
+                followup: record.catatan_tindak_lanjut || ""
+            });
+        });
         
-        // DOM Elements
         const animalSelect = document.getElementById('animal-select');
         const animalInfo = document.getElementById('animal-info');
         const animalId = document.getElementById('animal-id');
-        const animalName = document.getElementById('animal-name');
-        const animalSpecies = document.getElementById('animal-species');
-        const animalAge = document.getElementById('animal-age');
+        const animalDoctor = document.getElementById('animal-doctor');
+        const animalStatus = document.getElementById('animal-status');
         const medicalRecords = document.getElementById('medical-records');
         const recordsTableBody = document.getElementById('records-table-body');
         const noRecordsMessage = document.getElementById('no-records-message');
@@ -434,7 +379,6 @@
         const healthStatus = document.getElementById('health-status');
         const diagnosisSection = document.getElementById('diagnosis-section');
         
-        // Event Listeners
         animalSelect.addEventListener('change', function() {
             const animalId = this.value;
             if (animalId) {
@@ -446,9 +390,8 @@
             }
         });
         
-       
         healthStatus.addEventListener('change', function() {
-            if (this.value === 'sakit') {
+            if (this.value === 'Sakit') {
                 diagnosisSection.classList.remove('hidden');
                 document.getElementById('diagnosis').setAttribute('required', true);
                 document.getElementById('treatment').setAttribute('required', true);
@@ -459,8 +402,9 @@
             }
         });
         
-        // Show add record modal
+       
         addRecordBtn.addEventListener('click', function() {
+            console.log('Add record button clicked');
             const animalId = animalSelect.value;
             if (!animalId) {
                 alert('Silakan pilih hewan terlebih dahulu.');
@@ -473,7 +417,6 @@
             addRecordModal.classList.remove('hidden');
         });
         
-       
         document.querySelectorAll('.close-modal').forEach(button => {
             button.addEventListener('click', function() {
                 addRecordModal.classList.add('hidden');
@@ -482,7 +425,6 @@
             });
         });
         
-       
         document.getElementById('add-record-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -501,27 +443,38 @@
                 return;
             }
             
-            
-            const newRecordId = Math.max(0, ...Object.values(animalData).flatMap(a => a.records.map(r => r.id))) + 1;
+          
+            const newRecordIndex = medicalRecordsData.length;
             const newRecord = {
-                id: newRecordId,
+                index: newRecordIndex,
                 date: date,
                 doctor: doctor,
                 status: status,
                 diagnosis: diagnosis,
                 treatment: treatment,
-                followup: followup,
-                action: ""
+                followup: followup
             };
             
+           
             animalData[animalId].records.push(newRecord);
             animalData[animalId].records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+           
+            medicalRecordsData.push({
+                id_hewan: animalId,
+                username_dh: doctor,
+                tanggal_pemeriksaan: date,
+                diagnosis: diagnosis,
+                pengobatan: treatment,
+                status_kesehatan: status,
+                catatan_tindak_lanjut: followup
+            });
             
           
             loadMedicalRecords(animalId);
             addRecordModal.classList.add('hidden');
             
-          
+         
             alert('Rekam medis berhasil ditambahkan!');
         });
         
@@ -529,32 +482,33 @@
             e.preventDefault();
             
             const animalId = animalSelect.value;
-            const recordId = parseInt(document.getElementById('edit-record-id').value);
-            const action = document.getElementById('edit-action').value;
+            const recordIndex = parseInt(document.getElementById('edit-record-index').value);
             const newDiagnosis = document.getElementById('edit-new-diagnosis').value;
             const newTreatment = document.getElementById('edit-new-treatment').value;
             const newFollowUp = document.getElementById('edit-new-followup').value;
             
-           
-            const recordIndex = animalData[animalId].records.findIndex(r => r.id === recordId);
-            if (recordIndex !== -1) {
-                const record = animalData[animalId].records[recordIndex];
-                record.action = action;
-                
-                if (newDiagnosis) {
-                    record.diagnosis += record.diagnosis ? "\n\nUpdate: " + newDiagnosis : newDiagnosis;
-                }
-                
-                if (newTreatment) {
-                    record.treatment += record.treatment ? "\n\nUpdate: " + newTreatment : newTreatment;
-                }
-
-                if (newFollowUp) {
-                    record.followup += record.followup ? "\n\nUpdate: " + newFollowUp : newFollowUp;
-                }
+          
+            const record = medicalRecordsData[recordIndex];
+            
+            if (newDiagnosis) {
+                record.diagnosis = record.diagnosis ? 
+                    record.diagnosis + "\n\nUpdate: " + newDiagnosis : 
+                    newDiagnosis;
             }
             
-         
+            if (newTreatment) {
+                record.pengobatan = record.pengobatan ? 
+                    record.pengobatan + "\n\nUpdate: " + newTreatment : 
+                    newTreatment;
+            }
+
+            if (newFollowUp) {
+                record.catatan_tindak_lanjut = record.catatan_tindak_lanjut ? 
+                    record.catatan_tindak_lanjut + "\n\nUpdate: " + newFollowUp : 
+                    newFollowUp;
+            }
+            
+          
             loadMedicalRecords(animalId);
             editRecordModal.classList.add('hidden');
             
@@ -566,33 +520,97 @@
             e.preventDefault();
             
             const animalId = animalSelect.value;
-            const recordId = parseInt(document.getElementById('delete-record-id').value);
+            const recordIndex = parseInt(document.getElementById('delete-record-index').value);
             
            
-            const recordIndex = animalData[animalId].records.findIndex(r => r.id === recordId);
-            if (recordIndex !== -1) {
-                animalData[animalId].records.splice(recordIndex, 1);
-            }
+            medicalRecordsData.splice(recordIndex, 1);
             
+            rebuildAnimalData();
             
+         
             loadMedicalRecords(animalId);
             deleteRecordModal.classList.add('hidden');
             
-           
+          
             alert('Rekam medis berhasil dihapus!');
+            
         });
         
-       
-        function displayAnimalInfo(animalId) {
-            const animal = animalData[animalId];
-            animalId.textContent = animal.id;
-            animalName.textContent = animal.name;
-            animalSpecies.textContent = animal.species;
-            animalAge.textContent = animal.age;
+        
+        function rebuildAnimalData() {
+           
+            for (let key in animalData) {
+                animalData[key].records = [];
+            }
+            
+           
+            medicalRecordsData.forEach((record, index) => {
+                const animalId = record.id_hewan;
+                
+                if (!animalData[animalId]) {
+                    animalData[animalId] = {
+                        id: animalId,
+                        records: []
+                    };
+                }
+                
+                animalData[animalId].records.push({
+                    index: index,
+                    date: record.tanggal_pemeriksaan,
+                    doctor: record.username_dh,
+                    status: record.status_kesehatan,
+                    diagnosis: record.diagnosis || "",
+                    treatment: record.pengobatan || "",
+                    followup: record.catatan_tindak_lanjut || ""
+                });
+            });
+            
+           
+            for (let key in animalData) {
+                animalData[key].records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
+        }
+        
+    function displayAnimalInfo(animalId) {
+        if (!animalData[animalId] || animalData[animalId].records.length === 0) {
+            animalInfo.classList.add('hidden');
+            return;
+        }
+        
+        const records = animalData[animalId].records;
+        const latestRecord = records.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+    
+    
+        let animalName = "Unknown Animal";
+        for (let record of medicalRecordsData) {
+            if (record.id_hewan === animalId && record.nama) {
+                animalName = record.nama;
+                break;
+            }
+        }
+    
+        document.getElementById('animal-id').textContent = animalName + " (" + animalId.slice(0, 8) + '...)';
+        document.getElementById('animal-doctor').textContent = latestRecord.doctor;
+        document.getElementById('animal-status').textContent = latestRecord.status;
+            
+           
+            const statusElement = document.getElementById('animal-status');
+            statusElement.className = '';
+            if (latestRecord.status === 'Sehat') {
+                statusElement.classList.add('health-status-healthy');
+            } else if (latestRecord.status === 'Sakit') {
+                statusElement.classList.add('health-status-sick');
+            }
+            
             animalInfo.classList.remove('hidden');
         }
         
         function loadMedicalRecords(animalId) {
+            if (!animalData[animalId]) {
+                medicalRecords.classList.add('hidden');
+                return;
+            }
+            
             const records = animalData[animalId].records;
             recordsTableBody.innerHTML = '';
             
@@ -604,25 +622,31 @@
                 records.forEach(record => {
                     const row = document.createElement('tr');
                     
-                    
-                    const dateObj = new Date(record.date);
-                    const formattedDate = dateObj.toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    });
-                    
-                    let actionButtons = '';
-                    if (record.status === 'sakit') {
-                        actionButtons = `<button class="action-button bg-[#FBBE99] text-white edit-record" data-id="${record.id}">Edit</button>`;
-                    }
-                    actionButtons += `<button class="action-button bg-[#dc3545] text-white delete-record" data-id="${record.id}">Hapus</button>`;
+                  
+                    const dateParts = record.date.split('-');
+                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                    const formattedDate = dateObj.toLocaleDateString('id-ID', options);
                     
                    
+                    let actionButtons = '';
+                    if (record.status === 'Sakit') {
+                        actionButtons = `<button class="action-button bg-[#FBBE99] text-white edit-record mr-2" data-index="${record.index}">Edit</button>`;
+                    }
+                    actionButtons += `<button class="action-button bg-[#dc3545] text-white delete-record" data-index="${record.index}">Hapus</button>`;
+                    
+                    
+                    let statusClass = '';
+                    if (record.status === 'Sehat') {
+                        statusClass = 'health-status-healthy';
+                    } else if (record.status === 'Sakit') {
+                        statusClass = 'health-status-sick';
+                    }
+                    
                     row.innerHTML = `
                         <td>${formattedDate}</td>
                         <td>${record.doctor}</td>
-                        <td class="health-status-${record.status}">${record.status === 'sehat' ? 'Sehat' : 'Sakit'}</td>
+                        <td class="${statusClass}">${record.status}</td>
                         <td>${record.diagnosis || '-'}</td>
                         <td>${record.treatment || '-'}</td>
                         <td>${record.followup || '-'}</td>
@@ -637,13 +661,13 @@
                 
                 document.querySelectorAll('.edit-record').forEach(button => {
                     button.addEventListener('click', function() {
-                        openEditModal(animalId, parseInt(this.dataset.id));
+                        openEditModal(parseInt(this.dataset.index));
                     });
                 });
                 
                 document.querySelectorAll('.delete-record').forEach(button => {
                     button.addEventListener('click', function() {
-                        openDeleteModal(parseInt(this.dataset.id));
+                        openDeleteModal(parseInt(this.dataset.index));
                     });
                 });
             }
@@ -651,10 +675,11 @@
             medicalRecords.classList.remove('hidden');
         }
         
-        function openEditModal(selectedAnimalId, recordId) {
-            const record = animalData[selectedAnimalId].records.find(r => r.id === recordId);
+        function openEditModal(recordIndex) {
+            const record = medicalRecordsData[recordIndex];
+            
             if (record) {
-                document.getElementById('edit-record-id').value = recordId;
+                document.getElementById('edit-record-index').value = recordIndex;
                 document.getElementById('edit-new-diagnosis').value = '';
                 document.getElementById('edit-new-treatment').value = '';
                 document.getElementById('edit-new-followup').value = '';
@@ -662,50 +687,9 @@
                 editRecordModal.classList.remove('hidden');
             }
         }
-
         
-        document.getElementById('edit-record-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const animalId = animalSelect.value;
-            const recordId = parseInt(document.getElementById('edit-record-id').value);
-            const newDiagnosis = document.getElementById('edit-new-diagnosis').value;
-            const newTreatment = document.getElementById('edit-new-treatment').value;
-            const followup = document.getElementById('edit-followup').value;
-            
-           
-            if (!newDiagnosis || !newTreatment) {
-                alert('Diagnosa dan Pengobatan harus diisi!');
-                return;
-            }
-            
-            
-            const recordIndex = animalData[animalId].records.findIndex(r => r.id === recordId);
-            if (recordIndex !== -1) {
-                const record = animalData[animalId].records[recordIndex];
-                
-                if (newDiagnosis) {
-                    record.diagnosis += record.diagnosis ? "\n\nUpdate: " + newDiagnosis : newDiagnosis;
-                }
-                
-                if (newTreatment) {
-                    record.treatment += record.treatment ? "\n\nUpdate: " + newTreatment : newTreatment;
-                }
-
-                if (followup) {
-                    record.followup += record.followup ? "\n\nUpdate: " + followup : followup;
-                }
-            }
-            
-            
-            loadMedicalRecords(animalId);
-            editRecordModal.classList.add('hidden');
-           
-            alert('Rekam medis berhasil diperbarui!');
-        });
-        
-        function openDeleteModal(recordId) {
-            document.getElementById('delete-record-id').value = recordId;
+        function openDeleteModal(recordIndex) {
+            document.getElementById('delete-record-index').value = recordIndex;
             deleteRecordModal.classList.remove('hidden');
         }
     </script>

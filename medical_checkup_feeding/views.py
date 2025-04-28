@@ -44,45 +44,6 @@ def medical_checkup(request):
     }
     return render(request, 'medical_checkup.html', context)
 
-def feeding(request):
-    memberi_file_path = os.path.join(settings.BASE_DIR, 'medical_checkup_feeding', 'fixtures', 'memberi.json')
-    pakan_file_path = os.path.join(settings.BASE_DIR, 'medical_checkup_feeding', 'fixtures', 'pakan.json')
-    hewan_path = os.path.join(settings.BASE_DIR, 'medical_checkup_feeding', 'fixtures', 'hewan.json')
-
-    with open(memberi_file_path, 'r') as file:
-        memberi_data = json.load(file)
-    
-    with open(pakan_file_path, 'r') as file:
-        pakan_data = json.load(file)
-
-    with open(hewan_path, 'r') as file:
-        hewan_data = json.load(file)
-        
-    animal_ids = []
-    seen_animals = set()
-    for record in memberi_data:
-        if record["id_hewan"] not in seen_animals:
-            seen_animals.add(record["id_hewan"])
-            animal_ids.append(record["id_hewan"])
-            
-    animal_names = {}
-    for animal in hewan_data:
-        animal_names[animal['id']] = animal.get('nama', 'Unknown Animal')
-
-    animal_display_names = {}
-    for animal_id in animal_ids:
-      animal_display_names[animal_id] = animal_names.get(animal_id, "Unknown Animal")
-    
-    context = {
-        'memberi_data': memberi_data,
-        'pakan_data': pakan_data,
-        'hewan_data': hewan_data,
-        'animal_names': animal_names,
-        'animal_display_names': animal_display_names,
-        'animal_ids': animal_ids,
-    }
-    return render(request, 'feeding.html', context)
-
 def feeding_schedule(request):
     memberi_file_path = os.path.join(settings.BASE_DIR, 'medical_checkup_feeding', 'fixtures', 'memberi.json')
     pakan_file_path = os.path.join(settings.BASE_DIR, 'medical_checkup_feeding', 'fixtures', 'pakan.json')

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Program Adopsi Satwa - Halaman Adopter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        custom: {
+                            lightest: '#FAD4B6',
+                            light: '#FBBE99',
+                            medium: '#ED8764',
+                            dark: '#DD6D49',
+                            darker: '#883526',
+                            darkest: '#49241B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .bg-texture {
+            background-image: url("/api/placeholder/1600/900");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+        }
+
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+        }
+    
+        .popup-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-custom-lightest">
+
+    <div class="bg-texture absolute top-0 left-0 right-0 h-full w-full -z-10"></div>
+    
+    {% include "navbar.html" %}
+
+    <div class="container mx-auto p-6 bg-white my-8 rounded-lg shadow-lg">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-custom-darker mb-2">Program Adopsi Satwa: Bantu Mereka dengan Cinta</h1>
+            <p class="text-custom-darkest">Terima kasih telah mewujudkan kepedulian Anda terhadap satwa dengan menjadi adopter simbolis! Dapatkan sertifikat digital dan laporan berkala tentang kondisi hewan yang Anda dukung.</p>
+        </div>
+
+        <h2 class="text-2xl font-semibold text-custom-darker mb-6">Hewan yang Sedang Anda Adopsi</h2>
+
+        <!-- Hewan 1 -->
+        <div class="border border-custom-light rounded-lg p-4 mb-6 hover:shadow-md transition">
+            <div class="flex flex-col md:flex-row">
+                <div class="md:w-1/4 mb-4 md:mb-0">
+                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9z7mrJYa7zsRfi6n26gjfhjzjvYMO3RfYMmFSJxJuaIo5y5-W7ih9VDxE1FZEineYw0EJYSmJ8Zi4P7o62NSOo0R7W2YyoL6UjKLhEoSEP_FuwdwnWFAIRHaZ-Uxq_LKGRf_xzYXK64tg/w640-h419/1644897149271573-0.png" alt="Foto Harimau Sumatra" class="rounded-lg w-full h-auto object-cover">
+                </div>
+                <div class="md:w-3/4 md:pl-6">
+                    <h3 class="text-xl font-bold text-custom-darker">Sari <span class="text-custom-dark text-sm font-normal">(ID: HTM-001)</span></h3>
+                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Jenis:</span> Harimau Sumatra</p>
+                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Kondisi:</span> Sehat, sedang dalam masa pemulihan setelah operasi kaki</p>
+                    <p class="text-custom-darkest mb-4"><span class="font-semibold">Usia:</span> 5 tahun</p>
+                    
+                    <div class="flex justify-end mt-2">
+                        <a href="#" onclick="openPopup('Sari', 'Harimau Sumatra', 'Sumatra', '2025-01-01', '2025-12-31')" class="text-custom-dark hover:text-custom-darker text-sm underline">[Lihat Detail]</a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hewan 2 -->
+        <div class="border border-custom-light rounded-lg p-4 mb-6 hover:shadow-md transition">
+            <div class="flex flex-col md:flex-row">
+                <div class="md:w-1/4 mb-4 md:mb-0">
+                    <img src="https://www.wwf.id/sites/default/files/slider/9.ORANGUTAN_Fiona%20Rogers_copy.jpg" alt="Foto Orangutan" class="rounded-lg w-full h-auto object-cover">
+                </div>
+                <div class="md:w-3/4 md:pl-6">
+                    <h3 class="text-xl font-bold text-custom-darker">Jojo <span class="text-custom-dark text-sm font-normal">(ID: ORG-023)</span></h3>
+                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Jenis:</span> Orangutan Kalimantan</p>
+                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Kondisi:</span> Sangat baik, aktif dan suka bermain</p>
+                    <p class="text-custom-darkest mb-4"><span class="font-semibold">Usia:</span> 3 tahun</p>
+                    
+                    <div class="flex justify-end mt-2">
+                        <a href="#" onclick="openPopup('Jojo', 'Orangutan Kalimantan', 'Kalimantan', '2025-02-01', '2026-02-01')" class="text-custom-dark hover:text-custom-darker text-sm underline">[Lihat Detail]</a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <footer class="bg-custom-darkest text-white p-6">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 Program Adopsi Satwa. Semua hak dilindungi.</p>
+            <p class="mt-2 text-custom-lightest">Membantu melestarikan satwa Indonesia dengan cinta dan kepedulian.</p>
+        </div>
+    </footer>
+
+    <script>
+        function openPopup(nama, jenis, habitat, tanggalMulai, tanggalAkhir) {
+            document.getElementById('popupNama').textContent = nama;
+            document.getElementById('popupJenis').textContent = jenis;
+            document.getElementById('popupHabitat').textContent = habitat;
+            document.getElementById('popupTanggalMulai').textContent = tanggalMulai;
+            document.getElementById('popupTanggalAkhir').textContent = tanggalAkhir;
+            
+            // Update image berdasarkan nama hewan
+            if (nama === 'Sari') {
+                document.getElementById('popupImage').src = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9z7mrJYa7zsRfi6n26gjfhjzjvYMO3RfYMmFSJxJuaIo5y5-W7ih9VDxE1FZEineYw0EJYSmJ8Zi4P7o62NSOo0R7W2YyoL6UjKLhEoSEP_FuwdwnWFAIRHaZ-Uxq_LKGRf_xzYXK64tg/w640-h419/1644897149271573-0.png";
+            } else if (nama === 'Jojo') {
+                document.getElementById('popupImage').src = "https://www.wwf.id/sites/default/files/slider/9.ORANGUTAN_Fiona%20Rogers_copy.jpg";
+            }
+            
+            const popup = document.getElementById('detailPopup');
+            popup.style.display = 'flex';
+        }
+        
+        function closePopup() {
+            const popup = document.getElementById('detailPopup');
+            popup.style.display = 'none';
+        }
+        
+        // Menutup popup jika mengklik di luar konten popup
+        window.onclick = function(event) {
+            const popup = document.getElementById('detailPopup');
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        }
+
+         // Fungsi untuk menampilkan popup sertifikat adopsi
+    function showSertifikatAdopsi(nama, jenis, namaHewan, tanggalMulai, tanggalAkhir) {
+        // Format tanggal ke format yang lebih mudah dibaca
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('id-ID', options);
+        };
+        
+        document.getElementById('sertifikatNama').textContent = "Budi Santoso"; // Nama dummy
+        document.getElementById('sertifikatJenis').textContent = jenis;
+        document.getElementById('sertifikatNamaHewan').textContent = namaHewan;
+        document.getElementById('sertifikatMulai').textContent = formatDate(tanggalMulai);
+        document.getElementById('sertifikatAkhir').textContent = formatDate(tanggalAkhir);
+        
+        const popup = document.getElementById('sertifikatPopup');
+        popup.style.display = 'flex';
+    }
+    
+    // Fungsi untuk menutup popup sertifikat
+    function closeSertifikatPopup() {
+        const popup = document.getElementById('sertifikatPopup');
+        popup.style.display = 'none';
+    }
+
+     // Data dummy rekam medis
+     const rekamMedisData = {
+        'Sari': [
+            {
+                tanggal: '2025-04-01',
+                dokter: 'Dr. Siti Aminah',
+                status: 'Sakit',
+                diagnosa: 'Infeksi saluran pernapasan',
+                pengobatan: 'Antibiotik selama 7 hari',
+                catatan: 'Evaluasi kondisi perbaikan ventilasi kandang.'
+            },
+            {
+                tanggal: '2025-03-15',
+                dokter: 'Dr. Ahmad Fauzi',
+                status: 'Sehat',
+                diagnosa: 'Pemeriksaan rutin',
+                pengobatan: 'Vitamin dan suplemen',
+                catatan: 'Kondisi fisik baik, tetap pantau pola makan.'
+            }
+        ],
+        'Jojo': [
+            {
+                tanggal: '2025-04-10',
+                dokter: 'Dr. Budi Santoso',
+                status: 'Sehat',
+                diagnosa: 'Pemeriksaan rutin',
+                pengobatan: 'Multivitamin',
+                catatan: 'Menunjukkan perilaku normal dan aktif.'
+            },
+            {
+                tanggal: '2025-03-05',
+                dokter: 'Dr. Maya Wijaya',
+                status: 'Sakit',
+                diagnosa: 'Diare ringan',
+                pengobatan: 'Obat anti-diare dan probiotik',
+                catatan: 'Pantau pola makan dan jenis makanan yang diberikan.'
+            }
+        ]
+    };
+    
+    // Fungsi untuk menampilkan popup kondisi hewan
+    function showKondisiHewan(nama, jenis, habitat) {
+        // Set informasi hewan
+        document.getElementById('kondisiHewanNama').textContent = nama;
+        document.getElementById('kondisiHewanJenis').textContent = jenis;
+        document.getElementById('kondisiHewanHabitat').textContent = habitat;
+        
+        // Set gambar hewan
+        if (nama === 'Sari') {
+            document.getElementById('kondisiHewanImage').src = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9z7mrJYa7zsRfi6n26gjfhjzjvYMO3RfYMmFSJxJuaIo5y5-W7ih9VDxE1FZEineYw0EJYSmJ8Zi4P7o62NSOo0R7W2YyoL6UjKLhEoSEP_FuwdwnWFAIRHaZ-Uxq_LKGRf_xzYXK64tg/w640-h419/1644897149271573-0.png";
+        } else if (nama === 'Jojo') {
+            document.getElementById('kondisiHewanImage').src = "https://www.wwf.id/sites/default/files/slider/9.ORANGUTAN_Fiona%20Rogers_copy.jpg";
+        }
+        
+        // Isi tabel rekam medis
+        const rekamMedisTable = document.getElementById('rekamMedisTable');
+        rekamMedisTable.innerHTML = ''; // Bersihkan tabel
+        
+        if (rekamMedisData[nama]) {
+            rekamMedisData[nama].forEach(data => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border border-custom-medium px-2 py-1 text-sm">${data.tanggal}</td>
+                    <td class="border border-custom-medium px-2 py-1 text-sm">${data.dokter}</td>
+                    <td class="border border-custom-medium px-2 py-1 text-sm">${data.status}</td>
+                    <td class="border border-custom-medium px-2 py-1 text-sm">${data.diagnosa}</td>
+                    <td class="border border-custom-medium px-2 py-1 text-sm">${data.pengobatan}</td>
+                    <td class="border border-custom-medium px-2 py-1 text-sm">${data.catatan}</td>
+                `;
+                rekamMedisTable.appendChild(row);
+            });
+        }
+        
+        // Tampilkan popup
+        const popup = document.getElementById('kondisiHewanPopup');
+        popup.style.display = 'flex';
+    }
+    
+    // Fungsi untuk menutup popup kondisi hewan
+    function closeKondisiHewanPopup() {
+        const popup = document.getElementById('kondisiHewanPopup');
+        popup.style.display = 'none';
+    }
+
+    // Fungsi untuk menampilkan popup perpanjang adopsi
+function showPerpanjangAdopsi(nama, jenis) {
+    // Set nilai pada form
+    document.getElementById('perpanjangNamaHewan').value = nama;
+    document.getElementById('perpanjangJenisHewan').value = jenis;
+    
+    // Tampilkan popup
+    const popup = document.getElementById('perpanjangAdopsiPopup');
+    popup.style.display = 'flex';
+}
+
+// Fungsi untuk menutup popup perpanjang adopsi
+function closePerpanjangAdopsiPopup() {
+    const popup = document.getElementById('perpanjangAdopsiPopup');
+    popup.style.display = 'none';
+}
+
+// Fungsi untuk submit form perpanjang adopsi
+function submitPerpanjangForm() {
+    // Di sini nantinya bisa ditambahkan validasi dan pengiriman data ke server
+    // Untuk sekarang hanya akan menampilkan alert
+    alert('Form perpanjangan adopsi berhasil dikirim!');
+    closePerpanjangAdopsiPopup();
+}
+
+// Fungsi untuk menampilkan popup konfirmasi berhenti adopsi
+function showBerhentiAdopsi(nama, jenis) {
+    // Simpan informasi hewan untuk digunakan jika konfirmasi
+    document.getElementById('berhentiAdopsiPopup').dataset.nama = nama;
+    document.getElementById('berhentiAdopsiPopup').dataset.jenis = jenis;
+    
+    // Tampilkan popup
+    const popup = document.getElementById('berhentiAdopsiPopup');
+    popup.style.display = 'flex';
+}
+
+// Fungsi untuk menutup popup konfirmasi berhenti adopsi
+function closeBerhentiAdopsiPopup() {
+    const popup = document.getElementById('berhentiAdopsiPopup');
+    popup.style.display = 'none';
+}
+
+// Fungsi untuk mengkonfirmasi berhenti adopsi
+function confirmBerhentiAdopsi() {
+    const popup = document.getElementById('berhentiAdopsiPopup');
+    const nama = popup.dataset.nama;
+    const jenis = popup.dataset.jenis;
+    
+    // Di sini bisa ditambahkan kode untuk mengirim data ke server
+    // Untuk sekarang, hanya tampilkan alert berhasil
+    alert(`Anda telah berhenti mengadopsi ${nama} (${jenis}). Terima kasih atas kontribusi Anda selama ini.`);
+    
+    // Tutup semua popup
+    closeBerhentiAdopsiPopup();
+    closePopup();
+    
+    
+}
+    </script>
+
+    <div id="detailPopup" class="popup-overlay">
+        <div class="popup-content">
+            <span class="close-popup" onclick="closePopup()">&times;</span>
+            <h2 class="text-xl font-bold text-center mb-4">Informasi Hewan Adopsi</h2>
+            
+            <div class="text-center mb-4">
+                <img id="popupImage" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9z7mrJYa7zsRfi6n26gjfhjzjvYMO3RfYMmFSJxJuaIo5y5-W7ih9VDxE1FZEineYw0EJYSmJ8Zi4P7o62NSOo0R7W2YyoL6UjKLhEoSEP_FuwdwnWFAIRHaZ-Uxq_LKGRf_xzYXK64tg/w640-h419/1644897149271573-0.png" alt="foto hewan" class="mx-auto rounded-lg">
+            </div>
+            
+            <div class="space-y-2">
+                <p><span class="font-semibold">Nama hewan:</span> <span id="popupNama"></span></p>
+                <p><span class="font-semibold">Jenis hewan:</span> <span id="popupJenis"></span></p>
+                <p><span class="font-semibold">Habitat:</span> <span id="popupHabitat"></span></p>
+                <p><span class="font-semibold">Tanggal mulai adopsi:</span> <span id="popupTanggalMulai"></span></p>
+                <p><span class="font-semibold">Tanggal akhir adopsi:</span> <span id="popupTanggalAkhir"></span></p>
+            </div>
+            
+            <div class="flex justify-between mt-6">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm" onclick="showKondisiHewan(document.getElementById('popupNama').textContent, document.getElementById('popupJenis').textContent, document.getElementById('popupHabitat').textContent)">Pantau Kondisi Hewan</button>
+                <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm" onclick="showSertifikatAdopsi('Budi Santoso', document.getElementById('popupJenis').textContent, document.getElementById('popupNama').textContent, document.getElementById('popupTanggalMulai').textContent, document.getElementById('popupTanggalAkhir').textContent)">Lihat Sertifikat Adopsi</button>
+            </div>
+            
+            <div class="flex justify-between mt-4">
+                <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm" onclick="showBerhentiAdopsi(document.getElementById('popupNama').textContent, document.getElementById('popupJenis').textContent)">Berhenti Adopsi</button>
+                <button class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm" onclick="showPerpanjangAdopsi(document.getElementById('popupNama').textContent, document.getElementById('popupJenis').textContent)">Perpanjang Periode Adopsi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sertifikatPopup" class="popup-overlay">
+        <div class="popup-content">
+            <span class="close-popup" onclick="closeSertifikatPopup()">&times;</span>
+            <div class="border-2 border-gray-300 p-6 max-w-lg mx-auto">
+                <h2 class="text-xl font-bold text-center mb-4">Sertifikat Adopsi Satwa</h2>
+                
+                <div class="text-center mb-6">
+                    <p class="mb-3">Sertifikat ini diberikan kepada</p>
+                    <p class="text-lg font-bold mb-3" id="sertifikatNama">Budi Santoso</p>
+                    <p class="mb-3">yang telah mengadopsi satwa</p>
+                    <p class="mb-3"><span id="sertifikatJenis">Harimau Sumatra</span> bernama <span id="sertifikatNamaHewan">Sari</span></p>
+                    <p class="mb-3">di taman safari secara simbolis dari <span id="sertifikatMulai">1 Januari 2025</span> hingga <span id="sertifikatAkhir">31 Desember 2025</span>.</p>
+                    <p class="mb-6">Kami sangat berterima kasih atas kepedulian dan kontribusi Anda terhadap kelestarian satwa di taman safari.</p>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="closeSertifikatPopup()" class="text-blue-500 hover:text-blue-700">[Kembali]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="kondisiHewanPopup" class="popup-overlay">
+        <div class="popup-content">
+            <span class="close-popup" onclick="closeKondisiHewanPopup()">&times;</span>
+            <h2 class="text-xl font-bold text-center mb-4">Laporan Kondisi Satwa</h2>
+            
+            <div class="text-center mb-4">
+                <img id="kondisiHewanImage" src="" alt="foto hewan" class="mx-auto rounded-lg mb-2">
+            </div>
+            
+            <div class="space-y-2 mb-4">
+                <p><span class="font-semibold">Nama:</span> <span id="kondisiHewanNama"></span></p>
+                <p><span class="font-semibold">Jenis:</span> <span id="kondisiHewanJenis"></span></p>
+                <p><span class="font-semibold">Habitat:</span> <span id="kondisiHewanHabitat"></span></p>
+            </div>
+            
+            <h3 class="text-lg font-semibold mb-2">Rekam Medis Satwa</h3>
+            <div class="overflow-x-auto">
+                <table class="table-auto w-full border-collapse">
+                    <thead>
+                        <tr class="bg-custom-light">
+                            <th class="border border-custom-medium px-2 py-1 text-sm">Tanggal Pemeriksaan</th>
+                            <th class="border border-custom-medium px-2 py-1 text-sm">Nama Dokter</th>
+                            <th class="border border-custom-medium px-2 py-1 text-sm">Status Kesehatan</th>
+                            <th class="border border-custom-medium px-2 py-1 text-sm">Diagnosa</th>
+                            <th class="border border-custom-medium px-2 py-1 text-sm">Pengobatan</th>
+                            <th class="border border-custom-medium px-2 py-1 text-sm">Catatan Tindak Lanjut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rekamMedisTable">
+                        <!-- Data rekam medis akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button class="bg-custom-medium hover:bg-custom-dark text-white px-4 py-2 rounded-lg text-sm" onclick="closeKondisiHewanPopup()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="perpanjangAdopsiPopup" class="popup-overlay">
+        <div class="popup-content">
+            <span class="close-popup" onclick="closePerpanjangAdopsiPopup()">&times;</span>
+            <div class="border-2 border-gray-300 p-6 max-w-lg mx-auto">
+                <h2 class="text-xl font-bold text-center mb-4">FORM PERPANJANG PERIODE ADOPSI SATWA</h2>
+                
+                <form id="formPerpanjangAdopsi" class="space-y-4">
+                    <div>
+                        <p class="mb-3">Pihak di bawah ini,</p>
+                        <div class="mb-2">
+                            <label class="block font-semibold">Nama:</label>
+                            <input type="text" id="perpanjangNama" class="w-full border border-gray-300 p-2 rounded" value="Budi Santoso">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block font-semibold">NIK:</label>
+                            <input type="text" id="perpanjangNIK" class="w-full border border-gray-300 p-2 rounded" placeholder="Masukkan NIK">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block font-semibold">Alamat:</label>
+                            <textarea id="perpanjangAlamat" class="w-full border border-gray-300 p-2 rounded" rows="2" placeholder="Masukkan alamat"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="block font-semibold">Nomor telepon:</label>
+                            <input type="tel" id="perpanjangTelepon" class="w-full border border-gray-300 p-2 rounded" placeholder="Masukkan nomor telepon">
+                        </div>
+                        <p class="my-3">(selanjutnya disebut sebagai Adopter)</p>
+                        <p class="mb-3">dengan ini menyatakan kepedulian dan minat untuk lanjut mengadopsi secara simbolis satwa</p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="block font-semibold">Nama:</label>
+                        <input type="text" id="perpanjangNamaHewan" class="w-full border border-gray-300 p-2 rounded" readonly>
+                    </div>
+                    <div class="mb-2">
+                        <label class="block font-semibold">Jenis:</label>
+                        <input type="text" id="perpanjangJenisHewan" class="w-full border border-gray-300 p-2 rounded" readonly>
+                    </div>
+                    
+                    <p class="my-3">Adopter juga bersedia memberikan kontribusi finansial kepada pihak taman safari sebagai dukungan untuk pemeliharaan satwa:</p>
+                    
+                    <div class="mb-2">
+                        <label class="block font-semibold">Nominal:</label>
+                        <select id="perpanjangNominal" class="w-full border border-gray-300 p-2 rounded">
+                            <option value="100000">Rp 100.000</option>
+                            <option value="250000">Rp 250.000</option>
+                            <option value="500000">Rp 500.000</option>
+                            <option value="1000000">Rp 1.000.000</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="block font-semibold">untuk memperpanjang periode adopsi selama:</label>
+                        <select id="perpanjangPeriode" class="w-full border border-gray-300 p-2 rounded">
+                            <option value="3">3 bulan</option>
+                            <option value="6">6 bulan</option>
+                            <option value="12">12 bulan</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex justify-between mt-6">
+                        <button type="button" onclick="closePerpanjangAdopsiPopup()" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg text-sm">[Batal]</button>
+                        <button type="button" onclick="submitPerpanjangForm()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">[Submit Form]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="berhentiAdopsiPopup" class="popup-overlay">
+        <div class="popup-content text-center">
+            <div class="border-2 border-gray-300 p-6 max-w-lg mx-auto">
+                <h2 class="text-xl font-bold text-center mb-4">Apakah Anda yakin ingin berhenti mengadopsi satwa ini?</h2>
+                
+                <div class="flex justify-center space-x-8 mt-6">
+                    <button onclick="confirmBerhentiAdopsi()" class="text-blue-500 hover:text-blue-700 text-lg font-semibold">[Iya]</button>
+                    <button onclick="closeBerhentiAdopsiPopup()" class="text-blue-500 hover:text-blue-700 text-lg font-semibold">[Batal]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Program Adopsi Satwa - Halaman Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        custom: {
+                            lightest: '#FAD4B6',
+                            light: '#FBBE99',
+                            medium: '#ED8764',
+                            dark: '#DD6D49',
+                            darker: '#883526',
+                            darkest: '#49241B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .bg-texture {
+            background-image: url("/api/placeholder/1600/900");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+        }
+
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+        }
+    
+        .popup-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-custom-lightest">
+
+    <div class="bg-texture absolute top-0 left-0 right-0 h-full w-full -z-10"></div>
+    
+    {% include "navbar.html" %}
+
+    <div class="container mx-auto p-6 bg-white my-8 rounded-lg shadow-lg">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-custom-darker mb-2">Panel Administrasi Program Adopsi Satwa</h1>
+            <p class="text-custom-darkest">Mengelola dan memantau para adopter untuk mendukung kelestarian satwa Indonesia.</p>
+        </div>
+
+        <!-- Panel Statistik -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-custom-lightest p-4 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-custom-darker mb-2">Total Adopter</h3>
+                <p class="text-3xl font-bold">128</p>
+                <p class="text-sm text-custom-dark">Naik 12% dari bulan lalu</p>
+            </div>
+            <div class="bg-custom-lightest p-4 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-custom-darker mb-2">Total Kontribusi</h3>
+                <p class="text-3xl font-bold">Rp98.500.000</p>
+                <p class="text-sm text-custom-dark">Naik 8% dari bulan lalu</p>
+            </div>
+            <div class="bg-custom-lightest p-4 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-custom-darker mb-2">Satwa Teradopsi</h3>
+                <p class="text-3xl font-bold">42</p>
+                <p class="text-sm text-custom-dark">Dari total 56 satwa</p>
+            </div>
+        </div>
+
+        <!-- Adopter dengan Kontribusi Tertinggi -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-custom-darker mb-4">Adopter dengan Total Kontribusi Tertinggi</h2>
+            <div class="bg-white border border-custom-light rounded-lg p-6">
+                <ol class="list-decimal pl-6 space-y-2">
+                    <li class="text-lg">Ahmad Rizky - Rp7.500.000</li>
+                    <li class="text-lg">Bambang Supratman - Rp5.000.000</li>
+                    <li class="text-lg">Cindy Wijaya - Rp3.500.000</li>
+                    <li class="text-lg">Dewi Sartika - Rp3.200.000</li>
+                    <li class="text-lg">Eko Prasetyo - Rp2.800.000</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Tabel Daftar Adopter -->
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-custom-darker">Daftar Adopter</h2>
+                <div class="flex space-x-2">
+                    <input type="text" placeholder="Cari adopter..." class="border border-custom-light rounded-lg px-4 py-2">
+                    <button class="bg-custom-medium hover:bg-custom-dark text-white px-4 py-2 rounded-lg">Cari</button>
+                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">Tambah Adopter</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-custom-light rounded-lg">
+                    <thead class="bg-custom-light">
+                        <tr>
+                            <th class="py-2 px-4 border-b text-left">Nama Adopter</th>
+                            <th class="py-2 px-4 border-b text-left">Total Kontribusi</th>
+                            <th class="py-2 px-4 border-b text-left">Riwayat Adopsi</th>
+                            <th class="py-2 px-4 border-b text-left">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">Ahmad Rizky</td>
+                            <td class="py-3 px-4 border-b">Rp7.500.000</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Ahmad Rizky')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
+                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">Bambang Supratman</td>
+                            <td class="py-3 px-4 border-b">Rp5.000.000</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Bambang Supratman')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
+                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">Cindy Wijaya</td>
+                            <td class="py-3 px-4 border-b">Rp3.500.000</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Cindy Wijaya')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
+                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">Dewi Sartika</td>
+                            <td class="py-3 px-4 border-b">Rp3.200.000</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Dewi Sartika')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
+                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">Eko Prasetyo</td>
+                            <td class="py-3 px-4 border-b">Rp2.800.000</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Eko Prasetyo')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
+                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">Faisal Rahman</td>
+                            <td class="py-3 px-4 border-b">Rp2.500.000</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Faisal Rahman')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
+                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">Gita Nirmala</td>
+                            <td class="py-3 px-4 border-b">Rp2.200.000</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Gita Nirmala')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
+                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-between items-center mt-4">
+                <p class="text-sm text-gray-600">Menampilkan 1-7 dari 128 adopter</p>
+                <div class="flex space-x-2">
+                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">&laquo; Prev</button>
+                    <button class="px-3 py-1 bg-custom-medium text-white rounded-lg">1</button>
+                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">2</button>
+                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">3</button>
+                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">...</button>
+                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">18</button>
+                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">Next &raquo;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-custom-darkest text-white p-6">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 Program Adopsi Satwa. Semua hak dilindungi.</p>
+            <p class="mt-2 text-custom-lightest">Panel Administrasi - Hanya untuk penggunaan internal.</p>
+        </div>
+    </footer>
+
+    <!-- Popup Riwayat Adopsi -->
+    <div id="adoptionHistoryPopup" class="popup-overlay">
+        <div class="popup-content">
+            <span class="close-popup" onclick="closeAdoptionHistoryPopup()">&times;</span>
+            <div class="mb-6">
+                <a href="#" onclick="closeAdoptionHistoryPopup()" class="text-blue-500 hover:underline">[Kembali]</a>
+                <h2 class="text-2xl font-bold text-center mb-4">Riwayat Adopsi</h2>
+            </div>
+            
+            <div class="mb-6">
+                <p><strong>Nama Adopter:</strong> <span id="adopter-name"></span></p>
+                <p><strong>Alamat Adopter:</strong> <span id="adopter-address">Jl. Merdeka No.123, Jakarta</span></p>
+                <p><strong>Kontak Adopter:</strong> <span id="adopter-contact">0812-3456-7890</span></p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-custom-light rounded-lg">
+                    <thead class="bg-custom-light">
+                        <tr>
+                            <th class="py-2 px-4 border-b text-left">Nama Hewan</th>
+                            <th class="py-2 px-4 border-b text-left">Jenis Hewan</th>
+                            <th class="py-2 px-4 border-b text-left">Tanggal Mulai Adopsi</th>
+                            <th class="py-2 px-4 border-b text-left">Tanggal Akhir Adopsi</th>
+                            <th class="py-2 px-4 border-b text-left">Nominal Kontribusi</th>
+                            <th class="py-2 px-4 border-b text-left">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adoption-history-table">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data dummy untuk riwayat adopsi
+        const adoptionHistoryData = {
+            'Ahmad Rizky': {
+                alamat: 'Jl. Merdeka No. 123, Jakarta Selatan',
+                kontak: '0812-3456-7890',
+                adoptions: [
+                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2025-02-26', tanggal_akhir: '2025-08-26', nominal: 'Rp850.000', status: 'ongoing' },
+                    { nama_hewan: 'Simba', jenis: 'Singa', tanggal_mulai: '2024-07-10', tanggal_akhir: '2024-10-10', nominal: 'Rp500.000', status: 'ended' },
+                    { nama_hewan: 'Nala', jenis: 'Zebra', tanggal_mulai: '2023-12-12', tanggal_akhir: '2024-12-12', nominal: 'Rp1.200.000', status: 'ended' },
+                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2023-01-01', tanggal_akhir: '2023-07-01', nominal: 'Rp800.000', status: 'ended' }
+                ]
+            },
+            'Bambang Supratman': {
+                alamat: 'Jl. Pahlawan No. 45, Bandung',
+                kontak: '0856-7890-1234',
+                adoptions: [
+                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2025-01-15', tanggal_akhir: '2025-07-15', nominal: 'Rp850.000', status: 'ongoing' },
+                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2024-05-10', tanggal_akhir: '2024-11-10', nominal: 'Rp800.000', status: 'ended' }
+                ]
+            },
+            'Cindy Wijaya': {
+                alamat: 'Jl. Diponegoro No. 78, Surabaya',
+                kontak: '0877-8901-2345',
+                adoptions: [
+                    { nama_hewan: 'Simba', jenis: 'Singa', tanggal_mulai: '2024-08-20', tanggal_akhir: '2025-02-20', nominal: 'Rp500.000', status: 'ongoing' },
+                    { nama_hewan: 'Nala', jenis: 'Zebra', tanggal_mulai: '2024-03-05', tanggal_akhir: '2024-09-05', nominal: 'Rp1.200.000', status: 'ended' }
+                ]
+            },
+            'Dewi Sartika': {
+                alamat: 'Jl. Veteran No. 32, Yogyakarta',
+                kontak: '0819-2345-6789',
+                adoptions: [
+                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2024-09-10', tanggal_akhir: '2025-03-10', nominal: 'Rp800.000', status: 'ongoing' }
+                ]
+            },
+            'Eko Prasetyo': {
+                alamat: 'Jl. Gatot Subroto No. 99, Semarang',
+                kontak: '0898-3456-7890',
+                adoptions: [
+                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2024-11-20', tanggal_akhir: '2025-05-20', nominal: 'Rp850.000', status: 'ongoing' },
+                    { nama_hewan: 'Simba', jenis: 'Singa', tanggal_mulai: '2024-02-15', tanggal_akhir: '2024-08-15', nominal: 'Rp500.000', status: 'ended' }
+                ]
+            },
+            'Faisal Rahman': {
+                alamat: 'Jl. Ahmad Yani No. 54, Medan',
+                kontak: '0878-4567-8901',
+                adoptions: [
+                    { nama_hewan: 'Nala', jenis: 'Zebra', tanggal_mulai: '2024-10-05', tanggal_akhir: '2025-04-05', nominal: 'Rp1.200.000', status: 'ongoing' }
+                ]
+            },
+            'Gita Nirmala': {
+                alamat: 'Jl. Sudirman No. 67, Makassar',
+                kontak: '0822-5678-9012',
+                adoptions: [
+                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2024-12-15', tanggal_akhir: '2025-06-15', nominal: 'Rp800.000', status: 'ongoing' },
+                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2024-04-25', tanggal_akhir: '2024-10-25', nominal: 'Rp850.000', status: 'ended' }
+                ]
+            }
+        };
+
+        function showAdoptionHistory(name) {
+            document.getElementById('adopter-name').textContent = name;
+            document.getElementById('adopter-address').textContent = adoptionHistoryData[name].alamat;
+            document.getElementById('adopter-contact').textContent = adoptionHistoryData[name].kontak;
+            
+            const tableBody = document.getElementById('adoption-history-table');
+            tableBody.innerHTML = '';
+            
+            if (adoptionHistoryData[name] && adoptionHistoryData[name].adoptions) {
+                adoptionHistoryData[name].adoptions.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-100';
+                    
+                    // Menentukan teks dan class untuk kolom aksi berdasarkan status
+                    let actionText, actionClass;
+                    if (item.status === 'ongoing') {
+                        actionText = '[Sedang Berlangsung]';
+                        actionClass = 'text-green-600 font-semibold';
+                    } else {
+                        actionText = '[Hapus]';
+                        actionClass = 'text-blue-500 hover:underline';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="py-3 px-4 border-b">${item.nama_hewan}</td>
+                        <td class="py-3 px-4 border-b">${item.jenis}</td>
+                        <td class="py-3 px-4 border-b">${item.tanggal_mulai}</td>
+                        <td class="py-3 px-4 border-b">${item.tanggal_akhir}</td>
+                        <td class="py-3 px-4 border-b">${item.nominal}</td>
+                        <td class="py-3 px-4 border-b">
+                            <a href="#" class="${actionClass}">${actionText}</a>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            const popup = document.getElementById('adoptionHistoryPopup');
+            popup.style.display = 'flex';
+        }
+        
+        function closeAdoptionHistoryPopup() {
+            const popup = document.getElementById('adoptionHistoryPopup');
+            popup.style.display = 'none';
+        }
+        
+        // Menutup popup jika mengklik di luar konten popup
+        window.onclick = function(event) {
+            const popup = document.getElementById('adoptionHistoryPopup');
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

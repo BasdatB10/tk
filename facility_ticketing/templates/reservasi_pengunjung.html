@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservasi Fasilitas - Zoo Pintar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        .navbar-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar a {
+            padding: 8px 16px; /* Mengurangi padding untuk tombol agar tidak terlalu besar */
+            border-radius: 8px; /* Sudut melengkung */
+            border: 2px solid transparent; /* Border transparan awal */
+            color: white;
+            background-color: #DD6D49; /* Background seperti tombol logout */
+            text-align: center; /* Agar teks rata tengah */
+            font-weight: 600; /* Memberikan ketebalan pada teks */
+            transition: all 0.3s ease; /* Transisi halus */
+        }
+        .navbar a:hover {
+            background-color: #883526; /* Background lebih gelap saat hover */
+            border-color: #883526; /* Border juga berubah warna saat hover */
+        }
+        .active-link {
+            background-color: #ED8764; /* Warna latar belakang aktif */
+            border-color: #ED8764; /* Warna border aktif */
+        }
+        :root {
+            --color-light-peach: #fad4b6;
+            --color-peach: #fbbe99;
+            --color-coral: #ed8764;
+            --color-dark-coral: #dd6d49;
+            --color-brown: #883526;
+            --color-dark-brown: #49241b;
+            --background-color: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-color: #333;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Geist', sans-serif;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--color-dark-coral);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--color-coral);
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .instructions {
+            margin-bottom: 20px;
+            padding: 10px 0;
+        }
+        
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .instruction-item::before {
+            content: "•";
+            font-size: 18px;
+            margin-right: 10px;
+            color: var(--color-dark-coral);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--color-light-peach);
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .action-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-coral);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        /* Confirmation Modal */
+        .confirm-modal {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .confirm-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .confirm-message {
+            margin-bottom: 20px;
+            color: #666;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-confirmed {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .status-pending {
+            background-color: #ffc107;
+            color: #212529;
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar_pengunjung.html' %}
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Reservasi Fasilitas</h1>
+                <div class="subtitle">Kelola reservasi kunjungan Anda di Zoo Pintar</div>
+            </div>
+            <button class="btn btn-primary" onclick="showAddModal()">+ Tambah Reservasi</button>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Atraksi</th>
+                    <th>Lokasi</th>
+                    <th>Jam</th>
+                    <th>Tanggal</th>
+                    <th>Jumlah Tiket</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if reservasi_data %}
+                    {% for reservasi in reservasi_data %}
+                    <tr>
+                        <td>{{ reservasi.nama_atraksi }}</td>
+                        <td>{{ reservasi.lokasi }}</td>
+                        <td>{{ reservasi.jam }}</td>
+                        <td>{{ reservasi.tanggal }}</td>
+                        <td>{{ reservasi.jumlah_tiket }}</td>
+                        <td>
+                            {% if reservasi.status == 'Confirmed' %}
+                                <span class="status-badge status-confirmed">Confirmed</span>
+                            {% else %}
+                                <span class="status-badge status-pending">Terjadwal</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions">
+                            <button class="action-btn" onclick="showEditModal({{ forloop.counter0 }})">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89783 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn" onclick="showDeleteConfirmation({{ forloop.counter0 }})">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 6H5H21" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-state">Anda belum memiliki reservasi. Silakan buat reservasi baru dengan klik tombol "+ Tambah Reservasi".</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="formModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">FORM RESERVASI</h3>
+                <button class="modal-close" onclick="closeModal('formModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nama Atraksi:</label>
+                    <select class="form-control" id="namaAtraksi" onchange="updateAtraksiInfo()">
+                        <option value="">-- Pilih Atraksi --</option>
+                        {% for fasilitas in fasilitas_data %}
+                        <option value="{{ fasilitas.nama }}">{{ fasilitas.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lokasi:</label>
+                    <input type="text" class="form-control" id="lokasi" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jam:</label>
+                    <input type="text" class="form-control" id="jam" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tanggal:</label>
+                    <input type="date" class="form-control" id="tanggal">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jumlah tiket yang ingin dibeli:</label>
+                    <input type="number" class="form-control" id="jumlahTiket" min="1" max="10">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('formModal')">BATAL</button>
+                <button class="btn btn-primary" onclick="saveReservasi()">SIMPAN</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal" style="display: none;">
+        <div class="modal">
+            <div class="confirm-modal">
+                <h3 class="confirm-title">Hapus Reservasi</h3>
+                <p class="confirm-message">Apakah anda yakin ingin menghapus reservasi ini?</p>
+                <div class="confirm-buttons">
+                    <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Tidak</button>
+                    <button class="btn btn-danger" onclick="deleteReservasi()">Ya</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Data fasilitas dari Django ke JavaScript
+        const fasilitasData = [
+            {% for fasilitas in fasilitas_data %}
+            {
+                nama: "{{ fasilitas.nama|escapejs }}",
+                lokasi: "{{ fasilitas.lokasi|escapejs }}",
+                jam: "{{ fasilitas.jadwal|slice:"11:16"|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        // Data reservasi dari Django ke JavaScript
+        const reservasiData = [
+            {% for reservasi in reservasi_data %}
+            {
+                id: {{ reservasi.id }},
+                namaAtraksi: "{{ reservasi.nama_atraksi|escapejs }}",
+                lokasi: "{{ reservasi.lokasi|escapejs }}",
+                jam: "{{ reservasi.jam|escapejs }}",
+                tanggal: "{{ reservasi.tanggal|escapejs }}",
+                jumlahTiket: {{ reservasi.jumlah_tiket }},
+                status: "{{ reservasi.status|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        let currentReservationIndex = -1;
+        
+        // Function to update atraksi info when selecting from dropdown
+        function updateAtraksiInfo() {
+            const selectedAtraksi = document.getElementById('namaAtraksi').value;
+            const fasilitas = fasilitasData.find(a => a.nama === selectedAtraksi);
+            
+            if (fasilitas) {
+                document.getElementById('lokasi').value = fasilitas.lokasi;
+                document.getElementById('jam').value = fasilitas.jam;
+            } else {
+                document.getElementById('lokasi').value = '';
+                document.getElementById('jam').value = '';
+            }
+        }
+        
+        // Show Add Modal
+        function showAddModal() {
+            currentReservationIndex = -1;
+            document.getElementById('modalTitle').innerText = 'FORM RESERVASI';
+            document.getElementById('namaAtraksi').value = '';
+            document.getElementById('lokasi').value = '';
+            document.getElementById('jam').value = '';
+            
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const formattedDate = tomorrow.toISOString().substr(0, 10);
+            document.getElementById('tanggal').value = formattedDate;
+            
+            document.getElementById('jumlahTiket').value = '1';
+            
+            document.getElementById('formModal').style.display = 'flex';
+        }
+        
+        // Show Edit Modal
+        function showEditModal(index) {
+            currentReservationIndex = index;
+            document.getElementById('modalTitle').innerText = 'FORM RESERVASI';
+            
+            const data = reservasiData[index];
+            
+            document.getElementById('namaAtraksi').value = data.namaAtraksi;
+            document.getElementById('lokasi').value = data.lokasi;
+            document.getElementById('jam').value = data.jam;
+            document.getElementById('tanggal').value = data.tanggal;
+            document.getElementById('jumlahTiket').value = data.jumlahTiket;
+            
+            document.getElementById('formModal').style.display = 'flex';
+        }
+        
+        // Show Delete Confirmation
+        function showDeleteConfirmation(index) {
+            currentReservationIndex = index;
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+        
+        // Close Modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Save Reservasi (dummy function)
+        function saveReservasi() {
+            // Validate form
+            const namaAtraksi = document.getElementById('namaAtraksi').value;
+            const tanggal = document.getElementById('tanggal').value;
+            const jumlahTiket = document.getElementById('jumlahTiket').value;
+            
+            if (!namaAtraksi) {
+                alert('Silakan pilih Atraksi');
+                return;
+            }
+            
+            if (!tanggal) {
+                alert('Silakan pilih Tanggal');
+                return;
+            }
+            
+            if (!jumlahTiket || jumlahTiket < 1) {
+                alert('Jumlah tiket harus minimal 1');
+                return;
+            }
+            
+            if (currentReservationIndex === -1) {
+                alert('Reservasi berhasil ditambahkan');
+            } else {
+                alert('Reservasi berhasil diperbarui');
+            }
+            
+            closeModal('formModal');
+            
+            
+        }
+        
+        function deleteReservasi() {
+            alert('Reservasi berhasil dihapus');
+            closeModal('deleteModal');
+            
+        }
+        
+        window.onload = function() {
+            const today = new Date().toISOString().substr(0, 10);
+            document.getElementById('tanggal').min = today;
+        };
+    </script>
+</body>
+</html>

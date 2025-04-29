@@ -1,0 +1,52 @@
+[
+    {
+     "id_hewan": "f4c4be4e-5b27-4ae1-a7b2-2385b6713e15",
+     "tgl_pemeriksaan_selanjutnya": "2025-06-15",
+     "freq_pemeriksaan_rutin": "6"
+    },
+    {
+     "id_hewan": "a3a7e4a2-ef87-4f3e-83b6-d06b6dce168c",
+     "tgl_pemeriksaan_selanjutnya": "2025-05-20",
+     "freq_pemeriksaan_rutin": "12"
+    },
+    {
+     "id_hewan": "b6328fa4-5246-46b4-9c91-cabe936ff28e",
+     "tgl_pemeriksaan_selanjutnya": "2025-07-10",
+     "freq_pemeriksaan_rutin": "9"
+    },
+    {
+     "id_hewan": "6c8ed738-3ff2-4f1b-86b2-f8f632fd9a7c",
+     "tgl_pemeriksaan_selanjutnya": "2025-06-25",
+     "freq_pemeriksaan_rutin": "12"
+    },
+    {
+     "id_hewan": "5a0c348e-1c7a-4a77-9991-222374e3d165",
+     "tgl_pemeriksaan_selanjutnya": "2025-08-05",
+     "freq_pemeriksaan_rutin": "6"
+    },
+    {
+     "id_hewan": "740a3023-c34e-4eb7-a07a-b0a35961186c",
+     "tgl_pemeriksaan_selanjutnya": "2025-05-18",
+     "freq_pemeriksaan_rutin": "18"
+    },
+    {
+     "id_hewan": "99ab2b9e-b3a0-46ec-a431-ea0b6ff469a4",
+     "tgl_pemeriksaan_selanjutnya": "2025-06-22",
+     "freq_pemeriksaan_rutin": "6"
+    },
+    {
+     "id_hewan": "ae68d739-49ae-44be-b80d-e7c65f059cf5",
+     "tgl_pemeriksaan_selanjutnya": "2025-05-30",
+     "freq_pemeriksaan_rutin": "12"
+    },
+    {
+     "id_hewan": "77b4e511-60c1-4013-b7c9-fd4b5a5a0b2c",
+     "tgl_pemeriksaan_selanjutnya": "2025-07-15",
+     "freq_pemeriksaan_rutin": "9"
+    },
+    {
+     "id_hewan": "b9e8f4c4-49b4-42fd-882e-1b213c1a55fa",
+     "tgl_pemeriksaan_selanjutnya": "2025-06-12",
+     "freq_pemeriksaan_rutin": "18"
+    }
+   ]

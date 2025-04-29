@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Jadwal Pemeriksaan | SIZOPI</title>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        .navbar-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .bg-texture {
+            background-image: url("{% static 'images/texture-bg.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+        }
+
+        .main-container {
+            max-width: 1000px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .form-container {
+            max-width: 700px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 6px 10px;
+            margin-top: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        input::placeholder, textarea::placeholder, select::placeholder {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .form-button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+
+        .form-button:hover {
+            background-color: #ED8764;
+        }
+
+        .alert {
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th, table td {
+            border: 1px solid #e0e0e0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .action-button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        
+        .info-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .upcoming-date {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .past-date {
+            color: #dc3545;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body class="relative bg-white text-gray-800">
+    {% include "navbar_dokter_hewan.html" %}
+    <div id="bg" class="bg-texture absolute inset-0 -z-10"></div>
+    <div class="min-h-screen px-8 py-10 flex flex-col items-center max-w-7xl mx-auto">
+        <div class="main-container space-y-6 w-full">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
+                Jadwal Pemeriksaan Kesehatan
+            </h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        
+            <div class="flex items-center gap-4">
+                <label for="animal-select" class="text-lg font-semibold text-[#49241B]">Pilih Hewan:</label>
+                <select id="animal-select" class="w-64 text-lg">
+                    <option value="" disabled selected>-- Pilih Hewan --</option>
+                    {% for checkup in medical_checkup %}
+                        <option value="{{ checkup.id_hewan }}">{{ checkup.nama_hewan }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div id="schedule-info" class="hidden">
+                <div id="animal-info" class="bg-gray-50 p-6 rounded-lg shadow-sm mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">ID Hewan</p>
+                            <p class="font-semibold text-lg" id="animal-id">ID</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Nama</p>
+                            <p class="font-semibold text-lg" id="animal-name">Nama</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h3 class="text-xl font-bold text-[#883526] mb-2">Jadwal Pemeriksaan Kesehatan</h3>
+                    <p class="text-lg">
+                        <strong>Frekuensi Pemeriksaan Rutin:</strong> 
+                        <span id="examination-frequency">Frekuensi</span> bulan sekali
+                    </p>
+                </div>
+                
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-[#883526]">Jadwal Pemeriksaan Selanjutnya</h3>
+                    <button id="add-schedule-btn" class="form-button bg-[#FBBE99] text-white font-semibold">
+                        + Tambah Jadwal Pemeriksaan
+                    </button>
+                </div>
+                
+                <div class="mt-4">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Tanggal Pemeriksaan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-table-body">
+                        </tbody>
+                    </table>
+                    <p id="no-schedules-message" class="text-center text-gray-500 py-4">
+                        Belum ada jadwal pemeriksaan untuk hewan ini.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="add-schedule-modal" class="modal hidden">
+        <div class="form-container bg-white">
+            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
+                Tambah Jadwal Pemeriksaan
+            </h3>
+            <form id="add-schedule-form" class="space-y-6">
+                <div>
+                    <label for="next-examination-date" class="text-sm text-[#49241B]">Tanggal Pemeriksaan Selanjutnya:</label>
+                    <input type="date" id="next-examination-date" name="next_examination_date" class="text-lg" required />
+                </div>
+                
+                <div class="flex justify-center gap-4 pt-4">
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                        SIMPAN
+                    </button>
+                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
+                        BATAL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {{ medical_checkup|json_script:"medical-checkup-data" }}
+    <script>
+        const medicalCheckupData = JSON.parse(document.getElementById('medical-checkup-data').textContent);
+        
+        const animalData = {};
+        medicalCheckupData.forEach((checkup) => {
+        animalData[checkup.id_hewan] = {
+            id: checkup.id_hewan,
+            name: checkup.nama_hewan || `Animal ${checkup.id_hewan.slice(0, 5)}`, 
+            frequency: checkup.freq_pemeriksaan_rutin,
+            schedules: [
+                {
+                    id: 1,
+                    date: checkup.tgl_pemeriksaan_selanjutnya,
+                    status: new Date(checkup.tgl_pemeriksaan_selanjutnya) < new Date() ? "past" : "upcoming"
+                }
+            ]
+        };
+    });
+
+        const animalSelect = document.getElementById('animal-select');
+        const scheduleInfo = document.getElementById('schedule-info');
+        const animalId = document.getElementById('animal-id');
+        const animalName = document.getElementById('animal-name');
+        const examinationFrequency = document.getElementById('examination-frequency');
+        const scheduleTableBody = document.getElementById('schedule-table-body');
+        const noSchedulesMessage = document.getElementById('no-schedules-message');
+        
+        const addScheduleBtn = document.getElementById('add-schedule-btn');
+        const addScheduleModal = document.getElementById('add-schedule-modal');
+        
+        animalSelect.addEventListener('change', function() {
+            const animalId = this.value;
+            if (animalId) {
+                displayAnimalInfo(animalId);
+                loadSchedules(animalId);
+                scheduleInfo.classList.remove('hidden');
+            } else {
+                scheduleInfo.classList.add('hidden');
+            }
+        });
+    
+        addScheduleBtn.addEventListener('click', function() {
+            const animalId = animalSelect.value;
+            if (!animalId) {
+                alert('Silakan pilih hewan terlebih dahulu.');
+                return;
+            }
+  
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const formattedTomorrow = tomorrow.toISOString().split('T')[0];
+            document.getElementById('next-examination-date').min = formattedTomorrow;
+     
+            document.getElementById('add-schedule-form').reset();
+      
+            addScheduleModal.classList.remove('hidden');
+        });
+        
+      
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                addScheduleModal.classList.add('hidden');
+            });
+        });
+        
+    
+        document.getElementById('add-schedule-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const animalId = animalSelect.value;
+            const date = document.getElementById('next-examination-date').value;
+            const dateExists = animalData[animalId].schedules.some(schedule => schedule.date === date);
+            if (dateExists) {
+                alert('Sudah ada jadwal pemeriksaan untuk tanggal yang dipilih.');
+                return;
+            }
+            const newScheduleId = Math.max(0, ...Object.values(animalData).flatMap(a => a.schedules.map(s => s.id))) + 1;
+            const newSchedule = {
+                id: newScheduleId,
+                date: date,
+                status: "upcoming"
+            };
+            
+            animalData[animalId].schedules.push(newSchedule);
+            animalData[animalId].schedules.sort((a, b) => new Date(a.date) - new Date(b.date));
+            loadSchedules(animalId);
+            addScheduleModal.classList.add('hidden');
+            alert('Jadwal pemeriksaan berhasil ditambahkan!');
+        });
+        function displayAnimalInfo(animalId) {
+            const animal = animalData[animalId];
+            document.getElementById('animal-id').textContent = animal.id;
+            document.getElementById('animal-name').textContent = animal.name;
+            document.getElementById('examination-frequency').textContent = animal.frequency;
+        }
+        
+        function loadSchedules(animalId) {
+            const schedules = animalData[animalId].schedules;
+            scheduleTableBody.innerHTML = '';
+            
+            if (schedules.length === 0) {
+                noSchedulesMessage.classList.remove('hidden');
+            } else {
+                noSchedulesMessage.classList.add('hidden');
+                
+                schedules.forEach(schedule => {
+                    const row = document.createElement('tr');
+                    const dateObj = new Date(schedule.date);
+                    const formattedDate = dateObj.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const scheduleDate = new Date(schedule.date);
+                    scheduleDate.setHours(0, 0, 0, 0);
+                    
+                    const isPast = scheduleDate < today;
+                    const statusClass = isPast ? 'past-date' : 'upcoming-date';
+                    const statusText = isPast ? 'Lewat' : 'Mendatang';
+                    row.innerHTML = `
+                        <td class="${statusClass}">${formattedDate}</td>
+                        <td>${statusText}</td>
+                    `;
+                    
+                    scheduleTableBody.appendChild(row);
+                });
+            }
+        }
+        
+       
+        function updateScheduleStatuses() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            Object.keys(animalData).forEach(animalId => {
+                animalData[animalId].schedules.forEach(schedule => {
+                    const scheduleDate = new Date(schedule.date);
+                    scheduleDate.setHours(0, 0, 0, 0);
+                    
+                    if (scheduleDate < today) {
+                        schedule.status = 'past';
+                    }
+                });
+            });
+        }
+        updateScheduleStatuses();
+    </script>
+</body>
+</html>

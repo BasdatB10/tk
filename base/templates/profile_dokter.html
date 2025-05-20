@@ -13,7 +13,17 @@
             font-weight: 600;
             letter-spacing: -0.02em;
         }
-
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        .navbar-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
         .bg-texture {
             background-image: url("{% static 'images/texture-bg.jpg' %}");
             background-size: cover;
@@ -109,6 +119,7 @@
     </style>
 </head>
 <body class="relative bg-white text-gray-800">
+    {% include "navbar_dokter_hewan.html" %}
     <div id="bg" class="bg-texture absolute inset-0 -z-10"></div>
     <div class="min-h-screen px-8 py-10 grid place-items-center max-w-7xl mx-auto">
         <div id="profile-container" class="registration-container space-y-6">
@@ -123,8 +134,6 @@
                     </div>
                 {% endfor %}
             {% endif %}
-            
-            <!-- Main Profile Form -->
             <div id="profile-form" class="space-y-6">
                 <form action="{% url 'base:profile' %}" method="POST" class="space-y-6">
                     {% csrf_token %}
@@ -153,21 +162,6 @@
                             <label for="phone" class="text-sm text-[#49241B]">Nomor Telepon:</label>
                             <input type="tel" id="phone" name="phone" value="{{ user.phone }}" class="text-lg" required />
                         </div>
-                        
-                        {% if user_role == 'pengunjung' %}
-                        <!-- Pengunjung Fields -->
-                        <div>
-                            <label for="address" class="text-sm text-[#49241B]">Alamat Lengkap:</label>
-                            <textarea id="address" name="address" class="text-lg" required>{{ user.address }}</textarea>
-                        </div>
-                        <div>
-                            <label for="dob" class="text-sm text-[#49241B]">Tanggal Lahir:</label>
-                            <input type="date" id="dob" name="dob" value="{{ user.dob|date:'Y-m-d' }}" class="text-lg" required />
-                        </div>
-                        {% endif %}
-                        
-                        {% if user_role == 'dokter_hewan' %}
-                        <!-- Dokter Hewan Fields -->
                         <div>
                             <label for="certification_number" class="text-sm text-[#49241B]">Nomor Sertifikasi Profesional:</label>
                             <input type="text" id="certification_number" name="certification_number" value="{{ user.certification_number }}" class="text-lg" readonly />
@@ -187,15 +181,6 @@
                             <input type="text" id="other_specialization" name="other_specialization" placeholder="Masukkan spesialisasi lainnya" class="text-lg mt-2 hidden" />
                             {% endif %}
                         </div>
-                        {% endif %}
-                        
-                        {% if user_role == 'staff' %}
-                        <!-- Staff Fields -->
-                        <div>
-                            <label for="id_staf" class="text-sm text-[#49241B]">ID Staf:</label>
-                            <input type="text" id="id_staf" name="id_staf" value="{{ user.id_staf }}" class="text-lg" readonly />
-                        </div>
-                        {% endif %}
                     </div>
                     
                     <div class="flex justify-center gap-4 pt-4">
@@ -208,8 +193,6 @@
                     </div>
                 </form>
             </div>
-            
-            <!-- Password Change Form (Hidden by Default) -->
             <div id="password-form" class="space-y-6 hidden">
                 <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center">
                     Ubah Password
@@ -244,7 +227,6 @@
     </div>
     
     <script>
-        // Toggle between profile and password forms
         document.getElementById("show-password-form").addEventListener("click", function() {
             document.getElementById("profile-form").classList.add("hidden");
             document.getElementById("password-form").classList.remove("hidden");
@@ -255,7 +237,6 @@
             document.getElementById("profile-form").classList.remove("hidden");
         });
         
-        // For dokter hewan specialization field
         const specializationSelect = document.getElementById('specialization');
         if (specializationSelect) {
             const otherInput = document.getElementById('other_specialization');

@@ -1,0 +1,37 @@
+[
+    {
+     "id_hewan": "f4c4be4e-5b27-4ae1-a7b2-2385b6713e15",
+     "jadwal": "2024-04-21 08:00:00",
+     "jenis": "Daging",
+     "jumlah": "15",
+     "status": "Tersedia"
+    },
+    {
+     "id_hewan": "a3a7e4a2-ef87-4f3e-83b6-d06b6dce168c",
+     "jadwal": "2024-04-22 09:30:00",
+     "jenis": "Sayuran",
+     "jumlah": "10",
+     "status": "Habis"
+    },
+    {
+     "id_hewan": "b6328fa4-5246-46b4-9c91-cabe936ff28e",
+     "jadwal": "2024-04-22 10:15:00",
+     "jenis": "Rumput",
+     "jumlah": "30",
+     "status": "Tersedia"
+    },
+    {
+     "id_hewan": "6c8ed738-3ff2-4f1b-86b2-f8f632fd9a7c",
+     "jadwal": "2024-04-23 12:00:00",
+     "jenis": "Daun",
+     "jumlah": "20",
+     "status": "Tersedia"
+    },
+    {
+     "id_hewan": "77b4e511-60c1-4013-b7c9-fd4b5a5a0b2c",
+     "jadwal": "2024-04-23 14:45:00",
+     "jenis": "Biji",
+     "jumlah": "5",
+     "status": "Habis"
+    }
+   ]

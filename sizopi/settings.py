@@ -143,6 +143,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-SUPABASE_URL = "https://yujixrqeavtxyuwvfmro.supabase.co"
-SUPABASE_KEY =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1aml4cnFlYXZ0eHl1d3ZmbXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NDcxMjAsImV4cCI6MjA2MjUyMzEyMH0.HkRgjMUa1dF4u4_b2GjxYL4enTDr3CwP7mTNMcD9n7Q"

@@ -1,11 +1,96 @@
+import psycopg2, os, dotenv
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
+
+dotenv.load_dotenv()
 
 def home(request):
     return render(request, "home.html")
 
+@csrf_protect
 def register(request):
-    return render(request, "register.html")
+    alert_message = None
+
+    if request.method == "POST":
+        try:
+            conn = psycopg2.connect(
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
+            )
+            cursor = conn.cursor()
+
+            username = request.POST.get("username")
+            email = request.POST.get("email")
+            password = request.POST.get("password")
+            nama_depan = request.POST.get("nama_depan")
+            nama_tengah = request.POST.get("nama_tengah", "")
+            nama_belakang = request.POST.get("nama_belakang")
+            no_telepon = request.POST.get("no_telepon")
+            role = request.POST.get("role")
+            cursor.execute("""
+                INSERT INTO SIZOPI.PENGGUNA (username, email, password, nama_depan, nama_tengah, nama_belakang, no_telepon)
+                VALUES (%s, %s, %s, %s, %s, %s, %s);
+            """, (username, email, password, nama_depan, nama_tengah, nama_belakang, no_telepon))
+
+            if role == "pengunjung":
+                alamat = request.POST.get("alamat")
+                tgl_lahir = request.POST.get("tgl_lahir")
+                cursor.execute("""
+                    INSERT INTO SIZOPI.PENGUNJUNG (username_P, alamat, tgl_lahir)
+                    VALUES (%s, %s, %s);
+                """, (username, alamat, tgl_lahir))
+
+            elif role == "dokter_hewan":
+                no_STR = request.POST.get("no_STR")
+                nama_spesialisasi = request.POST.get("nama_spesialisasi")
+                cursor.execute("""
+                    INSERT INTO DOKTER_HEWAN (username_DH, no_STR)
+                    VALUES (%s, %s);
+                """, (username, no_STR))
+                cursor.execute("""
+                    INSERT INTO SPESIALISASI (username_SH, nama_spesialisasi)
+                    VALUES (%s, %s);
+                """, (username, nama_spesialisasi))
+
+            elif role == "staf":
+                id_staf = request.POST.get("id_staf")
+                role_staf = request.POST.get("role_staf")
+                if role_staf == "penjaga_hewan":
+                    cursor.execute("""
+                        INSERT INTO PENJAGA_HEWAN (username_jh, id_staf)
+                        VALUES (%s, %s);
+                    """, (username, id_staf))
+                elif role_staf == "pelatih_hewan":
+                    cursor.execute("""
+                        INSERT INTO PELATIH_HEWAN (username_lh, id_staf)
+                        VALUES (%s, %s);
+                    """, (username, id_staf))
+                elif role_staf == "staf_admin":
+                    cursor.execute("""
+                        INSERT INTO STAF_ADMIN (username_sa, id_staf)
+                        VALUES (%s, %s);
+                    """, (username, id_staf))
+
+            conn.commit()
+            return JsonResponse({'success': True, 'message': 'Pengguna baru berhasil dibuat.'})
+        except psycopg2.Error as e:
+            alert_message = str(e).split("\n")[0].replace("ERROR:", "").strip()
+            return JsonResponse({'success': False, 'message': alert_message}, status=400)
+        except Exception:
+            alert_message = "Terjadi kesalahan saat melakukan registrasi."
+            return JsonResponse({'success': False, 'message': alert_message}, status=400)
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
+    return render(request, 'register.html')
 
 def login(request):
     return render(request, "login.html")

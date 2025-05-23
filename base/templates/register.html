@@ -5,6 +5,8 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+	<script src="{% static 'alerts/alert.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'alerts/alert.css' %}">
 	<script src="https://cdn.tailwindcss.com"></script>
 	<title>Register | SIZOPI</title>
 	<style>
@@ -122,13 +124,14 @@
 						<input type="text" name="username" placeholder="Username" class="text-lg" required />
 						<input type="password" name="password" placeholder="Password" class="text-lg" required />
 						<input type="password" name="confirm_password" placeholder="Konfirmasi Password" class="text-lg" required />
-						<input type="text" name="first_name" placeholder="Nama Depan" class="text-lg" required />
-						<input type="text" name="middle_name" placeholder="Nama Tengah (opsional)" class="text-lg" />
-						<input type="text" name="last_name" placeholder="Nama Belakang" class="text-lg" required />
+						<input type="text" name="nama_depan" placeholder="Nama Depan" class="text-lg" required />
+						<input type="text" name="nama_tengah" placeholder="Nama Tengah (opsional)" class="text-lg" />
+						<input type="text" name="nama_belakang" placeholder="Nama Belakang" class="text-lg" required />
 						<input type="email" name="email" placeholder="Email" class="text-lg" required />
-						<input type="tel" name="phone" placeholder="Nomor Telepon" class="text-lg" required />
-						<textarea name="address" placeholder="Alamat Lengkap" class="text-lg" required></textarea>
-						<input type="date" name="dob" class="text-lg h-8" required />
+						<input type="tel" name="no_telepon" placeholder="Nomor Telepon" class="text-lg" required />
+						<textarea name="alamat" placeholder="Alamat Lengkap" class="text-lg" required></textarea>
+						<input type="date" name="tgl_lahir" class="text-lg h-8" required />
+						<input type="hidden" name="role" value="pengunjung" />
 					</div>
 					<div class="flex justify-center gap-4 pt-4">
 						<button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
@@ -155,13 +158,13 @@
 						<input type="text" name="username" placeholder="Username" class="text-lg" required />
 						<input type="password" name="password" placeholder="Password" class="text-lg" required />
 						<input type="password" name="confirm_password" placeholder="Konfirmasi Password" class="text-lg" required />
-						<input type="text" name="first_name" placeholder="Nama Depan" class="text-lg" required />
-						<input type="text" name="middle_name" placeholder="Nama Tengah (opsional)" class="text-lg" />
-						<input type="text" name="last_name" placeholder="Nama Belakang" class="text-lg" required />
+						<input type="text" name="nama_depan" placeholder="Nama Depan" class="text-lg" required />
+						<input type="text" name="nama_tengah" placeholder="Nama Tengah (opsional)" class="text-lg" />
+						<input type="text" name="nama_belakang" placeholder="Nama Belakang" class="text-lg" required />
 						<input type="email" name="email" placeholder="Email" class="text-lg" required />
-						<input type="tel" name="phone" placeholder="Nomor Telepon" class="text-lg" required />
-						<input type="text" name="certification_number" placeholder="Nomor Sertifikasi Profesional" class="text-lg" required />
-						<select id="specialization" name="specialization" class="text-lg" required>
+						<input type="tel" name="no_telepon" placeholder="Nomor Telepon" class="text-lg" required />
+						<input type="text" name="no_STR" placeholder="Nomor Sertifikasi Profesional" class="text-lg" required />
+						<select id="specialization" name="nama_spesialisasi" class="text-lg" required>
 							<option value="" selected disabled>Pilih spesialisasi</option>
 							<option value="mamalia_besar">Mamalia Besar</option>
 							<option value="reptil">Reptil</option>
@@ -170,6 +173,7 @@
 							<option value="lainnya">Lainnya</option>
 						</select>
 						<input type="text" name="other_specialization" id="other-specialization" placeholder="Masukkan spesialisasi lainnya" class="text-lg hidden" />
+						<input type="hidden" name="role" value="dokter_hewan" />
 					</div>
 					<div class="flex justify-center gap-4 pt-4">
 						<button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
@@ -196,18 +200,19 @@
 						<input type="text" name="username" placeholder="Username" class="text-lg" required />
 						<input type="password" name="password" placeholder="Password" class="text-lg" required />
 						<input type="password" name="confirm_password" placeholder="Konfirmasi Password" class="text-lg" required />
-						<input type="text" name="first_name" placeholder="Nama Depan" class="text-lg" required />
-						<input type="text" name="middle_name" placeholder="Nama Tengah (opsional)" class="text-lg" />
-						<input type="text" name="last_name" placeholder="Nama Belakang" class="text-lg" required />
+						<input type="text" name="nama_depan" placeholder="Nama Depan" class="text-lg" required />
+						<input type="text" name="nama_tengah" placeholder="Nama Tengah (opsional)" class="text-lg" />
+						<input type="text" name="nama_belakang" placeholder="Nama Belakang" class="text-lg" required />
 						<input type="email" name="email" placeholder="Email" class="text-lg" required />
-						<input type="tel" name="phone" placeholder="Nomor Telepon" class="text-lg" required />
-						<select name="role_staff" class="text-lg" required>
+						<input type="tel" name="no_telepon" placeholder="Nomor Telepon" class="text-lg" required />
+						<select name="role_staf" class="text-lg" required>
 							<option value="" selected disabled>Pilih Peran</option>
 							<option value="penjaga_hewan">Penjaga Hewan</option>
-							<option value="staff_administrasi">Staff Administrasi</option>
-							<option value="pelatih_pertunjukkan">Pelatih Pertunjukkan</option>
+							<option value="pelatih_hewan">Pelatih Hewan</option>
+							<option value="staf_admin">Staf Admin</option>
 						</select>
 						<input type="text" name="id_staf" placeholder="ID Staf" class="text-lg" readonly required />
+						<input type="hidden" name="role" value="staf" />
 					</div>
 					<div class="flex justify-center gap-4 pt-4">
 						<button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
@@ -264,7 +269,6 @@
 
 		const specializationSelect = document.getElementById('specialization');
 		const otherInput = document.getElementById('other-specialization');
-
 		specializationSelect.addEventListener('change', function () {
 			if (this.value === 'lainnya') {
 				specializationSelect.classList.add('hidden');
@@ -284,37 +288,71 @@
 			}
 		});
 
-		document.querySelector('select[name="role_staff"]').addEventListener('change', function () {
-			const role = this.value;
-			const idStafInput = document.querySelector('input[name="id_staf"]');
+		const roleStaffSelect = document.querySelector('select[name="role_staff"]');
+		if (roleStaffSelect) {
+			roleStaffSelect.addEventListener('change', function () {
+				const idStafInput = document.querySelector('input[name="id_staf"]');
+				function generateUUID() {
+					return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+						const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+						return v.toString(16);
+					});
+				}
+				idStafInput.value = generateUUID();
+				idStafInput.readOnly = true;
+			});
+		}
 
-			const prefixMap = {
-				penjaga_hewan: 'PJH',
-				staff_administrasi: 'ADM',
-				pelatih_pertunjukkan: 'PLP'
-			};
+		const roleStaff = document.getElementById("role-staff");
+		if (roleStaff) {
+			roleStaff.addEventListener("click", function() {
+				document.getElementById("role-selection").classList.add("hidden");
+				document.getElementById("registration-form-pengunjung").classList.add("hidden");
+				document.getElementById("registration-form-dokter-hewan").classList.add("hidden");
+				document.getElementById("registration-form-staff").classList.remove("hidden");
+				window.history.pushState({}, "", "?role=staff");
+				updateBg();
+			});
+		}
 
-			const prefix = prefixMap[role];
-			if (!prefix) {
-				idStafInput.value = '';
-				idStafInput.readOnly = false;
-				return;
-			}
-
-			const randomNum = Math.floor(Math.random() * 999) + 1;
-			const formattedNum = String(randomNum).padStart(3, '0');
-			const generatedId = `${prefix}${formattedNum}`;
-			idStafInput.value = generatedId;
-			idStafInput.readOnly = true;
+		document.querySelectorAll('form').forEach(form => {
+			form.addEventListener('submit', function(e) {
+				const pwd = form.querySelector('input[name="password"]');
+				const confirmPwd = form.querySelector('input[name="confirm_password"]');
+				if (pwd && confirmPwd && pwd.value !== confirmPwd.value) {
+					e.preventDefault();
+					showAlert('Password pada kedua field tidak cocok.');
+					confirmPwd.focus();
+				}
+			});
 		});
 
-		document.getElementById("role-staff").addEventListener("click", function() {
-			document.getElementById("role-selection").classList.add("hidden");
-			document.getElementById("registration-form-pengunjung").classList.add("hidden");
-			document.getElementById("registration-form-dokter-hewan").classList.add("hidden");
-			document.getElementById("registration-form-staff").classList.remove("hidden");
-			window.history.pushState({}, "", "?role=staff");
-            updateBg();
+		document.querySelectorAll('form').forEach(form => {
+			form.addEventListener("submit", async function (e) {
+				e.preventDefault();
+				const formData = new FormData(this);
+				try {
+					const response = await fetch("", {
+						method: "POST",
+						body: formData,
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+						}
+					});
+
+					const result = await response.json();
+					if (result.success) {
+						showAlert(result.message, () => {
+							window.location.href = '/login/';
+						});
+					} else {
+						showAlert(result.message);
+					}
+				} catch (err) {
+					showAlert("Terjadi kesalahan saat melakukan registrasi.");
+				}
+			});
 		});
 	</script>
 </body>

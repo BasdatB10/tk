@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Profile | SIZOPI</title>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        .navbar {
+        transition: all 0.3s ease;
+        }
+        .navbar-fixed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        body {
+        font-family: 'Manrope', sans-serif;
+        background-color: #FFF3EA;
+        }
+        .navbar a {
+        padding: 8px 16px; /* Mengurangi padding untuk tombol agar tidak terlalu besar */
+        border-radius: 8px; /* Sudut melengkung */
+        border: 2px solid transparent; /* Border transparan awal */
+        color: white;
+        background-color: #DD6D49; /* Background seperti tombol logout */
+        text-align: center; /* Agar teks rata tengah */
+        font-weight: 600; /* Memberikan ketebalan pada teks */
+        transition: all 0.3s ease; /* Transisi halus */
+        }
+        .navbar a:hover {
+        background-color: #883526; /* Background lebih gelap saat hover */
+        border-color: #883526; /* Border juga berubah warna saat hover */
+        }
+        .active-link {
+        background-color: #ED8764; /* Warna latar belakang aktif */
+        border-color: #ED8764; /* Warna border aktif */
+        }
+        .bg-texture {
+            background-image: url("{% static 'images/texture-bg.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+        }
+
+        .registration-container {
+            max-width: 700px;
+            width: 100%;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        #registration-form h2 {
+            text-align: center;
+        }
+
+        #role-selection h2 {
+            text-align: center;
+        }
+
+        #role-selection p {
+            text-align: center;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 6px 10px;
+            margin-top: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        input::placeholder, textarea::placeholder, select::placeholder {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        textarea {
+            min-height: 80px;
+        }
+
+        .form-button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+
+        .form-button:hover {
+            background-color: #ED8764;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .form-grid input, .form-grid textarea, .form-grid select {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            resize: none;
+            font-size: 0.8rem;
+            width: calc(100% - 16px);
+        }
+        
+        input[readonly] {
+            background-color: #f0f0f0;
+            color: #666;
+        }
+        
+        .alert {
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body class="relative bg-white text-gray-800">
+    {% include "navbar_pengunjung.html" %}
+    <div id="bg" class="bg-texture absolute inset-0 -z-10"></div>
+    <div class="min-h-screen px-8 py-10 grid place-items-center max-w-7xl mx-auto">
+        <div id="profile-container" class="registration-container space-y-6">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
+                Pengaturan Profil
+            </h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Main Profile Form -->
+            <div id="profile-form" class="space-y-6">
+                <form action="{% url 'base:profile' %}" method="POST" class="space-y-6">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div>
+                            <label for="username" class="text-sm text-[#49241B]">Username:</label>
+                            <input type="text" id="username" name="username" value="{{ user.username }}" class="text-lg" readonly />
+                        </div>
+                        <div>
+                            <label for="email" class="text-sm text-[#49241B]">Email:</label>
+                            <input type="email" id="email" name="email" value="{{ user.email }}" class="text-lg" required />
+                        </div>
+                        <div>
+                            <label for="first_name" class="text-sm text-[#49241B]">Nama Depan:</label>
+                            <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" class="text-lg" required />
+                        </div>
+                        <div>
+                            <label for="middle_name" class="text-sm text-[#49241B]">Nama Tengah (opsional):</label>
+                            <input type="text" id="middle_name" name="middle_name" value="{{ user.middle_name }}" class="text-lg" />
+                        </div>
+                        <div>
+                            <label for="last_name" class="text-sm text-[#49241B]">Nama Belakang:</label>
+                            <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" class="text-lg" required />
+                        </div>
+                        <div>
+                            <label for="phone" class="text-sm text-[#49241B]">Nomor Telepon:</label>
+                            <input type="tel" id="phone" name="phone" value="{{ user.phone }}" class="text-lg" required />
+                        </div>
+                        <div>
+                            <label for="address" class="text-sm text-[#49241B]">Alamat Lengkap:</label>
+                            <textarea id="address" name="address" class="text-lg" required>{{ user.address }}</textarea>
+                        </div>
+                        <div>
+                            <label for="dob" class="text-sm text-[#49241B]">Tanggal Lahir:</label>
+                            <input type="date" id="dob" name="dob" value="{{ user.dob|date:'Y-m-d' }}" class="text-lg" required />
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 pt-4">
+                        <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                            SIMPAN
+                        </button>
+                        <button type="button" id="show-password-form" class="form-button bg-[#ED8764] text-white font-semibold">
+                            UBAH PASSWORD
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="password-form" class="space-y-6 hidden">
+                <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center">
+                    Ubah Password
+                </h3>
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label for="old_password" class="text-sm text-[#49241B]">Password Lama:</label>
+                            <input type="password" id="old_password" name="old_password" class="text-lg" required />
+                        </div>
+                        <div>
+                            <label for="new_password" class="text-sm text-[#49241B]">Password Baru:</label>
+                            <input type="password" id="new_password" name="new_password" class="text-lg" required />
+                        </div>
+                        <div>
+                            <label for="confirm_password" class="text-sm text-[#49241B]">Konfirmasi Password Baru:</label>
+                            <input type="password" id="confirm_password" name="confirm_password" class="text-lg" required />
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 pt-4">
+                        <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                            SIMPAN
+                        </button>
+                        <button type="button" id="cancel-password-change" class="form-button bg-[#ED8764] text-white font-semibold">
+                            BATAL
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById("show-password-form").addEventListener("click", function() {
+            document.getElementById("profile-form").classList.add("hidden");
+            document.getElementById("password-form").classList.remove("hidden");
+        });
+        
+        document.getElementById("cancel-password-change").addEventListener("click", function() {
+            document.getElementById("password-form").classList.add("hidden");
+            document.getElementById("profile-form").classList.remove("hidden");
+        });
+    </script>
+</body>
+</html>

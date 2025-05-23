@@ -1,4 +1,3 @@
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Riwayat Pakan | SIZOPI</title>
-     <style>
+    <style>
         body { 
             font-family: 'Manrope', sans-serif; 
             font-weight: 600; 
@@ -29,14 +28,17 @@
             background-image: url("{% static 'images/texture-bg.jpg' %}"); 
             background-size: cover; 
             background-position: center; 
-            background-repeat: no-repeat; opacity: 0.15; }
+            background-repeat: no-repeat; 
+            opacity: 0.15; 
+        }
         .main-container { 
             max-width: 100%; 
             width: 100%; 
             padding: 2rem; 
             background-color: white; 
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); 
-            border-radius: 8px; }
+            border-radius: 8px; 
+        }
         table { 
             width: 100%; 
             border-collapse: collapse; 
@@ -54,7 +56,15 @@
         .table-container { 
             overflow-x: auto;
         }
-     </style>
+        .status-completed {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-waiting {
+            color: #f39c12;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body class="relative bg-white text-gray-800">
     {% include "navbar_penjaga_hewan.html" %}
@@ -64,12 +74,13 @@
             <h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
                 Riwayat Pemberian Pakan
             </h2>
+            
             <div id="history-content" class="space-y-6">
                 <div class="table-container">
                     <table class="w-full">
                         <thead>
                             <tr>
-                                <th>Nama Individu</th>
+                                <th>Nama Hewan</th>
                                 <th>Spesies</th>
                                 <th>Asal Hewan</th>
                                 <th>Tanggal Lahir</th>
@@ -78,32 +89,42 @@
                                 <th>Jenis Pakan</th>
                                 <th>Jumlah (gram)</th>
                                 <th>Jadwal</th>
+                                <th>Status</th>
+                                <th>Penjaga</th>
                             </tr>
                         </thead>
-                        <tbody id="history-table-body">
+                        <tbody>
                             {% for record in feeding_history %}
                             <tr>
-                                <td>{{ record.nama_hewan }}</td>
-                                <td>{{ record.spesies }}</td>
-                                <td>{{ record.asal_hewan }}</td>
-                                <td>{{ record.tanggal_lahir }}</td>
-                                <td>{{ record.nama_habitat }}</td>
+                                <td>{{ record.5 }}</td>
+                                <td>{{ record.6 }}</td>
+                                <td>{{ record.7 }}</td>
+                                <td>{{ record.8|date:"d F Y" }}</td>
+                                <td>{{ record.9 }}</td>
                                 <td>
-                                    {% if record.status_kesehatan == 'Sehat' %}
-                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">{{ record.status_kesehatan }}</span>
-                                    {% elif record.status_kesehatan == 'Sakit' %}
-                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full">{{ record.status_kesehatan }}</span>
+                                    {% if record.10 == 'Sehat' %}
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">{{ record.10 }}</span>
+                                    {% elif record.10 == 'Sakit' %}
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full">{{ record.10 }}</span>
                                     {% else %}
-                                        {{ record.status_kesehatan }}
+                                        {{ record.10 }}
                                     {% endif %}
                                 </td>
-                                <td>{{ record.jenis }}</td>
-                                <td>{{ record.jumlah }}</td>
-                                <td> {{ record.jadwal|slice:":10" }} {{ record.jadwal|slice:"11:19" }}</td>
+                                <td>{{ record.2 }}</td>
+                                <td>{{ record.3 }}</td>
+                                <td>{{ record.1|date:"d F Y H:i" }}</td>
+                                <td>
+                                    {% if record.4 == 'Selesai Diberikan' %}
+                                        <span class="status-completed">{{ record.4 }}</span>
+                                    {% else %}
+                                        <span class="status-waiting">{{ record.4 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.11|default:"Belum ditentukan" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="10" class="text-center text-gray-500 py-4">
+                                <td colspan="11" class="text-center text-gray-500 py-4">
                                     Belum ada riwayat pemberian pakan yang tercatat.
                                 </td>
                             </tr>

@@ -31,16 +31,14 @@
             background-repeat: no-repeat;
             opacity: 0.15;
         }
-
         .main-container {
-            max-width: 1000px;
+            max-width: 1200px;
             width: 100%;
             padding: 2rem;
             background-color: white;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
-
         .form-container {
             max-width: 700px;
             width: 100%;
@@ -51,7 +49,6 @@
             position: relative; 
             z-index: 10000;
         }
-
         input, textarea, select {
             width: 100%;
             padding: 6px 10px;
@@ -59,65 +56,34 @@
             border: 1px solid #ccc;
             border-radius: 8px;
         }
-
-        input::placeholder, textarea::placeholder, select::placeholder {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
         textarea {
             min-height: 80px;
             resize: none;
         }
-
         .form-button {
             padding: 12px 24px;
             font-size: 1rem;
             border-radius: 8px;
+            cursor: pointer;
         }
-
         .form-button:hover {
             background-color: #ED8764;
         }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        .form-grid input, .form-grid textarea, .form-grid select {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-            font-size: 0.8rem;
-            width: calc(100% - 16px);
-        }
-        
         .alert {
             padding: 10px 15px;
             margin-bottom: 15px;
             border-radius: 4px;
         }
-        
         .alert-success {
             background-color: #d4edda;
             border: 1px solid #c3e6cb;
             color: #155724;
         }
-        
         .alert-danger {
             background-color: #f8d7da;
             border: 1px solid #f5c6cb;
             color: #721c24;
         }
-        
-        .record-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        
         .modal {
             position: fixed;
             top: 0;
@@ -130,42 +96,36 @@
             align-items: center;
             z-index: 9999; 
         }
-        
         .hidden {
             display: none;
         }
-        
         .health-status-healthy {
             color: #28a745;
             font-weight: bold;
         }
-        
         .health-status-sick {
             color: #dc3545;
             font-weight: bold;
         }
-        
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        
         table th, table td {
             border: 1px solid #e0e0e0;
             padding: 0.75rem;
             text-align: left;
         }
-        
         table th {
             background-color: #f8f9fa;
             font-weight: 600;
         }
-        
         .action-button {
             padding: 6px 12px;
             border-radius: 4px;
             font-size: 0.875rem;
             cursor: pointer;
+            margin-right: 0.25rem;
         }
     </style>
 </head>
@@ -185,13 +145,14 @@
                     </div>
                 {% endfor %}
             {% endif %}
+
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <label for="animal-select" class="text-lg font-semibold text-[#49241B]">Pilih Hewan:</label>
                     <select id="animal-select" class="w-64 text-lg">
                         <option value="" disabled selected>-- Pilih Hewan --</option>
-                        {% for id, name in animals.items %}
-                            <option value="{{ id }}">{{ name }}</option>
+                        {% for animal in animals %}
+                            <option value="{{ animal.0 }}">{{ animal.1 }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -200,16 +161,15 @@
                 </button>
             </div>
             
-           
             <div id="animal-info" class="bg-gray-50 p-6 rounded-lg shadow-sm hidden">
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
-                        <p class="text-sm text-gray-500">ID Hewan</p>
-                        <p class="font-semibold text-lg" id="animal-id"></p>
+                        <p class="text-sm text-gray-500">Nama Hewan</p>
+                        <p class="font-semibold text-lg" id="animal-name"></p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500">Dokter Hewan Terakhir</p>
-                        <p class="font-semibold text-lg" id="animal-doctor"></p>
+                        <p class="text-sm text-gray-500">Spesies</p>
+                        <p class="font-semibold text-lg" id="animal-species"></p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Status Kesehatan</p>
@@ -218,485 +178,247 @@
                 </div>
             </div>
             
-         
-            <div id="medical-records" class="mt-8 hidden">
+            <div id="medical-records" class="mt-8">
                 <h3 class="text-xl font-bold text-[#883526] mb-4">Riwayat Pemeriksaan</h3>
-                <table class="w-full">
-                    <thead>
-                        <tr>
-                            <th>Tanggal Pemeriksaan</th>
-                            <th>Nama Dokter</th>
-                            <th>Status Kesehatan</th>
-                            <th>Diagnosa</th>
-                            <th>Pengobatan</th>
-                            <th>Catatan Tindak Lanjut</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="records-table-body">
-                    </tbody>
-                </table>
-                <p id="no-records-message" class="text-center text-gray-500 py-4">Belum ada rekam medis untuk hewan ini.</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Nama Hewan</th>
+                                <th>Tanggal Pemeriksaan</th>
+                                <th>Nama Dokter</th>
+                                <th>Status Kesehatan</th>
+                                <th>Diagnosa</th>
+                                <th>Pengobatan</th>
+                                <th>Catatan Tindak Lanjut</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in medical_records %}
+                            <tr>
+                                <td>{{ record.7 }}</td>
+                                <td>{{ record.2|date:"d F Y" }}</td>
+                                <td>{{ record.9 }}</td>
+                                <td>
+                                    {% if record.5 == 'Sehat' %}
+                                        <span class="health-status-healthy">{{ record.5 }}</span>
+                                    {% elif record.5 == 'Sakit' %}
+                                        <span class="health-status-sick">{{ record.5 }}</span>
+                                    {% else %}
+                                        {{ record.5 }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.3|default:"-" }}</td>
+                                <td>{{ record.4|default:"-" }}</td>
+                                <td>{{ record.6|default:"-" }}</td>
+                                <td>
+                                    {% if record.5 == 'Sakit' %}
+                                        <button onclick="editRecord('{{ record.0 }}', '{{ record.2 }}')" 
+                                                class="action-button bg-blue-500 text-white">Edit</button>
+                                    {% endif %}
+                                    <button onclick="deleteRecord('{{ record.0 }}', '{{ record.2 }}')" 
+                                            class="action-button bg-red-500 text-white">Hapus</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-gray-500 py-4">
+                                    Belum ada rekam medis yang tercatat.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
     
+    <!-- Modal Tambah Rekam Medis -->
     <div id="add-record-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
                 Tambah Rekam Medis
             </h3>
-            <form id="add-record-form" class="space-y-6">
-                <div class="form-grid">
-                    <div>
-                        <label for="examination-date" class="text-sm text-[#49241B]">Tanggal Pemeriksaan:</label>
-                        <input type="date" id="examination-date" name="examination_date" class="text-lg" required />
-                    </div>
-                    <div>
-                        <label for="doctor-name" class="text-sm text-[#49241B]">Nama Dokter:</label>
-                        <input type="text" id="doctor-name" name="doctor_name" class="text-lg" required />
-                    </div>
-                    <div>
-                        <label for="health-status" class="text-sm text-[#49241B]">Status Kesehatan:</label>
-                        <select id="health-status" name="health_status" class="text-lg" required>
-                            <option value="" disabled selected>-- Pilih Status --</option>
-                            <option value="Sehat">Sehat</option>
-                            <option value="Sakit">Sakit</option>
-                        </select>
-                    </div>
+            <form method="post" action="{% url 'medical_checkup_feeding:add_medical_record' %}" class="space-y-6">
+                {% csrf_token %}
+                <div>
+                    <label for="id_hewan" class="text-sm text-[#49241B]">Pilih Hewan:</label>
+                    <select id="id_hewan" name="id_hewan" class="text-lg" required>
+                        <option value="">-- Pilih Hewan --</option>
+                        {% for animal in animals %}
+                            <option value="{{ animal.0 }}">{{ animal.1 }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                
+                <div>
+                    <label for="tanggal_pemeriksaan" class="text-sm text-[#49241B]">Tanggal Pemeriksaan:</label>
+                    <input type="date" id="tanggal_pemeriksaan" name="tanggal_pemeriksaan" class="text-lg" required />
+                </div>
+                <div>
+                    <label for="status_kesehatan" class="text-sm text-[#49241B]">Status Kesehatan:</label>
+                    <select id="status_kesehatan" name="status_kesehatan" class="text-lg" required>
+                        <option value="" disabled selected>-- Pilih Status --</option>
+                        <option value="Sehat">Sehat</option>
+                        <option value="Sakit">Sakit</option>
+                    </select>
+                </div>
                 <div id="diagnosis-section" class="hidden">
                     <div>
                         <label for="diagnosis" class="text-sm text-[#49241B]">Diagnosa:</label>
                         <textarea id="diagnosis" name="diagnosis" class="text-lg w-full"></textarea>
                     </div>
                     <div class="mt-4">
-                        <label for="treatment" class="text-sm text-[#49241B]">Pengobatan:</label>
-                        <textarea id="treatment" name="treatment" class="text-lg w-full"></textarea>
+                        <label for="pengobatan" class="text-sm text-[#49241B]">Pengobatan:</label>
+                        <textarea id="pengobatan" name="pengobatan" class="text-lg w-full"></textarea>
                     </div>
                 </div>
-                
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
-                        Simpan
-                    </button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
-                        Batal
-                    </button>
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">SIMPAN</button>
+                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">BATAL</button>
                 </div>
             </form>
         </div>
     </div>
     
+    <!-- Modal Edit Rekam Medis -->
     <div id="edit-record-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
                 Edit Rekam Medis
             </h3>
-            <form id="edit-record-form" class="space-y-6">
-                <input type="hidden" id="edit-record-index" name="record_index" />
-                
+            <form method="post" id="edit-form" class="space-y-6">
+                {% csrf_token %}
                 <div>
-                    <label for="edit-new-followup" class="text-sm text-[#49241B]">Catatan Tindak Lanjut: </label>
-                    <textarea id="edit-new-followup" name="followup" class="text-lg w-full"></textarea>
+                    <label for="catatan_tindak_lanjut" class="text-sm text-[#49241B]">Catatan Tindak Lanjut:</label>
+                    <textarea id="catatan_tindak_lanjut" name="catatan_tindak_lanjut" class="text-lg w-full"></textarea>
                 </div>
-                
                 <div>
-                    <label for="edit-new-diagnosis" class="text-sm text-[#49241B]">Diagnosa Baru: </label>
-                    <textarea id="edit-new-diagnosis" name="new_diagnosis" class="text-lg w-full"></textarea>
+                    <label for="diagnosis_baru" class="text-sm text-[#49241B]">Diagnosa Baru:</label>
+                    <textarea id="diagnosis_baru" name="diagnosis_baru" class="text-lg w-full"></textarea>
                 </div>
-                
                 <div>
-                    <label for="edit-new-treatment" class="text-sm text-[#49241B]">Pengobatan Baru: </label>
-                    <textarea id="edit-new-treatment" name="new_treatment" class="text-lg w-full"></textarea>
+                    <label for="pengobatan_baru" class="text-sm text-[#49241B]">Pengobatan Baru:</label>
+                    <textarea id="pengobatan_baru" name="pengobatan_baru" class="text-lg w-full"></textarea>
                 </div>
-                
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
-                        Simpan
-                    </button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
-                        Batal
-                    </button>
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">SIMPAN</button>
+                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">BATAL</button>
                 </div>
             </form>
         </div>
     </div>
     
-   
+    <!-- Modal Konfirmasi Hapus -->
     <div id="delete-record-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Hapus Rekam Medis
+                Konfirmasi Penghapusan
             </h3>
-            <p class="text-center text-lg mb-6">Apakah anda yakin ingin menghapus rekam medis ini?</p>
-            <form id="delete-record-form" class="space-y-6">
-                <input type="hidden" id="delete-record-index" name="record_index" />
-                
+            <p class="text-center text-lg mb-6">Apakah Anda yakin ingin menghapus rekam medis ini?</p>
+            <form method="post" id="delete-form" class="space-y-6">
+                {% csrf_token %}
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#dc3545] text-white font-semibold">
-                        YA
-                    </button>
-                    <button type="button" class="form-button bg-[#6c757d] text-white font-semibold close-modal">
-                        TIDAK
-                    </button>
+                    <button type="submit" class="form-button bg-red-500 text-white font-semibold">YA</button>
+                    <button type="button" class="form-button bg-gray-500 text-white font-semibold close-modal">TIDAK</button>
                 </div>
             </form>
         </div>
     </div>
-    
-    {{ medical_records|json_script:"medical-records-data" }}
+
     <script>
-        const medicalRecordsData = JSON.parse(document.getElementById('medical-records-data').textContent);
-        const animalData = {};
-        medicalRecordsData.forEach((record, index) => {
-            if (!animalData[record.id_hewan]) {
-                animalData[record.id_hewan] = {
-                    id: record.id_hewan,
-                    records: []
-                };
-            }
-            animalData[record.id_hewan].records.push({
-                index: index,
-                date: record.tanggal_pemeriksaan,
-                doctor: record.username_dh,
-                status: record.status_kesehatan,
-                diagnosis: record.diagnosis || "",
-                treatment: record.pengobatan || "",
-                followup: record.catatan_tindak_lanjut || ""
-            });
-        });
+        // Data dari backend
+        const animalsData = {
+            {% for animal in animals %}
+                '{{ animal.0 }}': {
+                    id: '{{ animal.0 }}',
+                    name: '{{ animal.1 }}',
+                    species: '{{ animal.2 }}',
+                    health: '{{ animal.3 }}'
+                },
+            {% endfor %}
+        };
         
         const animalSelect = document.getElementById('animal-select');
         const animalInfo = document.getElementById('animal-info');
-        const animalId = document.getElementById('animal-id');
-        const animalDoctor = document.getElementById('animal-doctor');
-        const animalStatus = document.getElementById('animal-status');
-        const medicalRecords = document.getElementById('medical-records');
-        const recordsTableBody = document.getElementById('records-table-body');
-        const noRecordsMessage = document.getElementById('no-records-message');
-        
-        const addRecordBtn = document.getElementById('add-record-btn');
-        const addRecordModal = document.getElementById('add-record-modal');
-        const editRecordModal = document.getElementById('edit-record-modal');
-        const deleteRecordModal = document.getElementById('delete-record-modal');
-        
-        const healthStatus = document.getElementById('health-status');
+        const statusKesehatan = document.getElementById('status_kesehatan');
         const diagnosisSection = document.getElementById('diagnosis-section');
         
+        // Event listeners
         animalSelect.addEventListener('change', function() {
             const animalId = this.value;
-            if (animalId) {
+            if (animalId && animalsData[animalId]) {
                 displayAnimalInfo(animalId);
-                loadMedicalRecords(animalId);
+                animalInfo.classList.remove('hidden');
             } else {
                 animalInfo.classList.add('hidden');
-                medicalRecords.classList.add('hidden');
             }
         });
         
-        healthStatus.addEventListener('change', function() {
+        statusKesehatan.addEventListener('change', function() {
             if (this.value === 'Sakit') {
                 diagnosisSection.classList.remove('hidden');
                 document.getElementById('diagnosis').setAttribute('required', true);
-                document.getElementById('treatment').setAttribute('required', true);
+                document.getElementById('pengobatan').setAttribute('required', true);
             } else {
                 diagnosisSection.classList.add('hidden');
                 document.getElementById('diagnosis').removeAttribute('required');
-                document.getElementById('treatment').removeAttribute('required');
+                document.getElementById('pengobatan').removeAttribute('required');
             }
         });
         
-       
-        addRecordBtn.addEventListener('click', function() {
-            console.log('Add record button clicked');
+        document.getElementById('add-record-btn').addEventListener('click', function() {
             const animalId = animalSelect.value;
             if (!animalId) {
                 alert('Silakan pilih hewan terlebih dahulu.');
                 return;
             }
-           
-            document.getElementById('add-record-form').reset();
-            diagnosisSection.classList.add('hidden');
             
-            addRecordModal.classList.remove('hidden');
+            // Set tanggal hari ini sebagai default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tanggal_pemeriksaan').value = today;
+            document.getElementById('tanggal_pemeriksaan').max = today;
+            
+            document.getElementById('add-record-modal').classList.remove('hidden');
         });
         
         document.querySelectorAll('.close-modal').forEach(button => {
             button.addEventListener('click', function() {
-                addRecordModal.classList.add('hidden');
-                editRecordModal.classList.add('hidden');
-                deleteRecordModal.classList.add('hidden');
-            });
-        });
-        
-        document.getElementById('add-record-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const animalId = animalSelect.value;
-            const date = document.getElementById('examination-date').value;
-            const doctor = document.getElementById('doctor-name').value;
-            const status = document.getElementById('health-status').value;
-            const diagnosis = document.getElementById('diagnosis').value || "";
-            const treatment = document.getElementById('treatment').value || "";
-            const followup = document.getElementById('followup').value || "";
-            
-           
-            const dateExists = animalData[animalId].records.some(record => record.date === date);
-            if (dateExists) {
-                alert('Sudah ada rekam medis untuk tanggal yang dipilih.');
-                return;
-            }
-            
-          
-            const newRecordIndex = medicalRecordsData.length;
-            const newRecord = {
-                index: newRecordIndex,
-                date: date,
-                doctor: doctor,
-                status: status,
-                diagnosis: diagnosis,
-                treatment: treatment,
-                followup: followup
-            };
-            
-           
-            animalData[animalId].records.push(newRecord);
-            animalData[animalId].records.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-           
-            medicalRecordsData.push({
-                id_hewan: animalId,
-                username_dh: doctor,
-                tanggal_pemeriksaan: date,
-                diagnosis: diagnosis,
-                pengobatan: treatment,
-                status_kesehatan: status,
-                catatan_tindak_lanjut: followup
-            });
-            
-          
-            loadMedicalRecords(animalId);
-            addRecordModal.classList.add('hidden');
-            
-         
-            alert('Rekam medis berhasil ditambahkan!');
-        });
-        
-        document.getElementById('edit-record-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const animalId = animalSelect.value;
-            const recordIndex = parseInt(document.getElementById('edit-record-index').value);
-            const newDiagnosis = document.getElementById('edit-new-diagnosis').value;
-            const newTreatment = document.getElementById('edit-new-treatment').value;
-            const newFollowUp = document.getElementById('edit-new-followup').value;
-            
-          
-            const record = medicalRecordsData[recordIndex];
-            
-            if (newDiagnosis) {
-                record.diagnosis = record.diagnosis ? 
-                    record.diagnosis + "\n\nUpdate: " + newDiagnosis : 
-                    newDiagnosis;
-            }
-            
-            if (newTreatment) {
-                record.pengobatan = record.pengobatan ? 
-                    record.pengobatan + "\n\nUpdate: " + newTreatment : 
-                    newTreatment;
-            }
-
-            if (newFollowUp) {
-                record.catatan_tindak_lanjut = record.catatan_tindak_lanjut ? 
-                    record.catatan_tindak_lanjut + "\n\nUpdate: " + newFollowUp : 
-                    newFollowUp;
-            }
-            
-          
-            loadMedicalRecords(animalId);
-            editRecordModal.classList.add('hidden');
-            
-           
-            alert('Rekam medis berhasil diperbarui!');
-        });
-        
-        document.getElementById('delete-record-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const animalId = animalSelect.value;
-            const recordIndex = parseInt(document.getElementById('delete-record-index').value);
-            
-           
-            medicalRecordsData.splice(recordIndex, 1);
-            
-            rebuildAnimalData();
-            
-         
-            loadMedicalRecords(animalId);
-            deleteRecordModal.classList.add('hidden');
-            
-          
-            alert('Rekam medis berhasil dihapus!');
-            
-        });
-        
-        
-        function rebuildAnimalData() {
-           
-            for (let key in animalData) {
-                animalData[key].records = [];
-            }
-            
-           
-            medicalRecordsData.forEach((record, index) => {
-                const animalId = record.id_hewan;
-                
-                if (!animalData[animalId]) {
-                    animalData[animalId] = {
-                        id: animalId,
-                        records: []
-                    };
-                }
-                
-                animalData[animalId].records.push({
-                    index: index,
-                    date: record.tanggal_pemeriksaan,
-                    doctor: record.username_dh,
-                    status: record.status_kesehatan,
-                    diagnosis: record.diagnosis || "",
-                    treatment: record.pengobatan || "",
-                    followup: record.catatan_tindak_lanjut || ""
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.add('hidden');
                 });
             });
-            
-           
-            for (let key in animalData) {
-                animalData[key].records.sort((a, b) => new Date(b.date) - new Date(a.date));
-            }
-        }
+        });
         
-    function displayAnimalInfo(animalId) {
-        if (!animalData[animalId] || animalData[animalId].records.length === 0) {
-            animalInfo.classList.add('hidden');
-            return;
-        }
-        
-        const records = animalData[animalId].records;
-        const latestRecord = records.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-    
-    
-        let animalName = "Unknown Animal";
-        for (let record of medicalRecordsData) {
-            if (record.id_hewan === animalId && record.nama) {
-                animalName = record.nama;
-                break;
-            }
-        }
-    
-        document.getElementById('animal-id').textContent = animalName + " (" + animalId.slice(0, 8) + '...)';
-        document.getElementById('animal-doctor').textContent = latestRecord.doctor;
-        document.getElementById('animal-status').textContent = latestRecord.status;
+        function displayAnimalInfo(animalId) {
+            const animal = animalsData[animalId];
+            document.getElementById('animal-name').textContent = animal.name;
+            document.getElementById('animal-species').textContent = animal.species;
             
-           
             const statusElement = document.getElementById('animal-status');
-            statusElement.className = '';
-            if (latestRecord.status === 'Sehat') {
+            statusElement.textContent = animal.health;
+            statusElement.className = 'font-semibold text-lg';
+            
+            if (animal.health === 'Sehat') {
                 statusElement.classList.add('health-status-healthy');
-            } else if (latestRecord.status === 'Sakit') {
+            } else if (animal.health === 'Sakit') {
                 statusElement.classList.add('health-status-sick');
             }
-            
-            animalInfo.classList.remove('hidden');
         }
         
-        function loadMedicalRecords(animalId) {
-            if (!animalData[animalId]) {
-                medicalRecords.classList.add('hidden');
-                return;
-            }
+        function editRecord(idHewan, tanggalPemeriksaan) {
+            document.getElementById('edit-form').action = 
+                "{% url 'medical_checkup_feeding:edit_medical_record' '0' '0000-01-01' %}".replace('0/0000-01-01', idHewan + '/' + tanggalPemeriksaan);
             
-            const records = animalData[animalId].records;
-            recordsTableBody.innerHTML = '';
-            
-            if (records.length === 0) {
-                noRecordsMessage.classList.remove('hidden');
-            } else {
-                noRecordsMessage.classList.add('hidden');
-                
-                records.forEach(record => {
-                    const row = document.createElement('tr');
-                    
-                  
-                    const dateParts = record.date.split('-');
-                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-                    const formattedDate = dateObj.toLocaleDateString('id-ID', options);
-                    
-                   
-                    let actionButtons = '';
-                    if (record.status === 'Sakit') {
-                        actionButtons = `<button class="action-button bg-[#FBBE99] text-white edit-record mr-2" data-index="${record.index}">Edit</button>`;
-                    }
-                    actionButtons += `<button class="action-button bg-[#dc3545] text-white delete-record" data-index="${record.index}">Hapus</button>`;
-                    
-                    
-                    let statusClass = '';
-                    if (record.status === 'Sehat') {
-                        statusClass = 'health-status-healthy';
-                    } else if (record.status === 'Sakit') {
-                        statusClass = 'health-status-sick';
-                    }
-                    
-                    row.innerHTML = `
-                        <td>${formattedDate}</td>
-                        <td>${record.doctor}</td>
-                        <td class="${statusClass}">${record.status}</td>
-                        <td>${record.diagnosis || '-'}</td>
-                        <td>${record.treatment || '-'}</td>
-                        <td>${record.followup || '-'}</td>
-                        <td>
-                            ${actionButtons}
-                        </td>
-                    `;
-                    
-                    recordsTableBody.appendChild(row);
-                });
-                
-                
-                document.querySelectorAll('.edit-record').forEach(button => {
-                    button.addEventListener('click', function() {
-                        openEditModal(parseInt(this.dataset.index));
-                    });
-                });
-                
-                document.querySelectorAll('.delete-record').forEach(button => {
-                    button.addEventListener('click', function() {
-                        openDeleteModal(parseInt(this.dataset.index));
-                    });
-                });
-            }
-            
-            medicalRecords.classList.remove('hidden');
+            document.getElementById('edit-record-modal').classList.remove('hidden');
         }
         
-        function openEditModal(recordIndex) {
-            const record = medicalRecordsData[recordIndex];
+        function deleteRecord(idHewan, tanggalPemeriksaan) {
+            document.getElementById('delete-form').action = 
+                "{% url 'medical_checkup_feeding:delete_medical_record' '0' '0000-01-01' %}".replace('0/0000-01-01', idHewan + '/' + tanggalPemeriksaan);
             
-            if (record) {
-                document.getElementById('edit-record-index').value = recordIndex;
-                document.getElementById('edit-new-diagnosis').value = '';
-                document.getElementById('edit-new-treatment').value = '';
-                document.getElementById('edit-new-followup').value = '';
-                
-                editRecordModal.classList.remove('hidden');
-            }
-        }
-        
-        function openDeleteModal(recordIndex) {
-            document.getElementById('delete-record-index').value = recordIndex;
-            deleteRecordModal.classList.remove('hidden');
+            document.getElementById('delete-record-modal').classList.remove('hidden');
         }
     </script>
 </body>

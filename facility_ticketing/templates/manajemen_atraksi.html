@@ -204,6 +204,7 @@
             width: 500px;
             max-width: 90%;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1100 !important;
         }
         
         .modal-header {
@@ -230,6 +231,9 @@
         
         .modal-body {
             margin-bottom: 20px;
+            max-height: 65vh;
+            overflow-y: auto;
+            z-index: 1100 !important;
         }
         
         .form-group {
@@ -354,175 +358,145 @@
     <!-- Add/Edit Modal -->
     <div class="modal-overlay" id="formModal" style="display: none;">
         <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Form Tambah Atraksi</h3>
-                <button class="modal-close" onclick="closeModal('formModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Nama Atraksi</label>
-                    <input type="text" class="form-control" id="namaAtraksi">
+            <form id="atraksiForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle">Form Tambah Atraksi</h3>
+                    <button class="modal-close" onclick="closeModal('formModal')" type="button">&times;</button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Lokasi</label>
-                    <input type="text" class="form-control" id="lokasi">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Kapasitas Maksimum (orang)</label>
-                    <input type="number" class="form-control" id="kapasitas">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Jadwal</label>
-                    <input type="time" class="form-control" id="jadwal">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Hewan yang Terlibat</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="harimau">
-                            <label for="harimau">Harimau</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="gajah">
-                            <label for="gajah">Gajah</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="penguin">
-                            <label for="penguin">Penguin</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="orangutan">
-                            <label for="orangutan">Orangutan</label>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nama Atraksi</label>
+                        <input type="text" class="form-control" id="namaAtraksi" name="nama_atraksi">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Lokasi</label>
+                        <input type="text" class="form-control" id="lokasi" name="lokasi">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kapasitas Maksimum (orang)</label>
+                        <input type="number" class="form-control" id="kapasitas" name="kapasitas">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jadwal</label>
+                        <input type="time" class="form-control" id="jadwal" name="jadwal">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hewan yang Terlibat</label>
+                        <div class="checkbox-group">
+                            {% for hewan in hewan_list %}
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hewan_{{ hewan.0 }}" name="hewan" value="{{ hewan.0 }}">
+                                <label for="hewan_{{ hewan.0 }}">{{ hewan.1 }}</label>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
+                    <div class="form-group" id="petugasGroup">
+                        <label class="form-label">Petugas</label>
+                        <select class="form-control" id="petugas" name="petugas">
+                            <option value="">Pilih Petugas</option>
+                            {% for petugas in petugas_list %}
+                            <option value="{{ petugas.0 }}">{{ petugas.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" class="form-control" id="petugasReadonly" style="display:none; margin-top: 5px;" readonly>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Petugas</label>
-                    <select class="form-control" id="petugas">
-                        <option value="">Pilih Petugas</option>
-                        {% for value in atraksi_data %}
-                            <option value="{{ value.petugas }}">{{ value.petugas }} </option>
-                        {% endfor %}
-                    </select>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('formModal')" type="button">Batal</button>
+                    <button class="btn btn-primary" type="submit" id="submitAtraksiBtn">Simpan</button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('formModal')">Batal</button>
-                <button class="btn btn-primary" onclick="saveAtraksi()">Simpan</button>
-            </div>
+            </form>
         </div>
     </div>
     
     <!-- Delete Confirmation Modal -->
     <div class="modal-overlay" id="deleteModal" style="display: none;">
         <div class="modal">
-            <div class="confirm-modal">
-                <h3 class="confirm-title">Hapus Atraksi</h3>
-                <p class="confirm-message">Apakah anda yakin ingin menghapus atraksi ini?</p>
-                <div class="confirm-buttons">
-                    <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Tidak</button>
-                    <button class="btn btn-danger" onclick="deleteAtraksi()">Ya</button>
+            <form id="deleteAtraksiForm" method="POST" action="{% url 'facility_ticketing:hapus_atraksi' %}">
+                {% csrf_token %}
+                <div class="confirm-modal">
+                    <h3 class="confirm-title">Hapus Atraksi</h3>
+                    <p class="confirm-message">Apakah anda yakin ingin menghapus atraksi ini?</p>
+                    <input type="hidden" id="deleteNamaAtraksi" name="nama_atraksi">
+                    <div class="confirm-buttons">
+                        <button class="btn btn-secondary" onclick="closeModal('deleteModal')" type="button">Tidak</button>
+                        <button class="btn btn-danger" type="submit">Ya</button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
     
     <script>
-        function showAddModal() {
-            document.getElementById('modalTitle').innerText = 'Form Tambah Atraksi';
-            document.getElementById('namaAtraksi').value = '';
-            document.getElementById('lokasi').value = '';
-            document.getElementById('kapasitas').value = '';
-            document.getElementById('jadwal').value = '';
-            document.getElementById('petugas').value = '';
-            
-            // Remove readonly/disabled attributes
-            document.getElementById('namaAtraksi').removeAttribute('readonly');
-            document.getElementById('lokasi').removeAttribute('readonly');
-            document.getElementById('petugas').removeAttribute('disabled');
-            
-            // Uncheck and enable all checkboxes
-            document.getElementById('harimau').checked = false;
-            document.getElementById('gajah').checked = false;
-            document.getElementById('penguin').checked = false;
-            document.getElementById('orangutan').checked = false;
-            
-            document.getElementById('harimau').disabled = false;
-            document.getElementById('gajah').disabled = false;
-            document.getElementById('penguin').disabled = false;
-            document.getElementById('orangutan').disabled = false;
-            
-            document.getElementById('formModal').style.display = 'flex';
-        }
-        
-        // Show Edit Modal
-        function showEditModal(index) {
-            document.getElementById('modalTitle').innerText = 'Form Edit Atraksi';
-            
-            // Get data from django template
-            const atraksiData = [
-                {% for atraksi in atraksi_data %}
-                {
-                    name: "{{ atraksi.nama|escapejs }}", 
-                    location: "{{ atraksi.lokasi|escapejs }}", 
-                    capacity: {{ atraksi.kapasitas }}, 
-                    time: "{{ atraksi.jadwal|slice:"11:16"|escapejs }}", 
-                    animal: "{{ atraksi.hewan|escapejs }}", 
-                    staff: "{{ atraksi.petugas|escapejs }}"
-                }{% if not forloop.last %},{% endif %}
-                {% endfor %}
-            ];
-            
-            const data = atraksiData[index];
-            
-            document.getElementById('namaAtraksi').value = data.name;
-            document.getElementById('lokasi').value = data.location;
-            document.getElementById('kapasitas').value = data.capacity;
-            document.getElementById('jadwal').value = data.time;
-            document.getElementById('petugas').value = data.staff;
-            
-            
-            // Check appropriate checkboxes based on animal
-            document.getElementById('harimau').checked = data.animal.includes('Harimau');
-            document.getElementById('gajah').checked = data.animal.includes('Gajah');
-            document.getElementById('penguin').checked = data.animal.includes('Penguin');
-            document.getElementById('orangutan').checked = data.animal.includes('Orangutan');
-            
-            document.getElementById('namaAtraksi').setAttribute('readonly', 'readonly');
-            document.getElementById('lokasi').setAttribute('readonly', 'readonly');
-            document.getElementById('petugas').setAttribute('disabled', 'disabled');
-            
-            // Disable checkboxes
-            document.getElementById('harimau').disabled = true;
-            document.getElementById('gajah').disabled = true;
-            document.getElementById('penguin').disabled = true;
-            document.getElementById('orangutan').disabled = true;
-            
-            
-            document.getElementById('formModal').style.display = 'flex';
-        }
-        
-        // Show Delete Confirmation
-        function showDeleteConfirmation(index) {
-            document.getElementById('deleteModal').style.display = 'flex';
-        }
-        
-        // Close Modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        // Save Atraksi (dummy function)
-        function saveAtraksi() {
-            alert('Data atraksi disimpan (dummy function)');
-            closeModal('formModal');
-        }
-        
-        // Delete Atraksi (dummy function)
-        function deleteAtraksi() {
-            alert('Atraksi dihapus (dummy function)');
-            closeModal('deleteModal');
-        }
+    const atraksiData = [
+        {% for atraksi in atraksi_data %}
+        {
+            nama: "{{ atraksi.nama|escapejs }}",
+            lokasi: "{{ atraksi.lokasi|escapejs }}",
+            kapasitas: "{{ atraksi.kapasitas|escapejs }}",
+            jadwal: "{{ atraksi.jadwal|escapejs }}",
+            hewan_ids: [{% for id in atraksi.hewan_ids %}"{{ id }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+            petugas: "{{ atraksi.petugas|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    function showAddModal() {
+        document.getElementById('modalTitle').innerText = 'Form Tambah Atraksi';
+        document.getElementById('namaAtraksi').value = '';
+        document.getElementById('lokasi').value = '';
+        document.getElementById('kapasitas').value = '';
+        document.getElementById('jadwal').value = '';
+        document.getElementById('petugas').value = '';
+        document.getElementById('atraksiForm').action = "{% url 'facility_ticketing:tambah_atraksi' %}";
+        document.getElementById('namaAtraksi').removeAttribute('readonly');
+        document.getElementById('lokasi').removeAttribute('readonly');
+        document.getElementById('petugas').removeAttribute('disabled');
+        document.querySelectorAll('input[name="hewan"]').forEach(cb => cb.checked = false);
+        document.getElementById('formModal').style.display = 'flex';
+        document.getElementById('petugas').style.display = '';
+        document.getElementById('petugasReadonly').style.display = 'none';
+    }
+
+    function showEditModal(index) {
+        const data = atraksiData[index];
+        document.getElementById('modalTitle').innerText = 'Form Edit Atraksi';
+        document.getElementById('atraksiForm').action = "{% url 'facility_ticketing:edit_atraksi' %}";
+        document.getElementById('namaAtraksi').value = data.nama;
+        document.getElementById('lokasi').value = data.lokasi;
+        document.getElementById('kapasitas').value = data.kapasitas;
+        document.getElementById('jadwal').value = data.jadwal ? data.jadwal.slice(11, 16) : '';
+        document.querySelectorAll('input[name="hewan"]').forEach(cb => {
+            cb.checked = Array.isArray(data.hewan_ids) && data.hewan_ids.includes(cb.value);
+        });
+        document.getElementById('petugas').value = data.petugas;
+        document.getElementById('namaAtraksi').setAttribute('readonly', 'readonly');
+        document.getElementById('lokasi').setAttribute('readonly', 'readonly');
+        document.getElementById('petugas').setAttribute('disabled', 'disabled');
+        document.getElementById('formModal').style.display = 'flex';
+        document.getElementById('petugas').style.display = 'none';
+        document.getElementById('petugasReadonly').style.display = '';
+        document.getElementById('petugasReadonly').value = data.petugas;
+    }
+
+    function showDeleteConfirmation(index) {
+        document.getElementById('deleteNamaAtraksi').value = atraksiData[index].nama;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function saveAtraksi() {
+        document.getElementById('atraksiForm').submit();
+    }
+
+    function deleteAtraksi() {
+        document.getElementById('deleteAtraksiForm').submit();
+    }
     </script>
 </body>
 </html>

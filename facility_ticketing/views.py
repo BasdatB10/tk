@@ -65,40 +65,44 @@ def manajemen_atraksi(request):
 
 
 def manajemen_wahana(request):
-    wahana_data = [
-        {
-            'nama': 'Safari Jeep',
-            'kapasitas': '30',
-            'jadwal': '2025-04-24 10:30:00',
-            'peraturan': 'Pengunjung diharapkan mengenakan sabuk pengaman sepanjang perjalanan, tidak boleh keluar dari kendaraan selama perjalanan.'
-        },
-        {
-            'nama': 'Panggung Pertunjukan Gajah',
-            'kapasitas': '100',
-            'jadwal': '2025-04-24 14:00:00',
-            'peraturan': 'Pengunjung dilarang mendekat ke panggung selama pertunjukan, menjaga jarak aman dari gajah.'
-        },
-        {
-            'nama': 'Balon Udara Edukasi',
-            'kapasitas': '20',
-            'jadwal': '2025-04-24 09:00:00',
-            'peraturan': 'Anak-anak harus didampingi orang tua.'
-        },
-        {
-            'nama': 'Zona Interaktif Serangga',
-            'kapasitas': '40',
-            'jadwal': '2025-04-24 13:00:00',
-            'peraturan': 'Dilarang menyentuh serangga tanpa izin petugas.'
-        },
-        {
-            'nama': 'Simulator Ekspedisi Kutub',
-            'kapasitas': '25',
-            'jadwal': '2025-04-24 15:00:00',
-            'peraturan': 'Wajib menggunakan peralatan keselamatan yang disediakan.'
-        }
-    ]
-    
-    return render(request, 'manajemen_wahana.html', {'wahana_data': wahana_data})
+    try:
+        conn = psycopg2.connect(
+            host=settings.DATABASES['default']['HOST'],
+            database=settings.DATABASES['default']['NAME'],
+            user=settings.DATABASES['default']['USER'],
+            password=settings.DATABASES['default']['PASSWORD'],
+            port=settings.DATABASES['default']['PORT']
+        )
+        cursor = conn.cursor()
+        cursor.execute("SET search_path TO sizopi;")
+
+        # Ambil data wahana, peraturan dari tabel wahana
+        cursor.execute('''
+            SELECT 
+                f.nama, 
+                f.kapasitas_max, 
+                f.jadwal,
+                w.peraturan
+            FROM fasilitas f
+            JOIN wahana w ON f.nama = w.nama_wahana
+            ORDER BY f.jadwal ASC
+        ''')
+        rows = cursor.fetchall()
+        wahana_data = []
+        for row in rows:
+            wahana_data.append({
+                'nama': row[0],
+                'kapasitas': row[1],
+                'jadwal': str(row[2]),
+                'peraturan': row[3] if row[3] else '-'
+            })
+
+        cursor.close()
+        conn.close()
+        return render(request, 'manajemen_wahana.html', {'wahana_data': wahana_data})
+    except Exception as e:
+        print('Error:', e)
+        return render(request, 'manajemen_wahana.html', {'wahana_data': [], 'error': str(e)})
 
 def reservasi_pengunjung(request):
     # Data atraksi untuk opsi dropdown (sama dengan data di manajemen_atraksi)
@@ -435,3 +439,86 @@ def hapus_atraksi(request):
             print('Hapus atraksi error:', e)
         return redirect('facility_ticketing:manajemen_atraksi')
     return redirect('facility_ticketing:manajemen_atraksi')
+
+@csrf_exempt
+def tambah_wahana(request):
+    if request.method == 'POST':
+        try:
+            conn = psycopg2.connect(
+                host=settings.DATABASES['default']['HOST'],
+                database=settings.DATABASES['default']['NAME'],
+                user=settings.DATABASES['default']['USER'],
+                password=settings.DATABASES['default']['PASSWORD'],
+                port=settings.DATABASES['default']['PORT']
+            )
+            cursor = conn.cursor()
+            cursor.execute("SET search_path TO sizopi;")
+            nama = request.POST.get('nama_wahana')
+            kapasitas = request.POST.get('kapasitas')
+            jadwal_input = request.POST.get('jadwal')
+            jadwal_full = f"{date.today()} {jadwal_input}:00" if jadwal_input else None
+            peraturan = request.POST.get('peraturan')
+            # Insert ke fasilitas (tanpa peraturan)
+            cursor.execute("INSERT INTO fasilitas (nama, kapasitas_max, jadwal) VALUES (%s, %s, %s)", 
+                         (nama, kapasitas, jadwal_full))
+            # Insert ke wahana (peraturan masuk ke sini)
+            cursor.execute("INSERT INTO wahana (nama_wahana, peraturan) VALUES (%s, %s)", (nama, peraturan))
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print('Tambah wahana error:', e)
+        return redirect('facility_ticketing:manajemen_wahana')
+    return redirect('facility_ticketing:manajemen_wahana')
+
+@csrf_exempt
+def edit_wahana(request):
+    if request.method == 'POST':
+        try:
+            conn = psycopg2.connect(
+                host=settings.DATABASES['default']['HOST'],
+                database=settings.DATABASES['default']['NAME'],
+                user=settings.DATABASES['default']['USER'],
+                password=settings.DATABASES['default']['PASSWORD'],
+                port=settings.DATABASES['default']['PORT']
+            )
+            cursor = conn.cursor()
+            cursor.execute("SET search_path TO sizopi;")
+            nama = request.POST.get('nama_wahana')
+            kapasitas = request.POST.get('kapasitas')
+            jadwal_input = request.POST.get('jadwal')
+            jadwal_full = f"{date.today()} {jadwal_input}:00" if jadwal_input else None
+            # Tidak update peraturan!
+            cursor.execute("UPDATE fasilitas SET kapasitas_max=%s, jadwal=%s WHERE nama=%s", 
+                         (kapasitas, jadwal_full, nama))
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print('Edit wahana error:', e)
+        return redirect('facility_ticketing:manajemen_wahana')
+    return redirect('facility_ticketing:manajemen_wahana')
+
+@csrf_exempt
+def hapus_wahana(request):
+    if request.method == 'POST':
+        try:
+            conn = psycopg2.connect(
+                host=settings.DATABASES['default']['HOST'],
+                database=settings.DATABASES['default']['NAME'],
+                user=settings.DATABASES['default']['USER'],
+                password=settings.DATABASES['default']['PASSWORD'],
+                port=settings.DATABASES['default']['PORT']
+            )
+            cursor = conn.cursor()
+            cursor.execute("SET search_path TO sizopi;")
+            nama = request.POST.get('nama_wahana')
+            cursor.execute("DELETE FROM wahana WHERE nama_wahana=%s", (nama,))
+            cursor.execute("DELETE FROM fasilitas WHERE nama=%s", (nama,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print('Hapus wahana error:', e)
+        return redirect('facility_ticketing:manajemen_wahana')
+    return redirect('facility_ticketing:manajemen_wahana')

@@ -164,7 +164,7 @@
         
         .actions {
             display: flex;
-            gap: 5px;
+            gap : 5px;
         }
         
         .action-btn {
@@ -340,7 +340,7 @@
         </table>
     </div>
     
-    <!-- Add/Edit Modal -->
+    <!-- Add Modal -->
     <div class="modal-overlay" id="formModal" style="display: none;">
         <div class="modal">
             <div class="modal-header">
@@ -350,19 +350,19 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">Nama Wahana</label>
-                    <input type="text" class="form-control" id="namaWahana">
+                    <input type="text" class="form-control" id="namaWahanaTambah">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Kapasitas Maksimum (orang)</label>
-                    <input type="number" class="form-control" id="kapasitas">
+                    <input type="number" class="form-control" id="kapasitasTambah">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Jadwal</label>
-                    <input type="time" class="form-control" id="jadwal">
+                    <input type="time" class="form-control" id="jadwalTambah">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Peraturan</label>
-                    <textarea class="form-control" id="peraturan" rows="4"></textarea>
+                    <textarea class="form-control" id="peraturanTambah" rows="4"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -372,6 +372,7 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
     <div class="modal-overlay" id="formModaledit" style="display: none;">
         <div class="modal">
             <div class="modal-header">
@@ -381,20 +382,24 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">Nama Wahana</label>
-                    <input type="text" class="form-control" id="namaWahana">
+                    <input type="text" class="form-control" id="namaWahanaEdit" readonly>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Kapasitas Maksimum (orang)</label>
-                    <input type="number" class="form-control" id="kapasitas">
+                    <input type="number" class="form-control" id="kapasitasEdit">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Jadwal</label>
-                    <input type="time" class="form-control" id="jadwal">
+                    <input type="time" class="form-control" id="jadwalEdit">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Peraturan</label>
+                    <textarea class="form-control" id="peraturanEdit" rows="4" readonly></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('formModaledit')">Batal</button>
-                <button class="btn btn-primary" onclick="saveWahana()">Simpan</button>
+                <button class="btn btn-primary" onclick="editWahana()">Simpan</button>
             </div>
         </div>
     </div>
@@ -414,44 +419,90 @@
     </div>
     
     <script>
-        // Show Add Modal
+        // Data wahana dari Django template (valid JSON)
+        const wahanaData = [
+            {% for wahana in wahana_data %}
+            {
+                name: "{{ wahana.nama|escapejs }}",
+                capacity: "{{ wahana.kapasitas|escapejs }}",
+                time: "{{ wahana.jadwal|slice:'11:16'|escapejs }}",
+                peraturan: "{{ wahana.peraturan|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
         function showAddModal() {
             document.getElementById('modalTitle').innerText = 'Form Tambah Wahana';
-            document.getElementById('namaWahana').value = '';
-            document.getElementById('kapasitas').value = '';
-            document.getElementById('jadwal').value = '';
-            document.getElementById('peraturan').value = '';
-            
+            document.getElementById('namaWahanaTambah').value = '';
+            document.getElementById('kapasitasTambah').value = '';
+            document.getElementById('jadwalTambah').value = '';
+            document.getElementById('peraturanTambah').value = '';
             document.getElementById('formModal').style.display = 'flex';
         }
-        
-        // Show Edit Modal
+
         function showEditModal(index) {
             document.getElementById('modalTitle').innerText = 'Form Edit Wahana';
-            
-            // Get data from django template
-            const wahanaData = [
-                {% for wahana in wahana_data %}
-                {
-                    name: "{{ wahana.nama|escapejs }}",
-                    capacity: {{ wahana.kapasitas }},
-                    time: "{{ wahana.jadwal|slice:"11:16"|escapejs }}",
-                }{% if not forloop.last %},{% endif %}
-                {% endfor %}
-            ];
-            
             const data = wahanaData[index];
-            
-            document.getElementById('namaWahana').value = data.name;
-            document.getElementById('kapasitas').value = data.capacity;
-            document.getElementById('jadwal').value = data.time;
-            
+            document.getElementById('namaWahanaEdit').value = data.name;
+            document.getElementById('kapasitasEdit').value = data.capacity;
+            document.getElementById('jadwalEdit').value = data.time;
+            document.getElementById('peraturanEdit').value = data.peraturan;
             document.getElementById('formModaledit').style.display = 'flex';
+        }
+
+        function saveWahana() {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{% url 'facility_ticketing:tambah_wahana' %}";
+            const fields = {
+                'nama_wahana': document.getElementById('namaWahanaTambah').value,
+                'kapasitas': document.getElementById('kapasitasTambah').value,
+                'jadwal': document.getElementById('jadwalTambah').value,
+                'peraturan': document.getElementById('peraturanTambah').value
+            };
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        function editWahana() {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{% url 'facility_ticketing:edit_wahana' %}";
+            const fields = {
+                'nama_wahana': document.getElementById('namaWahanaEdit').value,
+                'kapasitas': document.getElementById('kapasitasEdit').value,
+                'jadwal': document.getElementById('jadwalEdit').value
+            };
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
         }
         
         // Show Delete Confirmation
         function showDeleteConfirmation(index) {
+            const wahanaData = [
+                {% for wahana in wahana_data %}
+                {
+                    name: "{{ wahana.nama|escapejs }}"
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+            const data = wahanaData[index];
             document.getElementById('deleteModal').style.display = 'flex';
+            document.getElementById('deleteModal').setAttribute('data-nama', data.name);
         }
         
         // Close Modal
@@ -459,16 +510,22 @@
             document.getElementById(modalId).style.display = 'none';
         }
         
-        // Save Wahana (dummy function)
-        function saveWahana() {
-            alert('Data wahana disimpan (dummy function)');
-            closeModal('formModal');
-        }
-        
-        // Delete Wahana (dummy function)
+        // Delete Wahana
         function deleteWahana() {
-            alert('Wahana dihapus (dummy function)');
-            closeModal('deleteModal');
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{% url 'facility_ticketing:hapus_wahana' %}";
+            
+            const nama = document.getElementById('deleteModal').getAttribute('data-nama');
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'nama_wahana';
+            input.value = nama;
+            form.appendChild(input);
+            
+            document.body.appendChild(form);
+            form.submit();
         }
     </script>
 </body>

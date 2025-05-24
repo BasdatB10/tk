@@ -1,4 +1,4 @@
-function showAlert(message) {
+function showAlert(message, onClose) {
     let alertBox = document.getElementById('customAlert');
     if (!alertBox) {
         alertBox = document.createElement('div');
@@ -15,7 +15,12 @@ function showAlert(message) {
         const closeButton = document.createElement('button');
         closeButton.textContent = 'Tutup';
         closeButton.classList.add('bg-palette3', 'hover:bg-palette4', 'text-white', 'px-4', 'py-2', 'rounded-2xl');
-        closeButton.onclick = () => closeAlert(alertBox);
+        closeButton.onclick = () => {
+            closeAlert(alertBox);
+            if (typeof onClose === 'function') {
+                onClose();
+            }
+        };
 
         alertContent.appendChild(alertMessage);
         alertContent.appendChild(closeButton);

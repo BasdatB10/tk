@@ -43,77 +43,58 @@
     <div id="formModal" class="hidden fixed inset-0 flex items-center justify-center z-50 fade">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-xl">
             <h2 class="text-2xl font-bold text-center text-palette5 mb-4">Form Tambah Habitat</h2>
-            <form id="addHabitatForm" class="space-y-3">
+            <form action="{% url 'animal_habitat_management:habitat' %}" method="POST" id="addHabitatForm" class="space-y-3">
+                {% csrf_token %}
+				<input type="hidden" name="original_nama" id="originalNamaInput">
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Nama Habitat</label>
-                    <input type="text" placeholder="Masukkan Nama Habitat" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="nama" type="text" placeholder="Masukkan Nama Habitat" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Luas Area (m²)</label>
-                    <input type="number" placeholder="Masukkan Luas Area" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="luas_area" type="number" placeholder="Masukkan Luas Area" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Kapasitas Maksimal Satwa</label>
-                    <input type="number" placeholder="Masukkan Kapasitas Maksimal" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="kapasitas" type="number" placeholder="Masukkan Kapasitas Maksimal" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Status Lingkungan</label>
-                    <textarea 
-                        placeholder="Masukkan Status Lingkungan di sini" 
-                        class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3 resize-none"
-                        style="height: 6.25rem;">
-                    </textarea>
+                    <textarea name="status" placeholder="Masukkan Status Lingkungan di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3 resize-none" style="height: 6.25rem;"></textarea>
                 </div>
 
-                <!-- Buttons -->
                 <div class="flex justify-between mt-4">
                     <button type="button" id="cancelButton" class="text-palette5 font-semibold text-sm">< Kembali</button>
-                    <button onclick="showAlert('Habitat berhasil ditambahkan!')" type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Selesai dan Tambah Habitat</button>
+                    <button type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Selesai dan Tambah Habitat</button>
                 </div>
             </form>
         </div>
     </div>
 
-	<!-- Content -->
 	<div id="mainContent" class="max-w-7xl mx-auto p-6">
-		<!-- Judul -->
 		<h1 class="text-6xl font-extrabold text-palette5 text-center mb-10 drop-shadow-lg">Manajemen Habitat</h1>
-
-		<!-- Stats -->
 		<div class="flex flex-col items-center mb-10 drop-shadow-lg">
 			<div class="flex gap-32 justify-center">
 				<div class="text-center">
-					<div class="text-5xl font-extrabold text-palette5">XXX</div>
+					<div class="text-5xl font-extrabold text-palette5">{{ jumlah_habitat }}</div>
 					<div class="text-base text-palette6 mt-2">Jumlah Habitat</div>
 				</div>
 				<div class="text-center">
-					<div class="text-5xl font-extrabold text-green-600">XXX</div>
+					<div class="text-5xl font-extrabold text-green-600">{{ kapasitas_total }}</div>
 					<div class="text-base text-palette6 mt-2">Satwa Dapat Ditampung</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Habitat Table Container -->
 		<div class="overflow-x-auto bg-white rounded-2xl shadow-2xl p-6">
-			<!-- Top Controls (Pagination + Add Button) -->
 			<div class="flex justify-between items-center mb-6">
-				<!-- Left: Tampilan Data + Pagination -->
 				<div class="flex items-center gap-4">
-					<span class="text-palette6 text-base font-semibold">Tampilan Data Habitat 1-3</span>
-					<div class="flex gap-2">
-						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">1</button>
-						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">2</button>
-						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">3</button>
-					</div>
+					<span class="text-palette6 text-base font-semibold">Tampilan Data Habitat 1-{{ jumlah_habitat }}</span>
 				</div>
-
-				<!-- Right: Tambah Habitat Button -->
 				<button id="openFormButton" class="bg-palette5 hover:bg-palette6 text-white px-6 py-2 rounded-2xl shadow">
                     Tambah Habitat
                 </button>
 			</div>
-
-			<!-- Table -->
 			<table class="min-w-full table-auto">
 				<thead class="bg-palette2">
 					<tr>
@@ -125,63 +106,40 @@
 					</tr>
 				</thead>
 				<tbody>
-                <!-- Baris 1 -->
-                <tr class="bg-palette1">
-                    <td class="px-6 py-4 text-center">Sabana</td>
-                    <td class="px-6 py-4 text-center">5000</td>
-                    <td class="px-6 py-4 text-center">30</td>
-                    <td class="px-6 py-4 text-center">Baik</td>
-                    <td class="px-16 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <a href="{% url 'animal_habitat_management:habitat_detail' %}">
-                                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-2xl">
-                                    Detail
-                                </button>
-                            </a>
-                            <button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
-                            <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Baris 2 -->
-                <tr class="bg-white">
-                    <td class="px-6 py-4 text-center">Hutan Tropis</td>
-                    <td class="px-6 py-4 text-center">8000</td>
-                    <td class="px-6 py-4 text-center">50</td>
-                    <td class="px-6 py-4 text-center">Perlu Pemulihan</td>
-                    <td class="px-16 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <a href="{% url 'animal_habitat_management:habitat_detail' %}">
-                                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-2xl">
-                                    Detail
-                                </button>
-                            </a>
-                            <button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
-                            <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Baris 3 -->
-                <tr class="bg-palette1">
-                    <td class="px-6 py-4 text-center">Padang Rumput</td>
-                    <td class="px-6 py-4 text-center">3000</td>
-                    <td class="px-6 py-4 text-center">20</td>
-                    <td class="px-6 py-4 text-center">Dalam Renovasi</td>
-                    <td class="px-16 py-4 text-center">
-                        <div class="flex justify-center gap-2">
-                            <a href="{% url 'animal_habitat_management:habitat_detail' %}">
-                                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-2xl">
-                                    Detail
-                                </button>
-                            </a>
-                            <button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
-                            <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
+                    {% for habitat in habitat_data %}
+                    <tr class="{% cycle 'bg-palette1' 'bg-white' %}">
+                        <td class="px-6 py-4 text-center">{{ habitat.nama }}</td>
+                        <td class="px-6 py-4 text-center">{{ habitat.luas_area }}</td>
+                        <td class="px-6 py-4 text-center">{{ habitat.kapasitas }}</td>
+                        <td class="px-6 py-4 text-center">{{ habitat.status }}</td>
+                        <td class="px-16 py-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <a href="{% url 'animal_habitat_management:habitat_detail' %}?nama={{ habitat.nama }}">
+									<button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-2xl">
+										Detail
+									</button>
+								</a>
+                                <button 
+									class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl editHabitatButton"
+									data-nama="{{ habitat.nama }}"
+									data-luas="{{ habitat.luas_area }}"
+									data-kapasitas="{{ habitat.kapasitas }}"
+									data-status="{{ habitat.status }}"
+								>Edit</button>
+                                <form method="POST" action="{% url 'animal_habitat_management:habitat_delete' %}" style="display:inline;">
+									{% csrf_token %}
+									<input type="hidden" name="nama" value="{{ habitat.nama }}">
+									<button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">
+										Delete
+									</button>
+								</form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-6 text-palette6">Belum ada habitat tercatat.</td></tr>
+                    {% endfor %}
+                </tbody>
 			</table>
 		</div>
 	</div>
@@ -193,11 +151,39 @@
         const overlay = document.getElementById('overlay');
         const body = document.body;
 
+		document.querySelectorAll('.editHabitatButton').forEach(button => {
+			button.addEventListener('click', () => {
+				const nama = button.dataset.nama;
+				const luas = button.dataset.luas;
+				const kapasitas = button.dataset.kapasitas;
+				const status = button.dataset.status;
+
+				document.querySelector('input[name="nama"]').value = nama;
+				document.querySelector('input[name="luas_area"]').value = luas;
+				document.querySelector('input[name="kapasitas"]').value = kapasitas;
+				document.querySelector('textarea[name="status"]').value = status;
+				document.getElementById('originalNamaInput').value = nama;
+
+				document.querySelector('#formModal h2').textContent = `Edit Habitat: ${nama}`;
+				document.querySelector('#addHabitatForm button[type="submit"]').textContent = 'Simpan Perubahan';
+
+				formModal.classList.remove('hidden');
+				overlay.classList.remove('hidden');
+				body.classList.add('overflow-hidden');
+				body.style.paddingRight = '15px';
+			});
+		});
+
         openFormButton.addEventListener('click', () => {
             formModal.classList.remove('hidden');
             overlay.classList.remove('hidden');
             body.classList.add('overflow-hidden');
             body.style.paddingRight = '15px';
+
+			document.getElementById('originalNamaInput').value = '';
+			document.querySelector('#formModal h2').textContent = 'Form Tambah Habitat';
+			document.querySelector('#addHabitatForm button[type="submit"]').textContent = 'Selesai dan Tambah Habitat';
+			document.getElementById('addHabitatForm').reset();
         });
 
         cancelButton.addEventListener('click', () => {
@@ -213,8 +199,36 @@
             overlay.classList.add('hidden');
             body.classList.remove('overflow-hidden');
             body.style.paddingRight = '0';
-            // Tambahkan logic submit ke backend di sini
         });
+
+        const form = document.getElementById('addHabitatForm');
+		if (form) {
+			form.addEventListener("submit", async function (e) {
+				e.preventDefault();
+				const formData = new FormData(this);
+				try {
+					const response = await fetch("", {
+						method: "POST",
+						body: formData,
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+						}
+					});
+
+					const result = await response.json();
+					if (result.success) {
+						showAlert(result.message, () => {
+							window.location.href = '/animal/habitat/';
+						});
+					} else {
+						showAlert(result.message);
+					}
+				} catch (err) {
+					showAlert("Terjadi kesalahan saat menambahkan/mengubah data habitat.");
+				}
+			});
+		}
     </script>
 </body>
 </html>

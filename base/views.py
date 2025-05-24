@@ -1,18 +1,30 @@
 import psycopg2, os, dotenv
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.shortcuts import render, redirect
-from django.contrib.auth import logout
+from functools import wraps
 
 dotenv.load_dotenv()
 
+def session_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if 'username' not in request.session:
+            return redirect('base:home')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
 def home(request):
+    if 'username' in request.session:
+        return redirect('base:dashboard')
     return render(request, "home.html")
 
 @csrf_protect
 def register(request):
-    alert_message = None
+    if 'username' in request.session:
+        return redirect('base:dashboard')
 
+    alert_message = None
     if request.method == "POST":
         try:
             conn = psycopg2.connect(
@@ -92,8 +104,62 @@ def register(request):
                 pass
     return render(request, 'register.html')
 
+@csrf_protect
 def login(request):
-    return render(request, "login.html")
+    if 'username' in request.session:
+        return redirect('base:dashboard')
+
+    alert_message = None
+    if request.method == "POST":
+        try:
+            conn = psycopg2.connect(
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
+            )
+            cursor = conn.cursor()
+
+            email = request.POST.get("email")
+            password = request.POST.get("password")
+            cursor.execute("""
+                INSERT INTO SIZOPI.PERCOBAAN_LOGIN (email, password)
+                VALUES (%s, %s);
+            """, (email, password))
+
+            cursor.execute("""
+                SELECT username FROM SIZOPI.PENGGUNA WHERE email = %s;
+            """, (email,))
+            result = cursor.fetchone()
+            conn.commit()
+            if not result:
+                alert_message = 'Email atau password yang Anda masukkan salah.'
+                return JsonResponse({'success': False, 'message': alert_message}, status=404)
+            
+            username = result[0]
+            request.session['username'] = username
+            request.session['email'] = email
+            alert_message = f'Login berhasil. Selamat datang, {username}.'
+            return JsonResponse({'success': True, 'message': alert_message, 'username': username, 'email': email})
+        except psycopg2.Error as e:
+            alert_message = str(e).split("\n")[0].replace("ERROR:", "").strip()
+            return JsonResponse({'success': False, 'message': alert_message}, status=401)
+        except Exception:
+            alert_message = "Terjadi kesalahan saat proses login."
+            return JsonResponse({'success': False, 'message': alert_message}, status=400)
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
+    return render(request, 'login.html')
+
+@csrf_exempt
+def logout(request):
+    request.session.flush()
+    return redirect('base:home')
 
 def profile(request):
     return render(request, "profile.html")
@@ -107,10 +173,7 @@ def profile_pengunjung(request):
 def profile_staff(request):
     return render(request, "profile_staff.html")
 
-def logout_view(request):
-    logout(request)
-    return redirect('base:home')
-
+@session_required
 def dashboard(request):
     pengguna_data = [
         {

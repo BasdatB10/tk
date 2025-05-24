@@ -1,103 +1,190 @@
-    {% load static %}
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <title>Detail Habitat - SIZOPI</title>
-        <style>
-            body {
-                font-family: 'Manrope', sans-serif;
-                font-weight: 600;
-                letter-spacing: -0.02em;
-            }
-        </style>
-        <script>
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        colors: {
-                            palette1: '#FAD4B6',
-                            palette2: '#FBBE99',
-                            palette3: '#ED8764',
-                            palette4: '#DD6D49',
-                            palette5: '#883526',
-                            palette6: '#49241B',
-                        }
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="{% static 'alerts/alert.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'alerts/alert.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Detail Habitat - SIZOPI</title>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        palette1: '#FAD4B6',
+                        palette2: '#FBBE99',
+                        palette3: '#ED8764',
+                        palette4: '#DD6D49',
+                        palette5: '#883526',
+                        palette6: '#49241B',
                     }
                 }
             }
-        </script>
-    </head>
-    <body class="bg-palette1 text-palette6 overflow-x-hidden">
-        <div class="max-w-5xl mx-auto px-6 py-12 space-y-12">
-            <div class="bg-white p-8 rounded-2xl shadow-xl space-y-6">
-                <h1 class="text-4xl font-bold text-palette5">Detail Habitat: <span class="text-palette6">Sabana Afrika</span></h1>
-
-                <div class="text-sm text-gray-600 space-y-2">
-                    <p><span class="font-semibold text-palette5">Luas Area:</span> 5000 m²</p>
-                    <p><span class="font-semibold text-palette5">Status Lingkungan:</span> Padang rumput alami dengan ekosistem seimbang.</p>
-                    <p><span class="font-semibold text-palette5">Kapasitas Maksimal:</span> 50 satwa</p>
-                </div>
-
-                <div class="flex flex-wrap gap-4 pt-4">
-                    <button class="bg-palette2 hover:bg-palette3 text-palette6 font-semibold text-sm px-4 py-2 rounded-2xl">Edit Habitat</button>
-                    <button class="bg-red-400 hover:bg-red-500 text-white font-semibold text-sm px-4 py-2 rounded-2xl">Hapus Habitat</button>
-                    <a href="{% url 'animal_habitat_management:habitat' %}">
-                        <button type="button" class="text-palette5 font-semibold text-sm py-2 rounded-2xl"> < Kembali</button>
-                    </a>
-                </div>
-            </div>
-
-            <div class="bg-white p-8 rounded-2xl shadow-xl space-y-6">
-                <div class="flex justify-between items-center">
-                    <span class="text-palette6 text-base font-semibold">Tampilan Satwa 1-3</span>
-                    <div class="flex gap-2">
-                        <button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">1</button>
-                        <button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">2</button>
-                        <button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">3</button>
+        }
+    </script>
+</head>
+<body class="bg-palette1 text-palette6 overflow-x-hidden">
+    <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 z-40">
+        <div id="formModal" class="hidden fixed inset-0 flex items-center justify-center z-50 fade">
+            <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-xl">
+                <h2 class="text-2xl font-bold text-center text-palette5 mb-4">Edit Habitat: {{ habitat.nama }}</h2>
+                <form action="{% url 'animal_habitat_management:habitat_detail' %}" method="POST" id="editHabitatForm" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="original_nama" id="originalNamaInput">
+                    <div>
+                        <label class="block text-palette6 text-sm mb-1">Nama Habitat</label>
+                        <input name="nama" type="text" value="{{ habitat.nama }}" placeholder="Masukkan Nama Habitat" class="w-full px-3 py-2 text-black text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                     </div>
-                </div>
+                    <div>
+                        <label class="block text-palette6 text-sm mb-1">Luas Area (m²)</label>
+                        <input name="luas_area" type="number" value="{{ habitat.luas_area }}" placeholder="Masukkan Luas Area" class="w-full px-3 py-2 text-black text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    </div>
+                    <div>
+                        <label class="block text-palette6 text-sm mb-1">Kapasitas Maksimal Satwa</label>
+                        <input name="kapasitas" type="number" value="{{ habitat.kapasitas }}" placeholder="Masukkan Kapasitas Maksimal" class="w-full px-3 py-2 text-black text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    </div>
+                    <div>
+                        <label class="block text-palette6 text-sm mb-1">Status Lingkungan</label>
+                        <textarea name="status" placeholder="Masukkan Status Lingkungan di sini" class="w-full px-3 py-2 text-black text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3 resize-none" style="height: 6.25rem;">{{ habitat.status }}</textarea>
+                    </div>
 
-                <div class="overflow-x-auto rounded-xl">
-                    <table class="min-w-full table-auto">
-                        <thead class="bg-palette2 text-palette6">
-                            <tr>
-                                <th class="px-6 py-4 text-center font-bold">Nama Individu</th>
-                                <th class="px-6 py-4 text-center font-bold">Spesies</th>
-                                <th class="px-6 py-4 text-center font-bold">Asal Hewan</th>
-                                <th class="px-6 py-4 text-center font-bold">Tanggal Lahir</th>
-                                <th class="px-6 py-4 text-center font-bold">Status Kesehatan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="bg-palette1">
-                                <td class="px-6 py-4 text-center">Raja</td>
-                                <td class="px-6 py-4 text-center">Panthera leo</td>
-                                <td class="px-6 py-4 text-center">Afrika</td>
-                                <td class="px-6 py-4 text-center">2016-05-12</td>
-                                <td class="px-6 py-4 text-green-600 text-center">Sehat</td>
-                            </tr>
-                            <tr class="bg-white">
-                                <td class="px-6 py-4 text-center">Luna</td>
-                                <td class="px-6 py-4 text-center">Elephas maximus</td>
-                                <td class="px-6 py-4 text-center">Asia</td>
-                                <td class="px-6 py-4 text-center">2012-08-30</td>
-                                <td class="px-6 py-4 text-red-500 text-center">Sakit</td>
-                            </tr>
-                            <tr class="bg-palette1">
-                                <td class="px-6 py-4 text-center">Kiki</td>
-                                <td class="px-6 py-4 text-center">Ailuropoda melanoleuca</td>
-                                <td class="px-6 py-4 text-center">Tiongkok</td>
-                                <td class="px-6 py-4 text-center">2018-11-15</td>
-                                <td class="px-6 py-4 text-green-600 text-center">Sehat</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="flex justify-between mt-4">
+                        <button type="button" id="cancelButton" class="text-palette5 font-semibold text-sm">< Kembali</button>
+                        <button type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Simpan Perubahan</button>
+                    </div>
+                </form>
             </div>
         </div>
-    </body>
-    </html>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+        <div class="bg-white p-8 rounded-2xl shadow-xl space-y-6">
+            <h1 class="text-4xl font-bold text-palette5">Detail Habitat: <span class="text-palette6">{{ habitat.nama }}</span></h1>
+
+            <div class="text-sm text-gray-600 space-y-2">
+                <p><span class="font-semibold text-palette5">Luas Area:</span> {{ habitat.luas_area }} m²</p>
+                <p><span class="font-semibold text-palette5">Status Lingkungan:</span> {{ habitat.status }}</p>
+                <p><span class="font-semibold text-palette5">Kapasitas Maksimal:</span> {{ habitat.kapasitas }} satwa</p>
+            </div>
+
+            <div class="flex flex-wrap gap-4 pt-4">
+                <button id="openFormButton" class="bg-palette2 hover:bg-palette3 text-palette6 font-semibold text-sm px-4 py-2 rounded-2xl">Edit Habitat</button>
+                <form method="POST" action="{% url 'animal_habitat_management:habitat_delete' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="nama" value="{{ habitat.nama }}">
+                    <button type="submit" class="bg-red-400 hover:bg-red-500 text-white font-semibold text-sm px-4 py-2 rounded-2xl">Delete Habitat</button>
+                </form>
+                <a href="{% url 'animal_habitat_management:habitat' %}">
+                    <button type="button" class="text-palette5 font-semibold text-sm py-2 rounded-2xl"> < Kembali</button>
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl shadow-xl space-y-6">
+            <div class="flex justify-between items-center">
+                <span class="text-palette6 text-base font-semibold">Tampilan Satwa 1-{{ jumlah_hewan }}</span>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl">
+                <table class="min-w-full table-auto">
+                    <thead class="bg-palette2 text-palette6">
+                        <tr>
+                            <th class="px-6 py-4 text-center font-bold">Nama Individu</th>
+                            <th class="px-6 py-4 text-center font-bold">Spesies</th>
+                            <th class="px-6 py-4 text-center font-bold">Asal Hewan</th>
+                            <th class="px-6 py-4 text-center font-bold">Tanggal Lahir</th>
+                            <th class="px-6 py-4 text-center font-bold">Status Kesehatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hewan in hewan_list %}
+                            <tr class="{% cycle 'bg-palette1' 'bg-white' %}">
+                                <td class="px-6 py-4 text-center">{{ hewan.nama }}</td>
+                                <td class="px-6 py-4 text-center">{{ hewan.spesies }}</td>
+                                <td class="px-6 py-4 text-center">{{ hewan.asal }}</td>
+                                <td class="px-6 py-4 text-center">{{ hewan.tanggal_lahir }}</td>
+                                <td class="px-6 py-4 text-center {% if hewan.status == 'Sehat' %}text-green-600{% else %}text-red-500{% endif %}">
+                                    {{ hewan.status }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center py-4">Belum ada satwa di habitat ini.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const openFormButton = document.getElementById('openFormButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const formModal = document.getElementById('formModal');
+        const overlay = document.getElementById('overlay');
+        const body = document.body;
+
+        openFormButton.addEventListener('click', () => {
+            formModal.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+            body.classList.add('overflow-hidden');
+            body.style.paddingRight = '15px';
+            document.getElementById('originalNamaInput').value = "{{ habitat.nama|escapejs }}";
+        });
+
+        cancelButton.addEventListener('click', () => {
+            formModal.classList.add('hidden');
+            overlay.classList.add('hidden');
+            body.classList.remove('overflow-hidden');
+            body.style.paddingRight = '0';
+        });
+
+        document.getElementById('editHabitatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            formModal.classList.add('hidden');
+            overlay.classList.add('hidden');
+            body.classList.remove('overflow-hidden');
+            body.style.paddingRight = '0';
+        });
+
+        const form = document.getElementById('editHabitatForm');
+		if (form) {
+			form.addEventListener("submit", async function (e) {
+				e.preventDefault();
+				const formData = new FormData(this);
+				try {
+					const response = await fetch("", {
+						method: "POST",
+						body: formData,
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+						}
+					});
+
+					const result = await response.json();
+					if (result.success) {
+						showAlert(result.message, () => {
+                            const namaHabitat = formData.get('nama');
+							window.location.href = `/animal/habitat/detail/?nama=${encodeURIComponent(namaHabitat)}`;
+						});
+					} else {
+						showAlert(result.message);
+					}
+				} catch (err) {
+					showAlert("Terjadi kesalahan saat mengubah data habitat.");
+				}
+			});
+		}
+    </script>
+</body>
+</html>

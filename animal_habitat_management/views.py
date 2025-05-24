@@ -8,6 +8,9 @@ dotenv.load_dotenv()
 
 @csrf_protect
 def animal(request):
+    if 'username' not in request.session:
+        return redirect('base:home')
+
     if request.method == "POST":
         try:
             conn = psycopg2.connect(
@@ -29,6 +32,7 @@ def animal(request):
             url_foto = request.POST.get("url_foto")
 
             if id_:
+                conn.notices.clear()
                 cursor.execute("""
                     UPDATE SIZOPI.HEWAN
                     SET nama = %s,
@@ -40,7 +44,15 @@ def animal(request):
                         url_foto = %s
                     WHERE id = %s;
                 """, (nama, spesies, asal_hewan, tanggal_lahir, status_kesehatan, nama_habitat, url_foto, id_))
-                message = f'Data satwa {nama} berhasil diperbarui.'
+                conn.commit()
+
+                notice_message = None
+                if conn.notices:
+                    for notice in reversed(conn.notices):
+                        if 'SUKSES:' in notice:
+                            notice_message = notice.strip().replace('NOTICE:', '').replace('SUKSES:', '').strip()
+                            break
+                message = notice_message or f'Data satwa {nama} berhasil diperbarui.'
             else:
                 cursor.execute("""
                     INSERT INTO SIZOPI.HEWAN (
@@ -49,9 +61,8 @@ def animal(request):
                         gen_random_uuid(), %s, %s, %s, %s, %s, %s, %s
                     );
                 """, (nama, spesies, asal_hewan, tanggal_lahir, status_kesehatan, nama_habitat, url_foto))
+                conn.commit()
                 message = 'Data satwa baru berhasil ditambahkan.'
-
-            conn.commit()
             return JsonResponse({'success': True, 'message': message})
         except psycopg2.Error as e:
             return JsonResponse({'success': False, 'message': str(e).split("\n")[0].replace("ERROR:", "").strip()}, status=400)
@@ -127,6 +138,9 @@ def animal_delete(request):
 
 @csrf_protect
 def habitat(request):
+    if 'username' not in request.session:
+        return redirect('base:home')
+
     if request.method == "POST":
         try:
             conn = psycopg2.connect(
@@ -223,6 +237,9 @@ def habitat_delete(request):
         return redirect('animal_habitat_management:habitat')
 
 def habitat_detail(request):
+    if 'username' not in request.session:
+        return redirect('base:home')
+
     if request.method == "POST":
         try:
             conn = psycopg2.connect(

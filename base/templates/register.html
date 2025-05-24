@@ -316,20 +316,16 @@
 		}
 
 		document.querySelectorAll('form').forEach(form => {
-			form.addEventListener('submit', function(e) {
+			form.addEventListener("submit", async function (e) {
+				e.preventDefault();
 				const pwd = form.querySelector('input[name="password"]');
 				const confirmPwd = form.querySelector('input[name="confirm_password"]');
 				if (pwd && confirmPwd && pwd.value !== confirmPwd.value) {
-					e.preventDefault();
 					showAlert('Password pada kedua field tidak cocok.');
 					confirmPwd.focus();
+					return;
 				}
-			});
-		});
 
-		document.querySelectorAll('form').forEach(form => {
-			form.addEventListener("submit", async function (e) {
-				e.preventDefault();
 				const formData = new FormData(this);
 				try {
 					const response = await fetch("", {

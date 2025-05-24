@@ -133,9 +133,6 @@ def login(request):
             """, (email,))
             result = cursor.fetchone()
             conn.commit()
-            if not result:
-                alert_message = 'Email atau password yang Anda masukkan salah.'
-                return JsonResponse({'success': False, 'message': alert_message}, status=404)
             
             username = result[0]
             request.session['username'] = username

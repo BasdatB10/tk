@@ -105,7 +105,7 @@
                            data-start="{{ hewan.tgl_mulai_adopsi|default:'-' }}"
                            data-end="{{ hewan.tgl_berhenti_adopsi|default:'-' }}"
                            data-nominal="{{ hewan.kontribusi_finansial|default:'-' }}"
-                           data-status="{{ hewan.status_pembayaran|default:'tertunda' }}"
+                           data-status="{{ hewan.status_pembayaran|default:'Menunggu' }}"
                            data-id-hewan="{{ hewan.id }}"
                         >[Lihat Detail]</a>
                     {% else %}
@@ -147,8 +147,8 @@
                 <div class="flex items-center">
                     <span class="font-semibold mr-2">Status Pembayaran:</span>
                     <select id="paymentStatus" class="border border-custom-light rounded px-2 py-1 text-sm bg-white">
-                        <option value="tertunda">Tertunda</option>
-                        <option value="lunas">Lunas</option>
+                        <option value="Menunggu">Menunggu</option>
+                        <option value="Lunas">Lunas</option>
                     </select>
                     <button id="saveStatus" class="ml-2 bg-custom-medium hover:bg-custom-dark text-white px-3 py-1 rounded-md text-sm">[Simpan Status]</button>
                 </div>
@@ -418,7 +418,7 @@
                 const idHewan = currentAdoptionData.idHewan;
 
                 // Only update total kontribusi if status is changed to 'lunas'
-                if (newStatus === 'lunas') {
+                if (newStatus === 'Lunas') {
                     // Send data to Django view
                     fetch("{% url 'adoption_management:update_adopter_status' %}", {
                         method: 'POST',

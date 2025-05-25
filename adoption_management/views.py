@@ -411,7 +411,7 @@ def update_adopter_status(request):
             )
             cur = conn.cursor()
 
-            # 1. Cari id_adopter berdasarkan username
+            # Cari id_adopter berdasarkan username
             cur.execute("SELECT id_adopter FROM SIZOPI.adopter WHERE username_adopter = %s", (username,))
             adopter_result = cur.fetchone()
 
@@ -423,24 +423,47 @@ def update_adopter_status(request):
             id_adopter = adopter_result[0]
             print(f"Debug - Found adopter_id: {id_adopter}")
 
-            # 2. Update status_pembayaran di tabel adopsi
+            # Ambil status lama dari tabel adopsi
+            cur.execute(
+                "SELECT status_pembayaran FROM SIZOPI.adopsi WHERE id_hewan = %s AND id_adopter = %s",
+                (id_hewan, id_adopter)
+            )
+            old_status_result = cur.fetchone()
+            old_status = old_status_result[0] if old_status_result else None
+
+            print(f"Debug - Old status: {old_status}")
+
+            # Update status_pembayaran di tabel adopsi
             cur.execute(
                 "UPDATE SIZOPI.adopsi SET status_pembayaran = %s WHERE id_hewan = %s AND id_adopter = %s",
                 (new_status, id_hewan, id_adopter)
             )
             print(f"Debug - Updated adopsi status to {new_status}")
 
-            # 3. Update total_kontribusi jika status adalah 'lunas'
-            if new_status == 'lunas':
-                # Cek total kontribusi saat ini
-                cur.execute("SELECT total_kontribusi FROM SIZOPI.adopter WHERE id_adopter = %s", (id_adopter,))
-                current_total = cur.fetchone()[0] or 0
-                print(f"Debug - Current total kontribusi: {current_total}")
-                
-                # Update total kontribusi
-                new_total = current_total + nominal
-                print(f"Debug - New total kontribusi will be: {new_total}")
-                
+            # Update total_kontribusi di tabel adopter berdasarkan perubahan status
+            current_total = 0
+            cur.execute("SELECT total_kontribusi FROM SIZOPI.adopter WHERE id_adopter = %s", (id_adopter,))
+            total_result = cur.fetchone()
+            if total_result and total_result[0] is not None:
+                current_total = total_result[0]
+            print(f"Debug - Current total kontribusi: {current_total}")
+
+            if old_status != new_status:
+                if new_status == "Lunas":
+                    # Tambah kontribusi
+                    new_total = current_total + nominal
+                    print(f"Debug - Adding nominal: {nominal} New total: {new_total}")
+                elif old_status == "Lunas" and new_status != "Lunas":
+                    # Kurangi kontribusi
+                    new_total = current_total - nominal
+                    # Pastikan tidak negatif
+                    if new_total < 0:
+                        new_total = 0
+                    print(f"Debug - Subtracting nominal: {nominal} New total: {new_total}")
+                else:
+                    new_total = current_total  # Tidak berubah jika status selain kasus di atas
+
+                # Update ke database
                 cur.execute(
                     "UPDATE SIZOPI.adopter SET total_kontribusi = %s WHERE id_adopter = %s",
                     (new_total, id_adopter)
@@ -449,7 +472,7 @@ def update_adopter_status(request):
 
             conn.commit()
             print("Debug - Changes committed to database")
-            
+
             cur.close()
             conn.close()
 
@@ -457,14 +480,16 @@ def update_adopter_status(request):
 
         except Exception as e:
             print(f"Debug - Error occurred: {str(e)}")
-            conn.rollback()
-            if 'cur' in locals() and cur:
+            if 'conn' in locals():
+                conn.rollback()
+            if 'cur' in locals():
                 cur.close()
-            if 'conn' in locals() and conn:
+            if 'conn' in locals():
                 conn.close()
             return JsonResponse({"success": False, "error": str(e)}, status=500)
-    
+
     return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)
+
 
 @csrf_exempt
 def stop_adoption(request):

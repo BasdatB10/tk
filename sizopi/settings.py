@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'base',
+    'userprofile',
     'animal_habitat_management',
     'medical_checkup_feeding',
     'facility_ticketing',

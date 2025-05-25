@@ -1,27 +1,21 @@
 from django.shortcuts import render, redirect
-import json
-import os
+import json, uuid, psycopg2, os, dotenv
 from django.conf import settings
 from datetime import datetime
-
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-import psycopg2
-from django.conf import settings
-from datetime import datetime
-import uuid
+dotenv.load_dotenv()
+
 
 @login_required
 def medical_record(request):
-    """View untuk menampilkan daftar rekam medis"""
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
@@ -140,11 +134,11 @@ def add_medical_record(request):
     # GET request - tampilkan form
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
@@ -177,11 +171,11 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -220,11 +214,11 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
     # GET request - tampilkan form edit
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
@@ -280,11 +274,11 @@ def delete_medical_record(request, id_hewan, tanggal_pemeriksaan):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -323,11 +317,11 @@ def medical_checkup(request):
     """View untuk menampilkan jadwal pemeriksaan kesehatan"""
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
@@ -378,11 +372,11 @@ def add_checkup_schedule(request):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -447,11 +441,11 @@ def edit_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -500,11 +494,11 @@ def edit_checkup_frequency(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -553,11 +547,11 @@ def delete_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -600,11 +594,11 @@ def feeding_schedule(request):
     """View untuk menampilkan jadwal pemberian pakan"""
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
@@ -660,11 +654,11 @@ def add_feeding_schedule(request):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -718,11 +712,11 @@ def edit_feeding_schedule(request, id_hewan, jadwal):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -775,11 +769,11 @@ def delete_feeding_schedule(request, id_hewan, jadwal):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -823,11 +817,11 @@ def give_feeding(request, id_hewan, jadwal):
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
@@ -877,11 +871,11 @@ def feeding_history(request):
     """View untuk menampilkan riwayat pemberian pakan"""
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")

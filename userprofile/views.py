@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-import psycopg2
+import psycopg2, os, dotenv
+dotenv.load_dotenv()
 from django.conf import settings
+
 
 @login_required
 def profile_view(request):
     username = request.user.username
-    
-    # Process form submission
     if request.method == 'POST':
         success = update_profile(username, request.POST)
         if success:
@@ -54,11 +54,11 @@ def get_user_profile_data(username):
     """Get user profile data based on role"""
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         
@@ -85,8 +85,6 @@ def get_user_profile_data(username):
             }
         }
         
-        # Check user role and get additional data
-        # Check if pengunjung
         cursor.execute("""
             SELECT alamat, tgl_lahir 
             FROM PENGUNJUNG 
@@ -158,11 +156,11 @@ def update_profile(username, post_data):
     """Update user profile"""
     try:
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         
@@ -234,11 +232,11 @@ def change_password(username, old_password, new_password, confirm_password):
             return False, "Password baru harus minimal 6 karakter."
         
         conn = psycopg2.connect(
-            host=settings.DATABASES['default']['HOST'],
-            database=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            port=settings.DATABASES['default']['PORT']
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
         )
         cursor = conn.cursor()
         

@@ -42,7 +42,7 @@
         }
 
         .form-container {
-            max-width: 700px;
+            max-width: 500px;
             width: 100%;
             padding: 2rem;
             background-color: white;
@@ -52,31 +52,31 @@
 
         input, textarea, select {
             width: 100%;
-            padding: 6px 10px;
+            padding: 8px 12px;
             margin-top: 0.5rem;
             border: 1px solid #ccc;
             border-radius: 8px;
-        }
-
-        input::placeholder, textarea::placeholder, select::placeholder {
-            font-size: 0.8rem;
-            color: #888;
+            font-size: 1rem;
         }
 
         .form-button {
             padding: 12px 24px;
             font-size: 1rem;
             border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         .form-button:hover {
-            background-color: #ED8764;
+            opacity: 0.9;
         }
 
         .alert {
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
         }
         
         .alert-success {
@@ -111,42 +111,44 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 1rem;
         }
         
         table th, table td {
             border: 1px solid #e0e0e0;
-            padding: 0.75rem;
+            padding: 12px;
             text-align: left;
         }
         
         table th {
             background-color: #f8f9fa;
             font-weight: 600;
+            color: #883526;
         }
         
         .action-button {
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
             font-size: 0.875rem;
             cursor: pointer;
             margin: 2px;
+            border: none;
+            font-weight: 500;
         }
         
-        .info-card {
+        .edit-frequency-section {
             background-color: #f8f9fa;
             border-radius: 8px;
-            padding: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .frequency-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 1rem;
-        }
-        
-        .upcoming-date {
-            color: #28a745;
-            font-weight: 600;
-        }
-        
-        .past-date {
-            color: #dc3545;
-            text-decoration: line-through;
         }
     </style>
 </head>
@@ -156,7 +158,7 @@
     <div class="min-h-screen px-8 py-10 flex flex-col items-center max-w-7xl mx-auto">
         <div class="main-container space-y-6 w-full">
             <h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
-                Jadwal Pemeriksaan Kesehatan
+                🗓 JADWAL PEMERIKSAAN KESEHATAN
             </h2>
             
             {% if messages %}
@@ -167,81 +169,47 @@
                 {% endfor %}
             {% endif %}
         
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 justify-center">
                 <label for="animal-select" class="text-lg font-semibold text-[#49241B]">Pilih Hewan:</label>
                 <select id="animal-select" class="w-64 text-lg">
                     <option value="" disabled selected>-- Pilih Hewan --</option>
-                    {% for animal in animals %}
-                        <option value="{{ animal.0 }}">{{ animal.1 }}</option>
+                    {% for animal_id, animal_data in animals_data.items %}
+                        <option value="{{ animal_id }}">{{ animal_data.nama }} ({{ animal_data.spesies }})</option>
                     {% endfor %}
                 </select>
-                <button id="add-schedule-btn" class="form-button bg-[#FBBE99] text-white font-semibold">
-                    + Tambah Jadwal Pemeriksaan
-                </button>
             </div>
             
             <div id="schedule-info" class="hidden">
-                <div id="animal-info" class="bg-gray-50 p-6 rounded-lg shadow-sm mb-6">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Frequency Section -->
+                <div class="edit-frequency-section">
+                    <div class="frequency-display">
                         <div>
-                            <p class="text-sm text-gray-500">Nama</p>
-                            <p class="font-semibold text-lg" id="animal-name">Nama</p>
+                            <span class="text-lg font-semibold text-[#883526]">Frekuensi Pemeriksaan Rutin: </span>
+                            <span id="frequency-value" class="text-lg font-bold">-</span>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Spesies</p>
-                            <p class="font-semibold text-lg" id="animal-species">Spesies</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Status Kesehatan</p>
-                            <p class="font-semibold text-lg" id="animal-health">Status</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Habitat</p>
-                            <p class="font-semibold text-lg" id="animal-habitat">Habitat</p>
-                        </div>
+                        <button id="edit-frequency-btn" class="action-button bg-blue-500 text-white">
+                            Edit
+                        </button>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button id="add-schedule-btn" class="form-button bg-[#FBBE99] text-white font-semibold">
+                            + Tambah Jadwal Pemeriksaan
+                        </button>
                     </div>
                 </div>
                 
+                <!-- Schedule Table -->
                 <div class="mt-4">
-                    <h3 class="text-xl font-bold text-[#883526] mb-4">Jadwal Pemeriksaan</h3>
                     <table class="w-full">
                         <thead>
                             <tr>
-                                <th>Tanggal Pemeriksaan</th>
-                                <th>Frekuensi (Bulan)</th>
-                                <th>Status</th>
+                                <th>Tanggal Pemeriksaan Selanjutnya</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="schedule-table-body">
-                            {% for checkup in medical_checkup %}
-                                <tr>
-                                    <td>{{ checkup.1|date:"d F Y" }}</td>
-                                    <td>{{ checkup.2 }} bulan</td>
-                                    <td>
-                                        {% now "Y-m-d" as today %}
-                                        {% if checkup.1|date:"Y-m-d" < today %}
-                                            <span class="past-date">Lewat</span>
-                                        {% else %}
-                                            <span class="upcoming-date">Mendatang</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <button onclick="editSchedule('{{ checkup.0 }}', '{{ checkup.1 }}')" 
-                                                class="action-button bg-blue-500 text-white">Edit Tanggal</button>
-                                        <button onclick="editFrequency('{{ checkup.0 }}', '{{ checkup.1 }}', {{ checkup.2 }})" 
-                                                class="action-button bg-yellow-500 text-white">Edit Frekuensi</button>
-                                        <button onclick="deleteSchedule('{{ checkup.0 }}', '{{ checkup.1 }}')" 
-                                                class="action-button bg-red-500 text-white">Hapus</button>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center text-gray-500 py-4">
-                                        Belum ada jadwal pemeriksaan.
-                                    </td>
-                                </tr>
-                            {% endfor %}
+                            <!-- Content will be populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -252,28 +220,31 @@
     <!-- Modal Tambah Jadwal -->
     <div id="add-schedule-modal" class="modal hidden">
         <div class="form-container bg-white">
-            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Tambah Jadwal Pemeriksaan
+            <h3 class="text-2xl font-bold text-[#883526] text-center mb-6">
+                TAMBAH JADWAL
             </h3>
             <form method="post" action="{% url 'medical_checkup_feeding:add_checkup_schedule' %}" class="space-y-6">
                 {% csrf_token %}
                 <input type="hidden" id="add-animal-id" name="id_hewan" />
                 
                 <div>
-                    <label for="add-examination-date" class="text-sm text-[#49241B]">Tanggal Pemeriksaan Selanjutnya:</label>
-                    <input type="date" id="add-examination-date" name="tgl_pemeriksaan_selanjutnya" class="text-lg" required />
+                    <label for="add-examination-date" class="text-sm font-semibold text-[#49241B]">Tanggal Pemeriksaan Selanjutnya:</label>
+                    <input type="date" id="add-examination-date" name="tgl_pemeriksaan_selanjutnya" required />
                 </div>
                 
                 <div>
-                    <label for="add-frequency" class="text-sm text-[#49241B]">Frekuensi Pemeriksaan (Bulan):</label>
-                    <input type="number" id="add-frequency" name="freq_pemeriksaan_rutin" value="3" min="1" max="12" class="text-lg" required />
+                    <label for="add-frequency" class="text-sm font-semibold text-[#49241B]">Frekuensi Pemeriksaan Rutin:</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="add-frequency" name="freq_pemeriksaan_rutin" min="1" max="12" value="3" required />
+                        <span class="text-sm text-gray-600">(x bulan sekali)</span>
+                    </div>
                 </div>
                 
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white">
                         SIMPAN
                     </button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
+                    <button type="button" class="form-button bg-gray-500 text-white close-modal">
                         BATAL
                     </button>
                 </div>
@@ -281,11 +252,11 @@
         </div>
     </div>
     
-    <!-- Modal Edit Tanggal -->
+    <!-- Modal Edit Jadwal -->
     <div id="edit-schedule-modal" class="modal hidden">
         <div class="form-container bg-white">
-            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Edit Tanggal Pemeriksaan
+            <h3 class="text-2xl font-bold text-[#883526] text-center mb-6">
+                EDIT JADWAL
             </h3>
             <form method="post" id="edit-schedule-form" class="space-y-6">
                 {% csrf_token %}
@@ -293,15 +264,15 @@
                 <input type="hidden" id="edit-old-date" name="old_date" />
                 
                 <div>
-                    <label for="edit-examination-date" class="text-sm text-[#49241B]">Tanggal Pemeriksaan Baru:</label>
-                    <input type="date" id="edit-examination-date" name="tgl_pemeriksaan_selanjutnya" class="text-lg" required />
+                    <label for="edit-examination-date" class="text-sm font-semibold text-[#49241B]">Tanggal Pemeriksaan Selanjutnya:</label>
+                    <input type="date" id="edit-examination-date" name="tgl_pemeriksaan_selanjutnya" required />
                 </div>
                 
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white">
                         SIMPAN
                     </button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
+                    <button type="button" class="form-button bg-gray-500 text-white close-modal">
                         BATAL
                     </button>
                 </div>
@@ -312,24 +283,26 @@
     <!-- Modal Edit Frekuensi -->
     <div id="edit-frequency-modal" class="modal hidden">
         <div class="form-container bg-white">
-            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Edit Frekuensi Pemeriksaan
+            <h3 class="text-2xl font-bold text-[#883526] text-center mb-6">
+                EDIT FREKUENSI
             </h3>
             <form method="post" id="edit-frequency-form" class="space-y-6">
                 {% csrf_token %}
                 <input type="hidden" id="freq-animal-id" name="id_hewan" />
-                <input type="hidden" id="freq-date" name="date" />
                 
                 <div>
-                    <label for="edit-frequency-input" class="text-sm text-[#49241B]">Frekuensi Pemeriksaan (Bulan):</label>
-                    <input type="number" id="edit-frequency-input" name="freq_pemeriksaan_rutin" min="1" max="12" class="text-lg" required />
+                    <label for="edit-frequency-input" class="text-sm font-semibold text-[#49241B]">Frekuensi pemeriksaan rutin:</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="edit-frequency-input" name="freq_pemeriksaan_rutin" min="1" max="12" required />
+                        <span class="text-sm text-gray-600">(x bulan sekali)</span>
+                    </div>
                 </div>
                 
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white">
                         SIMPAN
                     </button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
+                    <button type="button" class="form-button bg-gray-500 text-white close-modal">
                         BATAL
                     </button>
                 </div>
@@ -337,13 +310,13 @@
         </div>
     </div>
     
-    <!-- Modal Konfirmasi Hapus -->
+    <!-- Modal Hapus Jadwal -->
     <div id="delete-modal" class="modal hidden">
         <div class="form-container bg-white">
-            <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Konfirmasi Penghapusan
+            <h3 class="text-2xl font-bold text-[#883526] text-center mb-6">
+                HAPUS JADWAL
             </h3>
-            <p class="text-center mb-6">Apakah Anda yakin ingin menghapus jadwal pemeriksaan ini?</p>
+            <p class="text-center mb-6 text-lg">Apakah anda yakin ingin menghapus jadwal pemeriksaan ini?</p>
             <form method="post" id="delete-form" class="space-y-6">
                 {% csrf_token %}
                 <input type="hidden" id="delete-animal-id" name="id_hewan" />
@@ -351,10 +324,10 @@
                 <input type="hidden" name="confirm_delete" value="YA" />
                 
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-red-500 text-white font-semibold">
-                        YA, HAPUS
+                    <button type="submit" class="form-button bg-red-500 text-white">
+                        YA
                     </button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">
+                    <button type="button" class="form-button bg-gray-500 text-white close-modal">
                         TIDAK
                     </button>
                 </div>
@@ -363,26 +336,41 @@
     </div>
 
     <script>
-        // Data dari backend
         const animalsData = {
-            {% for animal in animals %}
-                '{{ animal.0 }}': {
-                    id: '{{ animal.0 }}',
-                    name: '{{ animal.1 }}',
-                    species: '{{ animal.2 }}',
-                    health: '{{ animal.3 }}'
+            {% for animal_id, animal_data in animals_data.items %}
+                '{{ animal_id }}': {
+                    id: '{{ animal_id }}',
+                    name: '{{ animal_data.nama }}',
+                    species: '{{ animal_data.spesies }}',
+                    health: '{{ animal_data.status_kesehatan }}',
+                    habitat: '{{ animal_data.nama_habitat }}',
+                    frequency: {{ animal_data.frequency|default:"null" }},
+                    schedules: [
+                        {% for schedule in animal_data.schedules %}
+                            {
+                                tanggal: '{{ schedule.tanggal|date:"Y-m-d" }}',
+                                frequency: {{ schedule.frequency }}
+                            }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]
                 },
             {% endfor %}
         };
         
+        let currentAnimalId = null;
+        let currentFrequency = null;
+        
         const animalSelect = document.getElementById('animal-select');
         const scheduleInfo = document.getElementById('schedule-info');
+        const scheduleTableBody = document.getElementById('schedule-table-body');
+        const frequencyValue = document.getElementById('frequency-value');
         
         // Event listeners
         animalSelect.addEventListener('change', function() {
             const animalId = this.value;
             if (animalId && animalsData[animalId]) {
-                displayAnimalInfo(animalId);
+                currentAnimalId = animalId;
+                loadAnimalScheduleData(animalId);
                 scheduleInfo.classList.remove('hidden');
             } else {
                 scheduleInfo.classList.add('hidden');
@@ -390,18 +378,44 @@
         });
         
         document.getElementById('add-schedule-btn').addEventListener('click', function() {
-            const animalId = animalSelect.value;
-            if (!animalId) {
+            if (!currentAnimalId) {
                 alert('Silakan pilih hewan terlebih dahulu.');
                 return;
             }
             
-            document.getElementById('add-animal-id').value = animalId;
+            document.getElementById('add-animal-id').value = currentAnimalId;
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('add-examination-date').min = tomorrow.toISOString().split('T')[0];
+            if (currentFrequency) {
+                document.getElementById('add-frequency').value = currentFrequency;
+            }
             
             document.getElementById('add-schedule-modal').classList.remove('hidden');
+        });
+        
+        document.getElementById('edit-frequency-btn').addEventListener('click', function() {
+            if (!currentAnimalId) {
+                alert('Silakan pilih hewan terlebih dahulu.');
+                return;
+            }
+            
+            if (!currentFrequency) {
+                alert('Hewan ini belum memiliki jadwal pemeriksaan. Silakan tambah jadwal terlebih dahulu.');
+                return;
+            }
+            
+            document.getElementById('freq-animal-id').value = currentAnimalId;
+            document.getElementById('edit-frequency-input').value = currentFrequency;
+            
+            const animalData = animalsData[currentAnimalId];
+            if (animalData.schedules.length > 0) {
+                const firstScheduleDate = animalData.schedules[0].tanggal;
+                document.getElementById('edit-frequency-form').action = 
+                    "{% url 'medical_checkup_feeding:edit_checkup_frequency' '0' '0000-01-01' %}".replace('0/0000-01-01', currentAnimalId + '/' + firstScheduleDate);
+            }
+            
+            document.getElementById('edit-frequency-modal').classList.remove('hidden');
         });
         
         document.querySelectorAll('.close-modal').forEach(button => {
@@ -412,12 +426,41 @@
             });
         });
         
-        function displayAnimalInfo(animalId) {
-            const animal = animalsData[animalId];
-            document.getElementById('animal-name').textContent = animal.name;
-            document.getElementById('animal-species').textContent = animal.species;
-            document.getElementById('animal-health').textContent = animal.health;
-            // Habitat akan diambil dari data medical_checkup jika ada
+        function loadAnimalScheduleData(animalId) {
+            const animalData = animalsData[animalId];
+            
+            if (animalData.frequency) {
+                currentFrequency = animalData.frequency;
+                frequencyValue.textContent = `${animalData.frequency} bulan sekali`;
+            } else {
+                currentFrequency = null;
+                frequencyValue.textContent = '-';
+            }
+            scheduleTableBody.innerHTML = '';
+            
+            if (animalData.schedules.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="2" class="text-center text-gray-500 py-4">
+                        Tidak ada jadwal pemeriksaan
+                    </td>
+                `;
+                scheduleTableBody.appendChild(row);
+            } else {
+                animalData.schedules.forEach(schedule => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${schedule.tanggal}</td>
+                        <td>
+                            <button onclick="editSchedule('${animalId}', '${schedule.tanggal}')" 
+                                    class="action-button bg-blue-500 text-white">Edit</button>
+                            <button onclick="deleteSchedule('${animalId}', '${schedule.tanggal}')" 
+                                    class="action-button bg-red-500 text-white">Hapus</button>
+                        </td>
+                    `;
+                    scheduleTableBody.appendChild(row);
+                });
+            }
         }
         
         function editSchedule(animalId, date) {
@@ -433,17 +476,6 @@
                 "{% url 'medical_checkup_feeding:edit_checkup_schedule' '0' '0000-01-01' %}".replace('0/0000-01-01', animalId + '/' + date);
             
             document.getElementById('edit-schedule-modal').classList.remove('hidden');
-        }
-        
-        function editFrequency(animalId, date, currentFreq) {
-            document.getElementById('freq-animal-id').value = animalId;
-            document.getElementById('freq-date').value = date;
-            document.getElementById('edit-frequency-input').value = currentFreq;
-            
-            document.getElementById('edit-frequency-form').action = 
-                "{% url 'medical_checkup_feeding:edit_checkup_frequency' '0' '0000-01-01' %}".replace('0/0000-01-01', animalId + '/' + date);
-            
-            document.getElementById('edit-frequency-modal').classList.remove('hidden');
         }
         
         function deleteSchedule(animalId, date) {

@@ -4,10 +4,90 @@ from django.conf import settings
 from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from functools import wraps
 dotenv.load_dotenv()
 
+def session_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if 'username' not in request.session:
+            return redirect('base:home')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
-@login_required
+def dokter_hewan_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if 'username' not in request.session:
+            return redirect('base:home')
+        
+        try:
+            conn = psycopg2.connect(
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
+            )
+            cursor = conn.cursor()
+            cursor.execute("SET search_path TO SIZOPI;")
+            
+            cursor.execute("""
+                SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
+            """, (request.session.get('username'),))
+            
+            dokter_hewan = cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+            
+            if not dokter_hewan:
+                return redirect('base:dashboard')
+                
+        except Exception as e:
+            messages.error(request, f'Error checking user role: {str(e)}')
+            return redirect('base:dashboard')
+            
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def penjaga_hewan_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if 'username' not in request.session:
+            return redirect('base:home')
+  
+        try:
+            conn = psycopg2.connect(
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
+            )
+            cursor = conn.cursor()
+            cursor.execute("SET search_path TO SIZOPI;")
+            
+            cursor.execute("""
+                SELECT username_jh FROM PENJAGA_HEWAN WHERE username_jh = %s
+            """, (request.session.get('username'),))
+            
+            penjaga_hewan = cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+            
+            if not penjaga_hewan:
+                return redirect('base:dashboard')
+                
+        except Exception as e:
+            messages.error(request, f'Error checking user role: {str(e)}')
+            return redirect('base:dashboard')
+            
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+@dokter_hewan_required
 def medical_record(request):
     try:
         conn = psycopg2.connect(
@@ -20,7 +100,6 @@ def medical_record(request):
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
         
-        # Query untuk mendapatkan rekam medis dengan informasi hewan dan dokter
         cursor.execute("""
             SELECT 
                 cm.id_hewan,
@@ -41,8 +120,7 @@ def medical_record(request):
         """)
         
         medical_records = cursor.fetchall()
-        
-        # Query untuk mendapatkan daftar hewan
+      
         cursor.execute("""
             SELECT id, nama, spesies, status_kesehatan
             FROM HEWAN
@@ -65,32 +143,30 @@ def medical_record(request):
         messages.error(request, f'Error loading medical records: {str(e)}')
         return render(request, 'medical_record.html', {'medical_records': [], 'animals': []})
 
-@login_required
+@dokter_hewan_required
 def add_medical_record(request):
     """View untuk menambah rekam medis baru"""
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
-                host=settings.DATABASES['default']['HOST'],
-                database=settings.DATABASES['default']['NAME'],
-                user=settings.DATABASES['default']['USER'],
-                password=settings.DATABASES['default']['PASSWORD'],
-                port=settings.DATABASES['default']['PORT']
+                host=os.getenv("DB_HOST"),
+                database=os.getenv("DB_NAME"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                port=os.getenv("DB_PORT")
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
             
-            # Ambil data dari form
             id_hewan = request.POST.get('id_hewan')
             tanggal_pemeriksaan = request.POST.get('tanggal_pemeriksaan')
             status_kesehatan = request.POST.get('status_kesehatan')
             diagnosis = request.POST.get('diagnosis', '')
             pengobatan = request.POST.get('pengobatan', '')
             
-            # Validasi: hanya dokter hewan yang bisa menambah rekam medis
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
-            """, (request.user.username,))
+            """, (request.session.get('username'),))
             
             if not cursor.fetchone():
                 messages.error(request, 'Hanya dokter hewan yang dapat menambah rekam medis.')
@@ -98,22 +174,20 @@ def add_medical_record(request):
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_record')
             
-            # Insert rekam medis baru
             cursor.execute("""
                 INSERT INTO CATATAN_MEDIS 
                 (id_hewan, username_dh, tanggal_pemeriksaan, diagnosis, pengobatan, status_kesehatan, catatan_tindak_lanjut)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 id_hewan,
-                request.user.username,
+                request.session.get('username'),
                 tanggal_pemeriksaan,
                 diagnosis if diagnosis else None,
                 pengobatan if pengobatan else None,
                 status_kesehatan,
-                None  # catatan_tindak_lanjut akan diisi nanti jika diperlukan
+                None 
             ))
-            
-            # Update status kesehatan hewan
+
             cursor.execute("""
                 UPDATE HEWAN 
                 SET status_kesehatan = %s 
@@ -130,8 +204,7 @@ def add_medical_record(request):
         except Exception as e:
             messages.error(request, f'Error adding medical record: {str(e)}')
             return redirect('medical_checkup_feeding:medical_record')
-    
-    # GET request - tampilkan form
+
     try:
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST"),
@@ -143,7 +216,6 @@ def add_medical_record(request):
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
         
-        # Ambil daftar hewan
         cursor.execute("""
             SELECT id, nama, spesies, status_kesehatan
             FROM HEWAN
@@ -165,7 +237,7 @@ def add_medical_record(request):
         messages.error(request, f'Error loading form: {str(e)}')
         return redirect('medical_checkup_feeding:medical_record')
 
-@login_required
+@dokter_hewan_required
 def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
     """View untuk mengedit rekam medis (hanya untuk hewan yang sakit)"""
     if request.method == 'POST':
@@ -180,12 +252,10 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
             
-            # Ambil data dari form
             catatan_tindak_lanjut = request.POST.get('catatan_tindak_lanjut', '')
             diagnosis_baru = request.POST.get('diagnosis_baru', '')
             pengobatan_baru = request.POST.get('pengobatan_baru', '')
             
-            # Update rekam medis
             cursor.execute("""
                 UPDATE CATATAN_MEDIS 
                 SET catatan_tindak_lanjut = %s,
@@ -211,7 +281,6 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
             messages.error(request, f'Error updating medical record: {str(e)}')
             return redirect('medical_checkup_feeding:medical_record')
     
-    # GET request - tampilkan form edit
     try:
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST"),
@@ -223,7 +292,6 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
         
-        # Ambil data rekam medis yang akan diedit
         cursor.execute("""
             SELECT 
                 cm.id_hewan,
@@ -248,8 +316,7 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
             conn.close()
             return redirect('medical_checkup_feeding:medical_record')
         
-        # Cek apakah hewan sakit (hanya bisa edit jika sakit)
-        if medical_record[8] != 'Sakit':  # status_hewan_saat_ini
+        if medical_record[8] != 'Sakit': 
             messages.error(request, 'Rekam medis hanya dapat diedit untuk hewan yang sakit.')
             cursor.close()
             conn.close()
@@ -268,7 +335,7 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
         messages.error(request, f'Error loading medical record: {str(e)}')
         return redirect('medical_checkup_feeding:medical_record')
 
-@login_required
+@dokter_hewan_required
 def delete_medical_record(request, id_hewan, tanggal_pemeriksaan):
     """View untuk menghapus rekam medis"""
     if request.method == 'POST':
@@ -282,19 +349,15 @@ def delete_medical_record(request, id_hewan, tanggal_pemeriksaan):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            
-            # Validasi: hanya dokter hewan yang bisa menghapus
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
-            """, (request.user.username,))
+            """, (request.session.get('username'),))
             
             if not cursor.fetchone():
                 messages.error(request, 'Hanya dokter hewan yang dapat menghapus rekam medis.')
                 cursor.close()
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_record')
-            
-            # Hapus rekam medis
             cursor.execute("""
                 DELETE FROM CATATAN_MEDIS 
                 WHERE id_hewan = %s AND tanggal_pemeriksaan = %s
@@ -311,8 +374,7 @@ def delete_medical_record(request, id_hewan, tanggal_pemeriksaan):
     
     return redirect('medical_checkup_feeding:medical_record')
 
-
-@login_required
+@dokter_hewan_required
 def medical_checkup(request):
     """View untuk menampilkan jadwal pemeriksaan kesehatan"""
     try:
@@ -326,47 +388,57 @@ def medical_checkup(request):
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
         
-        # Query untuk mendapatkan jadwal pemeriksaan kesehatan dengan informasi hewan
         cursor.execute("""
             SELECT 
-                jpk.id_hewan,
-                jpk.tgl_pemeriksaan_selanjutnya,
-                jpk.freq_pemeriksaan_rutin,
-                h.nama as nama_hewan,
+                h.id,
+                h.nama,
                 h.spesies,
                 h.status_kesehatan,
-                h.nama_habitat
-            FROM JADWAL_PEMERIKSAAN_KESEHATAN jpk
-            JOIN HEWAN h ON jpk.id_hewan = h.id
-            ORDER BY jpk.tgl_pemeriksaan_selanjutnya ASC
+                h.nama_habitat,
+                jpk.tgl_pemeriksaan_selanjutnya,
+                jpk.freq_pemeriksaan_rutin
+            FROM HEWAN h
+            LEFT JOIN JADWAL_PEMERIKSAAN_KESEHATAN jpk ON h.id = jpk.id_hewan
+            ORDER BY h.nama
         """)
         
-        medical_checkup = cursor.fetchall()
-        
-        # Query untuk mendapatkan daftar hewan yang dipilih dokter hewan
-        cursor.execute("""
-            SELECT id, nama, spesies, status_kesehatan, nama_habitat
-            FROM HEWAN
-            ORDER BY nama
-        """)
-        
-        animals = cursor.fetchall()
+        animals_with_schedules = cursor.fetchall()
+        animals = {}
+        for row in animals_with_schedules:
+            animal_id = str(row[0])
+            if animal_id not in animals:
+                animals[animal_id] = {
+                    'id': animal_id,
+                    'nama': row[1],
+                    'spesies': row[2],
+                    'status_kesehatan': row[3],
+                    'nama_habitat': row[4],
+                    'schedules': [],
+                    'frequency': None
+                }
+            
+            if row[5]: 
+                animals[animal_id]['schedules'].append({
+                    'tanggal': row[5],
+                    'frequency': row[6]
+                })
+                if not animals[animal_id]['frequency']:
+                    animals[animal_id]['frequency'] = row[6]
         
         cursor.close()
         conn.close()
         
         context = {
-            'medical_checkup': medical_checkup,
-            'animals': animals,
+            'animals_data': animals,
         }
         
         return render(request, 'medical_checkup.html', context)
         
     except Exception as e:
         messages.error(request, f'Error loading medical checkup schedule: {str(e)}')
-        return render(request, 'medical_checkup.html', {'medical_checkup': [], 'animals': []})
-
-@login_required
+        return render(request, 'medical_checkup.html', {'animals_data': {}})
+    
+@dokter_hewan_required
 def add_checkup_schedule(request):
     """View untuk menambah jadwal pemeriksaan kesehatan baru"""
     if request.method == 'POST':
@@ -381,15 +453,13 @@ def add_checkup_schedule(request):
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
             
-            # Ambil data dari form
             id_hewan = request.POST.get('id_hewan')
             tgl_pemeriksaan_selanjutnya = request.POST.get('tgl_pemeriksaan_selanjutnya')
-            freq_pemeriksaan_rutin = request.POST.get('freq_pemeriksaan_rutin', 3)  # default 3 bulan
-            
-            # Validasi: hanya dokter hewan yang bisa menambah jadwal
+            freq_pemeriksaan_rutin = request.POST.get('freq_pemeriksaan_rutin', 3) 
+          
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
-            """, (request.user.username,))
+            """, (request.session.get('username'),))
             
             if not cursor.fetchone():
                 messages.error(request, 'Hanya dokter hewan yang dapat menambah jadwal pemeriksaan.')
@@ -397,7 +467,6 @@ def add_checkup_schedule(request):
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
             
-            # Cek apakah jadwal untuk hewan ini sudah ada
             cursor.execute("""
                 SELECT COUNT(*) FROM JADWAL_PEMERIKSAAN_KESEHATAN 
                 WHERE id_hewan = %s
@@ -411,7 +480,6 @@ def add_checkup_schedule(request):
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
             
-            # Insert jadwal pemeriksaan baru
             cursor.execute("""
                 INSERT INTO JADWAL_PEMERIKSAAN_KESEHATAN 
                 (id_hewan, tgl_pemeriksaan_selanjutnya, freq_pemeriksaan_rutin)
@@ -435,7 +503,7 @@ def add_checkup_schedule(request):
     
     return redirect('medical_checkup_feeding:medical_checkup')
 
-@login_required
+@dokter_hewan_required
 def edit_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     """View untuk mengedit jadwal pemeriksaan kesehatan"""
     if request.method == 'POST':
@@ -450,13 +518,11 @@ def edit_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
             
-            # Ambil data dari form
             tgl_pemeriksaan_baru = request.POST.get('tgl_pemeriksaan_selanjutnya')
             
-            # Validasi: hanya dokter hewan yang bisa mengedit
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
-            """, (request.user.username,))
+            """, (request.session.get('username'),))
             
             if not cursor.fetchone():
                 messages.error(request, 'Hanya dokter hewan yang dapat mengedit jadwal pemeriksaan.')
@@ -464,7 +530,6 @@ def edit_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
             
-            # Update jadwal pemeriksaan
             cursor.execute("""
                 UPDATE JADWAL_PEMERIKSAAN_KESEHATAN 
                 SET tgl_pemeriksaan_selanjutnya = %s
@@ -488,7 +553,7 @@ def edit_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     
     return redirect('medical_checkup_feeding:medical_checkup')
 
-@login_required
+@dokter_hewan_required
 def edit_checkup_frequency(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     """View untuk mengedit frekuensi pemeriksaan rutin"""
     if request.method == 'POST':
@@ -502,22 +567,16 @@ def edit_checkup_frequency(request, id_hewan, tgl_pemeriksaan_selanjutnya):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            
-            # Ambil data dari form
             freq_pemeriksaan_rutin = request.POST.get('freq_pemeriksaan_rutin')
-            
-            # Validasi: hanya dokter hewan yang bisa mengedit
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
-            """, (request.user.username,))
+            """, (request.session.get('username'),))
             
             if not cursor.fetchone():
                 messages.error(request, 'Hanya dokter hewan yang dapat mengedit frekuensi pemeriksaan.')
                 cursor.close()
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
-            
-            # Update frekuensi pemeriksaan
             cursor.execute("""
                 UPDATE JADWAL_PEMERIKSAAN_KESEHATAN 
                 SET freq_pemeriksaan_rutin = %s
@@ -541,7 +600,7 @@ def edit_checkup_frequency(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     
     return redirect('medical_checkup_feeding:medical_checkup')
 
-@login_required
+@dokter_hewan_required
 def delete_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     """View untuk menghapus jadwal pemeriksaan kesehatan"""
     if request.method == 'POST':
@@ -555,11 +614,9 @@ def delete_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            
-            # Validasi: hanya dokter hewan yang bisa menghapus
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
-            """, (request.user.username,))
+            """, (request.session.get('username'),))
             
             if not cursor.fetchone():
                 messages.error(request, 'Hanya dokter hewan yang dapat menghapus jadwal pemeriksaan.')
@@ -588,10 +645,9 @@ def delete_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
     
     return redirect('medical_checkup_feeding:medical_checkup')
 
-
-@login_required
+@penjaga_hewan_required
 def feeding_schedule(request):
-    """View untuk menampilkan jadwal pemberian pakan"""
+    """View untuk menampilkan jadwal pemberian pakan dan riwayat"""
     try:
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST"),
@@ -602,15 +658,17 @@ def feeding_schedule(request):
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
-        
-        # Query untuk mendapatkan jadwal pemberian pakan dengan status "Menunggu Pemberian"
+       
         cursor.execute("""
             SELECT 
                 p.id_hewan,
                 p.jadwal,
                 p.jenis,
                 p.jumlah,
-                p.status,
+                CASE 
+                    WHEN p.status = 'Habis' THEN 'Selesai Diberikan'
+                    ELSE 'Menunggu Pemberian'
+                END as status,
                 h.nama as nama_hewan,
                 h.spesies,
                 h.asal_hewan,
@@ -619,20 +677,44 @@ def feeding_schedule(request):
                 h.status_kesehatan
             FROM PAKAN p
             JOIN HEWAN h ON p.id_hewan = h.id
-            WHERE p.status = 'Menunggu Pemberian'
-            ORDER BY p.jadwal ASC
-        """)
-        
+            ORDER BY p.jadwal DESC
+            """)
+            
         pakan_data = cursor.fetchall()
-        
-        # Query untuk mendapatkan daftar hewan
         cursor.execute("""
-            SELECT id, nama, spesies, status_kesehatan
+            SELECT id, nama, spesies, status_kesehatan, asal_hewan, nama_habitat
             FROM HEWAN
             ORDER BY nama
         """)
         
         hewan_data = cursor.fetchall()
+        cursor.execute("""
+            SELECT 
+                p.id_hewan,
+                p.jadwal,
+                p.jenis,
+                p.jumlah,
+                'Selesai Diberikan' as status,
+                h.nama as nama_hewan,
+                h.spesies,
+                h.asal_hewan,
+                h.tanggal_lahir,
+                h.nama_habitat,
+                h.status_kesehatan,
+                m.username_jh
+            FROM PAKAN p
+            JOIN HEWAN h ON p.id_hewan = h.id
+            LEFT JOIN MEMBERI m ON p.id_hewan = m.id_hewan
+            WHERE p.status = 'Habis' 
+            AND EXISTS (
+                SELECT 1 FROM MEMBERI m2 
+                WHERE m2.id_hewan = p.id_hewan 
+                AND m2.username_jh = %s
+            )
+            ORDER BY p.jadwal DESC
+        """, (request.session.get('username'),))
+        
+        feeding_history = cursor.fetchall()
         
         cursor.close()
         conn.close()
@@ -640,15 +722,17 @@ def feeding_schedule(request):
         context = {
             'pakan_data': pakan_data,
             'hewan_data': hewan_data,
+            'feeding_history': feeding_history,
         }
         
         return render(request, 'feeding_schedule.html', context)
         
     except Exception as e:
-        messages.error(request, f'Error loading feeding schedule: {str(e)}')
-        return render(request, 'feeding_schedule.html', {'pakan_data': [], 'hewan_data': []})
+        messages.error(request, f'Error loading feeding data: {str(e)}')
+        return render(request, 'feeding_schedule.html', {'pakan_data': [], 'hewan_data': [], 'feeding_history': []})
 
-@login_required
+
+@penjaga_hewan_required
 def add_feeding_schedule(request):
     """View untuk menambah jadwal pemberian pakan baru"""
     if request.method == 'POST':
@@ -662,25 +746,12 @@ def add_feeding_schedule(request):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            
-            # Ambil data dari form
+          
             id_hewan = request.POST.get('id_hewan')
             jenis_pakan = request.POST.get('jenis_pakan')
             jumlah_pakan = request.POST.get('jumlah_pakan')
             jadwal = request.POST.get('jadwal')
-            
-            # Validasi: hanya penjaga hewan yang bisa menambah jadwal pakan
-            cursor.execute("""
-                SELECT username_jh FROM PENJAGA_HEWAN WHERE username_jh = %s
-            """, (request.user.username,))
-            
-            if not cursor.fetchone():
-                messages.error(request, 'Hanya penjaga hewan yang dapat menambah jadwal pemberian pakan.')
-                cursor.close()
-                conn.close()
-                return redirect('medical_checkup_feeding:feeding_schedule')
-            
-            # Insert jadwal pakan baru
+           
             cursor.execute("""
                 INSERT INTO PAKAN 
                 (id_hewan, jadwal, jenis, jumlah, status)
@@ -690,7 +761,7 @@ def add_feeding_schedule(request):
                 jadwal,
                 jenis_pakan,
                 int(jumlah_pakan),
-                'Menunggu Pemberian'
+                'Tersedia' 
             ))
             
             conn.commit()
@@ -706,7 +777,7 @@ def add_feeding_schedule(request):
     
     return redirect('medical_checkup_feeding:feeding_schedule')
 
-@login_required
+@penjaga_hewan_required
 def edit_feeding_schedule(request, id_hewan, jadwal):
     """View untuk mengedit jadwal pemberian pakan"""
     if request.method == 'POST':
@@ -721,27 +792,26 @@ def edit_feeding_schedule(request, id_hewan, jadwal):
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
             
-            # Ambil data dari form
+            cursor.execute("""
+                SELECT status FROM PAKAN 
+                WHERE id_hewan = %s AND jadwal = %s
+            """, (id_hewan, jadwal))
+            
+            current_status = cursor.fetchone()
+            if not current_status or current_status[0] == 'Habis':
+                messages.error(request, 'Jadwal pakan yang sudah selesai diberikan tidak dapat diedit.')
+                cursor.close()
+                conn.close()
+                return redirect('medical_checkup_feeding:feeding_schedule')
+          
             jenis_pakan_baru = request.POST.get('jenis_pakan_baru')
             jumlah_pakan_baru = request.POST.get('jumlah_pakan_baru')
             jadwal_baru = request.POST.get('jadwal_baru')
             
-            # Validasi: hanya penjaga hewan yang bisa mengedit
-            cursor.execute("""
-                SELECT username_jh FROM PENJAGA_HEWAN WHERE username_jh = %s
-            """, (request.user.username,))
-            
-            if not cursor.fetchone():
-                messages.error(request, 'Hanya penjaga hewan yang dapat mengedit jadwal pemberian pakan.')
-                cursor.close()
-                conn.close()
-                return redirect('medical_checkup_feeding:feeding_schedule')
-            
-            # Update jadwal pakan
             cursor.execute("""
                 UPDATE PAKAN 
                 SET jenis = %s, jumlah = %s, jadwal = %s
-                WHERE id_hewan = %s AND jadwal = %s AND status = 'Menunggu Pemberian'
+                WHERE id_hewan = %s AND jadwal = %s AND status != 'Habis'
             """, (
                 jenis_pakan_baru,
                 int(jumlah_pakan_baru),
@@ -763,7 +833,7 @@ def edit_feeding_schedule(request, id_hewan, jadwal):
     
     return redirect('medical_checkup_feeding:feeding_schedule')
 
-@login_required
+@penjaga_hewan_required
 def delete_feeding_schedule(request, id_hewan, jadwal):
     """View untuk menghapus jadwal pemberian pakan"""
     if request.method == 'POST':
@@ -777,25 +847,23 @@ def delete_feeding_schedule(request, id_hewan, jadwal):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            
-            # Validasi: hanya penjaga hewan yang bisa menghapus
             cursor.execute("""
-                SELECT username_jh FROM PENJAGA_HEWAN WHERE username_jh = %s
-            """, (request.user.username,))
+                SELECT status FROM PAKAN 
+                WHERE id_hewan = %s AND jadwal = %s
+            """, (id_hewan, jadwal))
             
-            if not cursor.fetchone():
-                messages.error(request, 'Hanya penjaga hewan yang dapat menghapus jadwal pemberian pakan.')
+            current_status = cursor.fetchone()
+            if not current_status or current_status[0] == 'Habis':
+                messages.error(request, 'Jadwal pakan yang sudah selesai diberikan tidak dapat dihapus.')
                 cursor.close()
                 conn.close()
                 return redirect('medical_checkup_feeding:feeding_schedule')
-            
-            # Konfirmasi penghapusan
+         
             confirm = request.POST.get('confirm_delete')
             if confirm == 'YA':
-                # Hapus jadwal pakan
                 cursor.execute("""
                     DELETE FROM PAKAN 
-                    WHERE id_hewan = %s AND jadwal = %s AND status = 'Menunggu Pemberian'
+                    WHERE id_hewan = %s AND jadwal = %s AND status != 'Habis'
                 """, (id_hewan, jadwal))
                 
                 conn.commit()
@@ -811,9 +879,9 @@ def delete_feeding_schedule(request, id_hewan, jadwal):
     
     return redirect('medical_checkup_feeding:feeding_schedule')
 
-@login_required
+@penjaga_hewan_required
 def give_feeding(request, id_hewan, jadwal):
-    """View untuk memberikan pakan (ubah status menjadi 'Selesai Diberikan')"""
+    """View untuk memberikan pakan (ubah status menjadi 'Habis')"""
     if request.method == 'POST':
         try:
             conn = psycopg2.connect(
@@ -825,33 +893,18 @@ def give_feeding(request, id_hewan, jadwal):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            
-            # Validasi: hanya penjaga hewan yang bisa memberikan pakan
-            cursor.execute("""
-                SELECT username_jh FROM PENJAGA_HEWAN WHERE username_jh = %s
-            """, (request.user.username,))
-            
-            if not cursor.fetchone():
-                messages.error(request, 'Hanya penjaga hewan yang dapat memberikan pakan.')
-                cursor.close()
-                conn.close()
-                return redirect('medical_checkup_feeding:feeding_schedule')
-            
-            # Update status pakan menjadi 'Selesai Diberikan'
             cursor.execute("""
                 UPDATE PAKAN 
-                SET status = 'Selesai Diberikan'
-                WHERE id_hewan = %s AND jadwal = %s AND status = 'Menunggu Pemberian'
+                SET status = 'Habis'
+                WHERE id_hewan = %s AND jadwal = %s AND status != 'Habis'
             """, (id_hewan, jadwal))
-            
-            # Insert ke tabel MEMBERI untuk mencatat siapa yang memberikan pakan
             cursor.execute("""
                 INSERT INTO MEMBERI (id_hewan, jadwal, username_jh)
                 VALUES (%s, %s, %s)
                 ON CONFLICT (id_hewan) DO UPDATE SET
                 jadwal = EXCLUDED.jadwal,
                 username_jh = EXCLUDED.username_jh
-            """, (id_hewan, jadwal, request.user.username))
+            """, (id_hewan, jadwal, request.session.get('username')))
             
             conn.commit()
             cursor.close()
@@ -865,55 +918,3 @@ def give_feeding(request, id_hewan, jadwal):
             return redirect('medical_checkup_feeding:feeding_schedule')
     
     return redirect('medical_checkup_feeding:feeding_schedule')
-
-@login_required
-def feeding_history(request):
-    """View untuk menampilkan riwayat pemberian pakan"""
-    try:
-        conn = psycopg2.connect(
-            host=os.getenv("DB_HOST"),
-            database=os.getenv("DB_NAME"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            port=os.getenv("DB_PORT")
-        )
-        cursor = conn.cursor()
-        cursor.execute("SET search_path TO SIZOPI;")
-        
-        # Query untuk mendapatkan riwayat pemberian pakan
-        cursor.execute("""
-            SELECT 
-                p.id_hewan,
-                p.jadwal,
-                p.jenis,
-                p.jumlah,
-                p.status,
-                h.nama as nama_hewan,
-                h.spesies,
-                h.asal_hewan,
-                h.tanggal_lahir,
-                h.nama_habitat,
-                h.status_kesehatan,
-                pg.nama_depan || ' ' || pg.nama_belakang as nama_penjaga
-            FROM PAKAN p
-            JOIN HEWAN h ON p.id_hewan = h.id
-            LEFT JOIN MEMBERI m ON p.id_hewan = m.id_hewan AND p.jadwal = m.jadwal
-            LEFT JOIN PENJAGA_HEWAN pj ON m.username_jh = pj.username_jh
-            LEFT JOIN PENGGUNA pg ON pj.username_jh = pg.username
-            ORDER BY p.jadwal DESC
-        """)
-        
-        feeding_history = cursor.fetchall()
-        
-        cursor.close()
-        conn.close()
-        
-        context = {
-            'feeding_history': feeding_history
-        }
-        
-        return render(request, 'feeding_history.html', context)
-        
-    except Exception as e:
-        messages.error(request, f'Error loading feeding history: {str(e)}')
-        return render(request, 'feeding_history.html', {'feeding_history': []})

@@ -34,34 +34,37 @@
 	</script>
 </head>
 <body class="relative min-h-screen bg-white overflow-x-auto">
+	<!-- Background Image -->
 	<div class="absolute inset-0 -z-10">
-		<img src="{% static 'images/animal-bg.jpeg' %}" alt="Animal Background" class="w-full h-full object-cover opacity-5 saturate-50" />
+		<img src="{% static 'images/animal-bg.jpeg' %}" alt="Background" class="w-full h-full object-cover opacity-5 saturate-50" />
 	</div>
 
     <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 z-40"></div>
     <div id="formModal" class="hidden fixed inset-0 flex items-center justify-center z-50 fade">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-xl">
             <h2 class="text-2xl font-bold text-center text-palette5 mb-4">Form Tambah Satwa</h2>
-            <form id="addAnimalForm" class="space-y-3">
+            <form action="{% url 'animal_habitat_management:animal' %}" method="POST" id="addAnimalForm" class="space-y-3">
+				{% csrf_token %}
+				<input type="hidden" name="id" id="animalId" />
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Nama Individu</label>
-                    <input type="text" placeholder="Masukkan Nama Individu di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="nama" type="text" placeholder="Masukkan Nama Individu di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Spesies</label>
-                    <input type="text" placeholder="Masukkan Spesies di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="spesies" type="text" placeholder="Masukkan Spesies di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Asal Hewan</label>
-                    <input type="text" placeholder="Masukkan Asal Hewan di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="asal_hewan" type="text" placeholder="Masukkan Asal Hewan di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Tanggal Lahir</label>
-                    <input type="date" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="tanggal_lahir" type="date" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Status Kesehatan</label>
-                    <select class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3">
+                    <select name="status_kesehatan" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3">
                         <option selected disabled>Pilih Status</option>
                         <option>Sehat</option>
                         <option>Sakit</option>
@@ -70,21 +73,21 @@
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">Nama Habitat</label>
-                    <select class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3">
+                    <select name="nama_habitat" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3">
                         <option selected disabled>Pilih Habitat</option>
-                        <option>Sabana</option>
-                        <option>Hutan Tropis</option>
-                        <option>Bambu Grove</option>
+						{% for habitat in habitat_list %}
+							<option value="{{ habitat }}">{{ habitat }}</option>
+						{% endfor %}
                     </select>
                 </div>
                 <div>
                     <label class="block text-palette6 text-sm mb-1">URL Foto Satwa</label>
-                    <input type="text" placeholder="Masukkan URL Foto Satwa di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
+                    <input name="url_foto" type="text" placeholder="Masukkan URL Foto Satwa di sini" class="w-full px-3 py-2 text-sm border rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-palette3" />
                 </div>
 
                 <div class="flex justify-between mt-4">
                     <button type="button" id="cancelButton" class="text-palette5 font-semibold text-sm">< Kembali</button>
-                    <button onclick="showAlert('Satwa berhasil ditambahkan!')" type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Selesai dan Tambah Satwa</button>
+                    <button type="submit" class="bg-palette5 hover:bg-palette6 text-white text-sm px-4 py-2 rounded-xl shadow">Selesai dan Tambah Satwa</button>
                 </div>
             </form>
         </div>
@@ -95,15 +98,15 @@
 		<div class="flex flex-col items-center mb-10 drop-shadow-lg">
 			<div class="flex gap-12 justify-center">
 				<div class="text-center">
-					<div class="text-5xl font-extrabold text-palette5">XXX</div>
+					<div class="text-5xl font-extrabold text-palette5">{{ jumlah_satwa }}</div>
 					<div class="text-base text-palette6 mt-2">Jumlah Satwa</div>
 				</div>
 				<div class="text-center">
-					<div class="text-5xl font-extrabold text-green-600">XXX</div>
+					<div class="text-5xl font-extrabold text-green-600">{{ jumlah_sehat }}</div>
 					<div class="text-base text-palette6 mt-2">Satwa Sehat</div>
 				</div>
 				<div class="text-center">
-					<div class="text-5xl font-extrabold text-red-500">XXX</div>
+					<div class="text-5xl font-extrabold text-red-500">{{ jumlah_sakit }}</div>
 					<div class="text-base text-palette6 mt-2">Satwa Sakit</div>
 				</div>
 			</div>
@@ -112,12 +115,7 @@
 		<div class="overflow-x-auto bg-white rounded-2xl shadow-2xl p-6">
 			<div class="flex justify-between items-center mb-6">
 				<div class="flex items-center gap-4">
-					<span class="text-palette6 text-base font-semibold">Tampilan Data Hewan 1-3</span>
-					<div class="flex gap-2">
-						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">1</button>
-						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">2</button>
-						<button class="bg-palette2 hover:bg-palette1 text-palette6 font-bold px-3 py-1 rounded-lg shadow">3</button>
-					</div>
+					<span class="text-palette6 text-base font-semibold">Tampilan Data Hewan 1-{{ jumlah_satwa }}</span>
 				</div>
 				<button id="openFormButton" class="bg-palette5 hover:bg-palette6 text-white px-6 py-2 rounded-2xl shadow">
                     Tambah Satwa
@@ -138,60 +136,44 @@
 					</tr>
 				</thead>
 				<tbody>
-					<!-- Row 1 -->
-					<tr class="bg-palette1">
-						<td class="px-6 py-4 text-center">Raja</td>
-						<td class="px-6 py-4 text-center">Panthera leo</td>
-						<td class="px-6 py-4 text-center">Afrika</td>
-						<td class="px-6 py-4 text-center">2016-05-12</td>
-						<td class="px-6 py-4 text-green-600 text-center">Sehat</td>
-						<td class="px-6 py-4 text-center">Sabana</td>
+					{% for hewan in hewan_data %}
+					<tr class="{% cycle 'bg-palette1' 'bg-white' %}">
+						<td class="px-6 py-4 text-center">{{ hewan.nama }}</td>
+						<td class="px-6 py-4 text-center">{{ hewan.spesies }}</td>
+						<td class="px-6 py-4 text-center">{{ hewan.asal }}</td>
+						<td class="px-6 py-4 text-center">{{ hewan.tanggal_lahir }}</td>
+						<td class="px-6 py-4 text-center {% if hewan.status == 'Sehat' %}text-green-600{% elif hewan.status == 'Sakit' %}text-red-500{% else %}text-yellow-600{% endif %}">
+							{{ hewan.status }}
+						</td>
+						<td class="px-6 py-4 text-center">{{ hewan.habitat }}</td>
 						<td class="px-6 py-4 text-center">
-							<img src="https://via.placeholder.com/80" alt="Foto Raja" class="rounded-lg w-20 h-20 object-cover mx-auto" />
+							<img src="{{ hewan.foto }}" alt="Foto {{ hewan.nama }}" class="rounded-lg w-20 h-20 object-cover mx-auto" />
 						</td>
 						<td class="px-10 py-4 text-center">
 							<div class="flex justify-center gap-2">
-								<button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
-								<button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
+								<button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl editButton"
+									data-id="{{ hewan.id }}"
+									data-nama="{{ hewan.nama }}"
+									data-spesies="{{ hewan.spesies }}"
+									data-asal="{{ hewan.asal }}"
+									data-tanggal_lahir="{{ hewan.tanggal_lahir }}"
+									data-status="{{ hewan.status }}"
+									data-habitat="{{ hewan.habitat }}"
+									data-foto="{{ hewan.foto }}"
+								>Edit</button>
+								<form method="POST" action="{% url 'animal_habitat_management:animal_delete' %}" style="display:inline;">
+									{% csrf_token %}
+									<input type="hidden" name="nama" value="{{ hewan.nama }}">
+									<button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">
+										Delete
+									</button>
+								</form>
 							</div>
 						</td>
 					</tr>
-					<!-- Row 2 -->
-					<tr class="bg-white">
-						<td class="px-6 py-4 text-center">Luna</td>
-						<td class="px-6 py-4 text-center">Elephas maximus</td>
-						<td class="px-6 py-4 text-center">Asia</td>
-						<td class="px-6 py-4 text-center">2012-08-30</td>
-						<td class="px-6 py-4 text-red-500 text-center">Sakit</td>
-						<td class="px-6 py-4 text-center">Hutan Tropis</td>
-						<td class="px-6 py-4 text-center">
-							<img src="https://via.placeholder.com/80" alt="Foto Luna" class="rounded-lg w-20 h-20 object-cover mx-auto" />
-						</td>
-						<td class="px-10 py-4 text-center">
-							<div class="flex justify-center gap-2">
-								<button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
-								<button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
-							</div>
-						</td>
-					</tr>
-					<!-- Row 3 -->
-					<tr class="bg-palette1">
-						<td class="px-6 py-4 text-center">Kiki</td>
-						<td class="px-6 py-4 text-center">Ailuropoda melanoleuca</td>
-						<td class="px-6 py-4 text-center">Tiongkok</td>
-						<td class="px-6 py-4 text-center">2018-11-15</td>
-						<td class="px-6 py-4 text-green-600 text-center">Sehat</td>
-						<td class="px-6 py-4 text-center">Bambu Grove</td>
-						<td class="px-6 py-4 text-center">
-							<img src="https://via.placeholder.com/80" alt="Foto Kiki" class="rounded-lg w-20 h-20 object-cover mx-auto" />
-						</td>
-						<td class="px-10 py-4 text-center">
-							<div class="flex justify-center gap-2">
-								<button class="bg-palette3 hover:bg-palette4 text-white px-4 py-2 rounded-2xl">Edit</button>
-								<button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-2xl">Hapus</button>
-							</div>
-						</td>
-					</tr>
+					{% empty %}
+                    <tr><td colspan="5" class="text-center py-6 text-palette6">Belum ada satwa tercatat.</td></tr>
+					{% endfor %}
 				</tbody>
 			</table>
 		</div>
@@ -204,11 +186,51 @@
         const overlay = document.getElementById('overlay');
         const body = document.body;
 
+		function formatTanggal(tanggalRaw) {
+			const date = new Date(tanggalRaw);
+			return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+		}
+
+		document.querySelectorAll('.editButton').forEach(button => {
+			button.addEventListener('click', () => {
+				const id = button.dataset.id;
+				const nama = button.dataset.nama;
+				const spesies = button.dataset.spesies;
+				const asal = button.dataset.asal;
+				const tanggal_lahir = formatTanggal(button.dataset.tanggal_lahir);
+				const status = button.dataset.status;
+				const habitat = button.dataset.habitat;
+				const foto = button.dataset.foto;
+
+				document.getElementById('animalId').value = id;
+				document.querySelector('input[name="nama"]').value = nama;
+				document.querySelector('input[name="spesies"]').value = spesies;
+				document.querySelector('input[name="asal_hewan"]').value = asal;
+				document.querySelector('input[name="tanggal_lahir"]').value = tanggal_lahir || '';
+				document.querySelector('select[name="status_kesehatan"]').value = status;
+				document.querySelector('select[name="nama_habitat"]').value = habitat || '';
+				document.querySelector('input[name="url_foto"]').value = foto;
+
+				document.querySelector('#formModal h2').textContent = `Edit Satwa: ${nama}`;
+				document.querySelector('#addAnimalForm button[type="submit"]').textContent = 'Simpan Perubahan';
+
+				formModal.classList.remove('hidden');
+				overlay.classList.remove('hidden');
+				body.classList.add('overflow-hidden');
+				body.style.paddingRight = '15px';
+			});
+		});
+
         openFormButton.addEventListener('click', () => {
             formModal.classList.remove('hidden');
             overlay.classList.remove('hidden');
             body.classList.add('overflow-hidden');
             body.style.paddingRight = '15px';
+
+			document.getElementById('animalId').value = '';
+			document.querySelector('#formModal h2').textContent = 'Form Tambah Satwa';
+			document.querySelector('#addAnimalForm button[type="submit"]').textContent = 'Selesai dan Tambah Satwa';
+			document.getElementById('addAnimalForm').reset();
         });
 
         cancelButton.addEventListener('click', () => {
@@ -225,6 +247,35 @@
             body.classList.remove('overflow-hidden');
             body.style.paddingRight = '0';
         });
+
+		const form = document.getElementById('addAnimalForm');
+		if (form) {
+			form.addEventListener("submit", async function (e) {
+				e.preventDefault();
+				const formData = new FormData(this);
+				try {
+					const response = await fetch("", {
+						method: "POST",
+						body: formData,
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+						}
+					});
+
+					const result = await response.json();
+					if (result.success) {
+						showAlert(result.message, () => {
+							window.location.href = '/animal/animal/';
+						});
+					} else {
+						showAlert(result.message);
+					}
+				} catch (err) {
+					showAlert("Terjadi kesalahan saat menambahkan/mengubah data satwa.");
+				}
+			});
+		}
     </script>
 </body>
 </html>

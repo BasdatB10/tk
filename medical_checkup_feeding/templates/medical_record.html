@@ -328,7 +328,7 @@
     </div>
 
     <script>
-        // Data dari backend
+      
         const animalsData = {
             {% for animal in animals %}
                 '{{ animal.0 }}': {
@@ -345,7 +345,6 @@
         const statusKesehatan = document.getElementById('status_kesehatan');
         const diagnosisSection = document.getElementById('diagnosis-section');
         
-        // Event listeners
         animalSelect.addEventListener('change', function() {
             const animalId = this.value;
             if (animalId && animalsData[animalId]) {
@@ -375,7 +374,6 @@
                 return;
             }
             
-            // Set tanggal hari ini sebagai default
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tanggal_pemeriksaan').value = today;
             document.getElementById('tanggal_pemeriksaan').max = today;

@@ -8,8 +8,46 @@ from django.http import JsonResponse
 import json
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import timezone
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import login_required
 
+# Fungsi untuk memeriksa apakah user adalah admin
+def is_staf_admin(user):
+    # Jika user tidak terautentikasi, langsung kembalikan False
+    if not user.is_authenticated:
+        return False
 
+    username = user.username
+
+    conn = None
+    cur = None
+    try:
+        conn = psycopg2.connect(
+            dbname=settings.DATABASES['default']['NAME'],
+            user=settings.DATABASES['default']['USER'],
+            password=settings.DATABASES['default']['PASSWORD'],
+            host=settings.DATABASES['default']['HOST'],
+            port=settings.DATABASES['default']['PORT']
+        )
+        cur = conn.cursor()
+        # Periksa apakah username ada di tabel SIZOPI.staf_admin
+        cur.execute("SELECT 1 FROM SIZOPI.staf_admin WHERE username_sa = %s", (username,))
+        result = cur.fetchone()
+        return result is not None # Mengembalikan True jika ditemukan, False jika tidak
+    except Exception as e:
+        # Log error jika terjadi masalah koneksi/query database, lalu kembalikan False
+        print(f"Error checking admin status for user {username}: {e}")
+        return False
+    finally:
+        # Pastikan koneksi database ditutup
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+# Terapkan decorator pada view yang hanya bisa diakses admin
+# @login_required # Pastikan user sudah login dulu
+# @user_passes_test(is_staf_admin, login_url='home') # Cek apakah user admin, redirect ke 'login' jika bukan
 def manage_adopt(request):
     # Koneksi ke database
     conn = psycopg2.connect(
@@ -55,12 +93,12 @@ def manage_adopt(request):
     adopter_specific_data = None
     if prefill_username:
         conn = psycopg2.connect(
-           dbname=settings.DATABASES['default']['NAME'],
-           user=settings.DATABASES['default']['USER'],
-           password=settings.DATABASES['default']['PASSWORD'],
-           host=settings.DATABASES['default']['HOST'],
-           port=settings.DATABASES['default']['PORT']
-       )
+            dbname=settings.DATABASES['default']['NAME'],
+            user=settings.DATABASES['default']['USER'],
+            password=settings.DATABASES['default']['PASSWORD'],
+            host=settings.DATABASES['default']['HOST'],
+            port=settings.DATABASES['default']['PORT']
+        )
         cur = conn.cursor()
         cur.execute("SELECT username, email, nama_depan, nama_belakang, no_telepon FROM SIZOPI.pengguna WHERE username = %s", (prefill_username,))
         pengguna = cur.fetchone()
@@ -110,7 +148,7 @@ def manage_adopt(request):
                     if organisasi_data:
                         organisasi_columns = ['npp', 'nama_organisasi']
                         adopter_specific_data = dict(zip(organisasi_columns, organisasi_data))
-                        # Gabungkan dengan data pengunjung (alamat) - asumsi organisasi juga punya alamat di pengunjung
+                        # Gabungkan dengan data pengunjung (alamat)
                         cur.execute("SELECT alamat FROM SIZOPI.pengunjung WHERE username_p = %s", (prefill_username,))
                         pengunjung_data_adopter = cur.fetchone()
                         if pengunjung_data_adopter:
@@ -126,16 +164,18 @@ def manage_adopt(request):
         "prefill_username": prefill_username,
         "prefill_tipe": prefill_tipe,
         "prefill_id_hewan": prefill_id_hewan,
-        "pengguna_data": pengguna_data, # Teruskan data pengguna jika ditemukan
-        "adopter_specific_data": adopter_specific_data # Teruskan data adopter spesifik jika ditemukan
+        "pengguna_data": pengguna_data,
+        "adopter_specific_data": adopter_specific_data
     })
 
 
 def show_adopter_page(request):
-    return render(request,"adopter_page.html")
+    # Pastikan user sudah login
+    if not request.user.is_authenticated:
+        return redirect('/login/')  # Menggunakan path absolut ke halaman login
 
-def show_adopter_list(request):
-    # Koneksi ke database (Buka koneksi hanya sekali di awal)
+    username = request.user.username
+    
     conn = None
     cur = None
     try:
@@ -146,9 +186,89 @@ def show_adopter_list(request):
             host=settings.DATABASES['default']['HOST'],
             port=settings.DATABASES['default']['PORT']
         )
-        cur = conn.cursor() # Gunakan satu cursor untuk semua query
+        cur = conn.cursor()
 
-        # Ambil data adopter dengan join ke tabel individu dan organisasi untuk daftar utama
+        # Cari id_adopter berdasarkan username
+        cur.execute("SELECT id_adopter FROM SIZOPI.adopter WHERE username_adopter = %s", (username,))
+        adopter_result = cur.fetchone()
+
+        if not adopter_result:
+            # Jika user belum menjadi adopter, tampilkan pesan
+            return render(request, "adopter_page.html", {
+                "error": "Anda belum mengadopsi satwa apapun. Silakan kunjungi halaman adopsi untuk memulai.",
+                "hewan_list": []
+            })
+
+        id_adopter = adopter_result[0]
+
+        # Ambil data hewan yang diadopsi oleh adopter ini
+        cur.execute("""
+            SELECT 
+                h.id,
+                h.nama,
+                h.spesies,
+                h.asal_hewan,
+                h.tanggal_lahir,
+                h.status_kesehatan,
+                h.nama_habitat,
+                h.url_foto,
+                a.tgl_mulai_adopsi,
+                a.tgl_berhenti_adopsi,
+                a.status_pembayaran,
+                a.kontribusi_finansial
+            FROM SIZOPI.hewan h
+            JOIN SIZOPI.adopsi a ON h.id = a.id_hewan
+            WHERE a.id_adopter = %s
+            ORDER BY a.tgl_mulai_adopsi DESC
+        """, (id_adopter,))
+
+        columns = [desc[0] for desc in cur.description]
+        hewan_list = []
+        for row in cur.fetchall():
+            hewan_dict = dict(zip(columns, row))
+            # Hitung usia hewan
+            if hewan_dict['tanggal_lahir']:
+                today = datetime.date.today()
+                age = today.year - hewan_dict['tanggal_lahir'].year
+                if today.month < hewan_dict['tanggal_lahir'].month or (today.month == hewan_dict['tanggal_lahir'].month and today.day < hewan_dict['tanggal_lahir'].day):
+                    age -= 1
+                hewan_dict['usia'] = age
+            else:
+                hewan_dict['usia'] = None
+            hewan_list.append(hewan_dict)
+
+        return render(request, "adopter_page.html", {
+            "hewan_list": hewan_list
+        })
+
+    except Exception as e:
+        print(f"Error in show_adopter_page: {e}")
+        return render(request, "adopter_page.html", {
+            "error": "Terjadi kesalahan saat mengambil data hewan.",
+            "hewan_list": []
+        })
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+# @login_required # Pastikan user sudah login dulu
+# @user_passes_test(is_staf_admin, login_url='login') # Cek apakah user admin, redirect ke 'login' jika bukan
+def show_adopter_list(request):
+    conn = None
+    cur = None
+    try:
+        conn = psycopg2.connect(
+            dbname=settings.DATABASES['default']['NAME'],
+            user=settings.DATABASES['default']['USER'],
+            password=settings.DATABASES['default']['PASSWORD'],
+            host=settings.DATABASES['default']['HOST'],
+            port=settings.DATABASES['default']['PORT']
+        )
+        cur = conn.cursor()
+
+        # Query utama daftar adopter
         cur.execute("""
             SELECT
                 a.id_adopter,
@@ -161,21 +281,17 @@ def show_adopter_list(request):
             LEFT JOIN SIZOPI.individu i ON a.id_adopter = i.id_adopter
             LEFT JOIN SIZOPI.organisasi o ON a.id_adopter = o.id_adopter
             LEFT JOIN SIZOPI.pengguna p ON a.username_adopter = p.username
-            LEFT JOIN SIZOPI.pengunjung peng ON a.username_adopter = peng.username_p -- Asumsi username_p adalah foreign key
+            LEFT JOIN SIZOPI.pengunjung peng ON a.username_adopter = peng.username_p
             ORDER BY a.total_kontribusi DESC
         """)
 
         columns = [desc[0] for desc in cur.description]
         adopter_list = []
-        # Ambil semua baris adopter utama SEBELUM loop riwayat adopsi
         adopter_rows = cur.fetchall()
 
-        # Loop melalui adopter_rows untuk mengambil riwayat adopsi masing-masing
-        # Query riwayat adopsi di dalam loop ini menggunakan cursor yang masih terbuka
         for row in adopter_rows:
             adopter_dict = dict(zip(columns, row))
 
-            # Ambil riwayat adopsi untuk setiap adopter
             cur.execute("""
                 SELECT
                     h.nama as nama_hewan,
@@ -199,9 +315,7 @@ def show_adopter_list(request):
             adopter_dict['adoptions'] = adoptions
             adopter_list.append(adopter_dict)
 
-        # --- Logika Top 5 Adopter Setahun Terakhir (Baca dari tabel ranking) --- #
-        # Query untuk membaca data dari tabel SIZOPI.top_adopters_ranking
-        # Query ini juga menggunakan cursor yang masih terbuka
+        # --- Query Top 5 Adopter ---
         cur.execute("""
             SELECT
                 rank_order,
@@ -211,49 +325,23 @@ def show_adopter_list(request):
                 total_kontribusi_periode
             FROM SIZOPI.top_adopters_ranking
             ORDER BY rank_order ASC
-            LIMIT 5 -- Ambil hanya 5 teratas sesuai dengan isi tabel
+            LIMIT 5
         """)
-
         top_adopters_columns = [desc[0] for desc in cur.description]
         top_5_adopters = []
         for row in cur.fetchall():
             top_adopters_dict = dict(zip(top_adopters_columns, row))
             top_5_adopters.append(top_adopters_dict)
 
-        # --- Logika Pagination --- #
-        # Tentukan jumlah item per halaman
-        items_per_page = 10 # Sesuaikan dengan kebutuhan Anda
-
-        # Buat objek Paginator
-        paginator = Paginator(adopter_list, items_per_page)
-
-        # Ambil nomor halaman dari parameter GET. Default ke 1 jika tidak ada atau invalid.
-        page = request.GET.get('page', 1)
-
-        try:
-            adopters_on_page = paginator.page(page)
-        except PageNotAnInteger:
-            # Jika parameter page bukan integer, tampilkan halaman pertama.
-            adopters_on_page = paginator.page(1)
-        except EmptyPage:
-            # Jika halaman di luar jangkauan (misal 999), tampilkan halaman terakhir.
-            adopters_on_page = paginator.page(paginator.num_pages)
-        # ------------------------- #
-
-        # Render template di sini, di dalam try block utama
         return render(request, "adopter_list.html", {
-            "adopter_list": adopters_on_page, # Kirim objek halaman yang sudah dipaginasi
-            "top_5_adopters": top_5_adopters # Kirim data top 5 adopter dari tabel ranking
+            "adopter_list": adopter_list,
+            "top_5_adopters": top_5_adopters
         })
 
     except Exception as e:
-        # Tangani error jika koneksi/query/pagination gagal
         print(f"Error in show_adopter_list: {e}")
-        # Anda bisa merender template error atau melemparnya lagi
-        # Untuk saat ini, kita lempar error agar terlihat di debug Django
-        raise e
+        return JsonResponse({"error": str(e)}, status=500)
     finally:
-        # Tutup cursor dan koneksi hanya sekali di akhir di blok finally
         if cur:
             cur.close()
         if conn:
@@ -427,7 +515,6 @@ def daftar_adopter(request):
     return redirect('adoption_management:manage_adopt')
 
 # Fungsi pembantu untuk ambil data hewan
-
 def get_hewan_list():
     conn = psycopg2.connect(
         dbname=settings.DATABASES['default']['NAME'],
@@ -443,10 +530,8 @@ def get_hewan_list():
             a.id_adopter, a.tgl_mulai_adopsi, a.tgl_berhenti_adopsi, a.status_pembayaran, a.kontribusi_finansial,
             ad.username_adopter
         FROM SIZOPI.hewan h
-        LEFT JOIN SIZOPI.adopsi a
-            ON h.id = a.id_hewan
-        LEFT JOIN SIZOPI.adopter ad
-            ON a.id_adopter = ad.id_adopter
+        LEFT JOIN SIZOPI.adopsi a ON h.id = a.id_hewan
+        LEFT JOIN SIZOPI.adopter ad ON a.id_adopter = ad.id_adopter
     """)
     columns = [desc[0] for desc in cur.description]
     hewan_list = []
@@ -672,7 +757,6 @@ def delete_adopter(request):
             )
             cur = conn.cursor()
 
-            # 1. Periksa apakah adopter memiliki adopsi yang masih berlangsung
             cur.execute("""
                 SELECT COUNT(*)
                 FROM SIZOPI.adopsi
@@ -680,19 +764,12 @@ def delete_adopter(request):
             """, (id_adopter,))
 
             ongoing_adoptions_count = cur.fetchone()[0]
-            print(f"Debug - Ongoig adoptions count: {ongoing_adoptions_count}")
+            print(f"Debug - Ongoing adoptions count: {ongoing_adoptions_count}")
 
             if ongoing_adoptions_count > 0:
                 cur.close()
                 conn.close()
                 return JsonResponse({"success": False, "error": "Tidak dapat menghapus adopter karena masih memiliki adopsi yang sedang berlangsung."}, status=400)
-
-            # 2. Jika tidak ada adopsi yang masih berlangsung, hapus adopter
-            # Perlu diingat tentang constraint foreign key. Menghapus adopter mungkin memerlukan
-            # penghapusan record terkait di tabel 'individu' atau 'organisasi' terlebih dahulu.
-            # Atau, pastikan foreign key di 'adopsi', 'individu', 'organisasi' punya ON DELETE CASCADE.
-            # Jika tidak punya ON DELETE CASCADE, kita perlu menghapus record di tabel tersebut secara manual.
-            # Asumsi saat ini: Foreign key di tabel terkait ke 'adopter' memiliki ON DELETE CASCADE.
 
             cur.execute("DELETE FROM SIZOPI.adopter WHERE id_adopter = %s", (id_adopter,))
             print(f"Debug - Deleted adopter with id: {id_adopter}")

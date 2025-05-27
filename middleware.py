@@ -2,7 +2,6 @@ from psycopg2 import pool
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv() 
 
 conn_pool = pool.SimpleConnectionPool(

@@ -79,5 +79,35 @@
 			</form>
 		</div>
 	</div>
+	<script>
+		const form = document.querySelector('form');
+		if (form) {
+			form.addEventListener("submit", async function (e) {
+				e.preventDefault();
+				const formData = new FormData(this);
+				try {
+					const response = await fetch("", {
+						method: "POST",
+						body: formData,
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+						}
+					});
+
+					const result = await response.json();
+					if (result.success) {
+						showAlert(result.message, () => {
+							window.location.href = '/dashboard/';
+						});
+					} else {
+						showAlert(result.message);
+					}
+				} catch (err) {
+					showAlert("Terjadi kesalahan saat proses login.");
+				}
+			});
+		}
+	</script>
 </body>
 </html>

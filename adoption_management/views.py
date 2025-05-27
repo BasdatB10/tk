@@ -6,6 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 import datetime
 from django.http import JsonResponse
 import json
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils import timezone
 
 
 def manage_adopt(request):
@@ -133,7 +135,129 @@ def show_adopter_page(request):
     return render(request,"adopter_page.html")
 
 def show_adopter_list(request):
-    return render(request,"adopter_list.html")
+    # Koneksi ke database (Buka koneksi hanya sekali di awal)
+    conn = None
+    cur = None
+    try:
+        conn = psycopg2.connect(
+            dbname=settings.DATABASES['default']['NAME'],
+            user=settings.DATABASES['default']['USER'],
+            password=settings.DATABASES['default']['PASSWORD'],
+            host=settings.DATABASES['default']['HOST'],
+            port=settings.DATABASES['default']['PORT']
+        )
+        cur = conn.cursor() # Gunakan satu cursor untuk semua query
+
+        # Ambil data adopter dengan join ke tabel individu dan organisasi untuk daftar utama
+        cur.execute("""
+            SELECT
+                a.id_adopter,
+                a.username_adopter,
+                a.total_kontribusi,
+                COALESCE(i.nama, o.nama_organisasi) as nama_adopter,
+                peng.alamat,
+                p.no_telepon
+            FROM SIZOPI.adopter a
+            LEFT JOIN SIZOPI.individu i ON a.id_adopter = i.id_adopter
+            LEFT JOIN SIZOPI.organisasi o ON a.id_adopter = o.id_adopter
+            LEFT JOIN SIZOPI.pengguna p ON a.username_adopter = p.username
+            LEFT JOIN SIZOPI.pengunjung peng ON a.username_adopter = peng.username_p -- Asumsi username_p adalah foreign key
+            ORDER BY a.total_kontribusi DESC
+        """)
+
+        columns = [desc[0] for desc in cur.description]
+        adopter_list = []
+        # Ambil semua baris adopter utama SEBELUM loop riwayat adopsi
+        adopter_rows = cur.fetchall()
+
+        # Loop melalui adopter_rows untuk mengambil riwayat adopsi masing-masing
+        # Query riwayat adopsi di dalam loop ini menggunakan cursor yang masih terbuka
+        for row in adopter_rows:
+            adopter_dict = dict(zip(columns, row))
+
+            # Ambil riwayat adopsi untuk setiap adopter
+            cur.execute("""
+                SELECT
+                    h.nama as nama_hewan,
+                    h.spesies as jenis,
+                    a.tgl_mulai_adopsi as tanggal_mulai,
+                    a.tgl_berhenti_adopsi as tanggal_akhir,
+                    a.kontribusi_finansial as nominal,
+                    a.status_pembayaran as status_pembayaran
+                FROM SIZOPI.adopsi a
+                JOIN SIZOPI.hewan h ON a.id_hewan = h.id
+                WHERE a.id_adopter = %s
+                ORDER BY a.tgl_mulai_adopsi DESC
+            """, (adopter_dict['id_adopter'],))
+
+            adoption_columns = [desc[0] for desc in cur.description]
+            adoptions = []
+            for adoption_row in cur.fetchall():
+                adoption_dict = dict(zip(adoption_columns, adoption_row))
+                adoptions.append(adoption_dict)
+
+            adopter_dict['adoptions'] = adoptions
+            adopter_list.append(adopter_dict)
+
+        # --- Logika Top 5 Adopter Setahun Terakhir (Baca dari tabel ranking) --- #
+        # Query untuk membaca data dari tabel SIZOPI.top_adopters_ranking
+        # Query ini juga menggunakan cursor yang masih terbuka
+        cur.execute("""
+            SELECT
+                rank_order,
+                id_adopter,
+                username_adopter,
+                nama_adopter,
+                total_kontribusi_periode
+            FROM SIZOPI.top_adopters_ranking
+            ORDER BY rank_order ASC
+            LIMIT 5 -- Ambil hanya 5 teratas sesuai dengan isi tabel
+        """)
+
+        top_adopters_columns = [desc[0] for desc in cur.description]
+        top_5_adopters = []
+        for row in cur.fetchall():
+            top_adopters_dict = dict(zip(top_adopters_columns, row))
+            top_5_adopters.append(top_adopters_dict)
+
+        # --- Logika Pagination --- #
+        # Tentukan jumlah item per halaman
+        items_per_page = 10 # Sesuaikan dengan kebutuhan Anda
+
+        # Buat objek Paginator
+        paginator = Paginator(adopter_list, items_per_page)
+
+        # Ambil nomor halaman dari parameter GET. Default ke 1 jika tidak ada atau invalid.
+        page = request.GET.get('page', 1)
+
+        try:
+            adopters_on_page = paginator.page(page)
+        except PageNotAnInteger:
+            # Jika parameter page bukan integer, tampilkan halaman pertama.
+            adopters_on_page = paginator.page(1)
+        except EmptyPage:
+            # Jika halaman di luar jangkauan (misal 999), tampilkan halaman terakhir.
+            adopters_on_page = paginator.page(paginator.num_pages)
+        # ------------------------- #
+
+        # Render template di sini, di dalam try block utama
+        return render(request, "adopter_list.html", {
+            "adopter_list": adopters_on_page, # Kirim objek halaman yang sudah dipaginasi
+            "top_5_adopters": top_5_adopters # Kirim data top 5 adopter dari tabel ranking
+        })
+
+    except Exception as e:
+        # Tangani error jika koneksi/query/pagination gagal
+        print(f"Error in show_adopter_list: {e}")
+        # Anda bisa merender template error atau melemparnya lagi
+        # Untuk saat ini, kita lempar error agar terlihat di debug Django
+        raise e
+    finally:
+        # Tutup cursor dan koneksi hanya sekali di akhir di blok finally
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 def daftar_user(request):
     if request.method == "POST":
@@ -433,48 +557,24 @@ def update_adopter_status(request):
 
             print(f"Debug - Old status: {old_status}")
 
-            # Update status_pembayaran di tabel adopsi
+            # Update status_pembayaran di tabel adopsi - Ini yang memicu trigger SQL
             cur.execute(
                 "UPDATE SIZOPI.adopsi SET status_pembayaran = %s WHERE id_hewan = %s AND id_adopter = %s",
                 (new_status, id_hewan, id_adopter)
             )
             print(f"Debug - Updated adopsi status to {new_status}")
 
-            # Update total_kontribusi di tabel adopter berdasarkan perubahan status
-            current_total = 0
-            cur.execute("SELECT total_kontribusi FROM SIZOPI.adopter WHERE id_adopter = %s", (id_adopter,))
-            total_result = cur.fetchone()
-            if total_result and total_result[0] is not None:
-                current_total = total_result[0]
-            print(f"Debug - Current total kontribusi: {current_total}")
-
-            if old_status != new_status:
-                if new_status == "Lunas":
-                    # Tambah kontribusi
-                    new_total = current_total + nominal
-                    print(f"Debug - Adding nominal: {nominal} New total: {new_total}")
-                elif old_status == "Lunas" and new_status != "Lunas":
-                    # Kurangi kontribusi
-                    new_total = current_total - nominal
-                    # Pastikan tidak negatif
-                    if new_total < 0:
-                        new_total = 0
-                    print(f"Debug - Subtracting nominal: {nominal} New total: {new_total}")
-                else:
-                    new_total = current_total  # Tidak berubah jika status selain kasus di atas
-
-                # Update ke database
-                cur.execute(
-                    "UPDATE SIZOPI.adopter SET total_kontribusi = %s WHERE id_adopter = %s",
-                    (new_total, id_adopter)
-                )
-                print(f"Debug - Updated total kontribusi to {new_total}")
+            # Logika update total_kontribusi di tabel adopter Dihapus
+            # Karena ini akan diurus sepenuhnya oleh trigger SQL
+            # ... (kode update total_kontribusi dihapus di sini) ...
 
             conn.commit()
-            print("Debug - Changes committed to database")
+            print("Debug - Changes committed to database (hanya update status_pembayaran)")
 
             cur.close()
             conn.close()
+
+            # Trigger SQL seharusnya berjalan secara otomatis setelah commit
 
             return JsonResponse({"success": True})
 
@@ -549,4 +649,70 @@ def stop_adoption(request):
                 conn.close()
             return JsonResponse({"success": False, "error": str(e)}, status=500)
     
+    return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)
+
+@csrf_exempt
+def delete_adopter(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            id_adopter = data.get("id_adopter")
+
+            print(f"Debug - Delete adopter data received: id_adopter={id_adopter}")
+
+            if not id_adopter:
+                return JsonResponse({"success": False, "error": "ID Adopter tidak disediakan."}, status=400)
+
+            conn = psycopg2.connect(
+                dbname=settings.DATABASES['default']['NAME'],
+                user=settings.DATABASES['default']['USER'],
+                password=settings.DATABASES['default']['PASSWORD'],
+                host=settings.DATABASES['default']['HOST'],
+                port=settings.DATABASES['default']['PORT']
+            )
+            cur = conn.cursor()
+
+            # 1. Periksa apakah adopter memiliki adopsi yang masih berlangsung
+            cur.execute("""
+                SELECT COUNT(*)
+                FROM SIZOPI.adopsi
+                WHERE id_adopter = %s AND tgl_berhenti_adopsi > CURRENT_DATE
+            """, (id_adopter,))
+
+            ongoing_adoptions_count = cur.fetchone()[0]
+            print(f"Debug - Ongoig adoptions count: {ongoing_adoptions_count}")
+
+            if ongoing_adoptions_count > 0:
+                cur.close()
+                conn.close()
+                return JsonResponse({"success": False, "error": "Tidak dapat menghapus adopter karena masih memiliki adopsi yang sedang berlangsung."}, status=400)
+
+            # 2. Jika tidak ada adopsi yang masih berlangsung, hapus adopter
+            # Perlu diingat tentang constraint foreign key. Menghapus adopter mungkin memerlukan
+            # penghapusan record terkait di tabel 'individu' atau 'organisasi' terlebih dahulu.
+            # Atau, pastikan foreign key di 'adopsi', 'individu', 'organisasi' punya ON DELETE CASCADE.
+            # Jika tidak punya ON DELETE CASCADE, kita perlu menghapus record di tabel tersebut secara manual.
+            # Asumsi saat ini: Foreign key di tabel terkait ke 'adopter' memiliki ON DELETE CASCADE.
+
+            cur.execute("DELETE FROM SIZOPI.adopter WHERE id_adopter = %s", (id_adopter,))
+            print(f"Debug - Deleted adopter with id: {id_adopter}")
+
+            conn.commit()
+            print("Debug - Changes committed to database")
+
+            cur.close()
+            conn.close()
+
+            return JsonResponse({"success": True})
+
+        except Exception as e:
+            print(f"Debug - Error occurred: {str(e)}")
+            if 'conn' in locals():
+                conn.rollback()
+            if 'cur' in locals():
+                cur.close()
+            if 'conn' in locals():
+                conn.close()
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+
     return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)

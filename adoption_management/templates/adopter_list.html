@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -83,6 +84,7 @@
     {% include "navbar_staf_administrasi.html" %}
 
     <div class="container mx-auto p-6 bg-white my-8 rounded-lg shadow-lg">
+        {% csrf_token %}
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-custom-darker mb-2">Panel Administrasi Program Adopsi Satwa</h1>
             <p class="text-custom-darkest">Mengelola dan memantau para adopter untuk mendukung kelestarian satwa Indonesia.</p>
@@ -109,15 +111,20 @@
 
         <!-- Adopter dengan Kontribusi Tertinggi -->
         <div class="mb-8">
-            <h2 class="text-2xl font-semibold text-custom-darker mb-4">Adopter dengan Total Kontribusi Tertinggi</h2>
+            <h2 class="text-2xl font-semibold text-custom-darker mb-4">Adopter dengan Total Kontribusi Tertinggi (Setahun Terakhir)</h2>
             <div class="bg-white border border-custom-light rounded-lg p-6">
+                {% if top_5_adopters %}
+                    {% if top_5_adopters.0 %}
+                    <p class="text-green-600 font-semibold mb-4">SUKSES: Daftar Top 5 Adopter satu tahun terakhir berhasil diperbarui, dengan peringkat pertama dengan nama adopter "{{ top_5_adopters.0.nama_adopter }}" berkontribusi sebesar Rp{{ top_5_adopters.0.total_kontribusi_periode|floatformat:0|intcomma }}.</p>
+                    {% endif %}
                 <ol class="list-decimal pl-6 space-y-2">
-                    <li class="text-lg">Ahmad Rizky - Rp7.500.000</li>
-                    <li class="text-lg">Bambang Supratman - Rp5.000.000</li>
-                    <li class="text-lg">Cindy Wijaya - Rp3.500.000</li>
-                    <li class="text-lg">Dewi Sartika - Rp3.200.000</li>
-                    <li class="text-lg">Eko Prasetyo - Rp2.800.000</li>
+                    {% for adopter in top_5_adopters %}
+                    <li class="text-lg">{{ adopter.nama_adopter }} - Rp{{ adopter.total_kontribusi_periode|floatformat:0|intcomma }}</li>
+                    {% endfor %}
                 </ol>
+                {% else %}
+                <p class="text-gray-600">Belum ada data adopsi dalam satu tahun terakhir.</p>
+                {% endif %}
             </div>
         </div>
 
@@ -143,84 +150,35 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for adopter in adopter_list %}
                         <tr class="hover:bg-gray-100">
-                            <td class="py-3 px-4 border-b">Ahmad Rizky</td>
-                            <td class="py-3 px-4 border-b">Rp7.500.000</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Ahmad Rizky')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">{{ adopter.nama_adopter }}</td>
+                            <td class="py-3 px-4 border-b">Rp{{ adopter.total_kontribusi|default:"0" }}</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('{{ adopter.nama_adopter }}')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
                             <td class="py-3 px-4 border-b">
-                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
-                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
+                                <a href="#" onclick="event.preventDefault(); confirmDeleteAdopter('{{ adopter.id_adopter }}', '{{ adopter.nama_adopter|escapejs }}')" class="text-red-500 hover:underline">[Hapus]</a>
                             </td>
                         </tr>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-3 px-4 border-b">Bambang Supratman</td>
-                            <td class="py-3 px-4 border-b">Rp5.000.000</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Bambang Supratman')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
-                            <td class="py-3 px-4 border-b">
-                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
-                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-3 px-4 border-b">Cindy Wijaya</td>
-                            <td class="py-3 px-4 border-b">Rp3.500.000</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Cindy Wijaya')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
-                            <td class="py-3 px-4 border-b">
-                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
-                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-3 px-4 border-b">Dewi Sartika</td>
-                            <td class="py-3 px-4 border-b">Rp3.200.000</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Dewi Sartika')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
-                            <td class="py-3 px-4 border-b">
-                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
-                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-3 px-4 border-b">Eko Prasetyo</td>
-                            <td class="py-3 px-4 border-b">Rp2.800.000</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Eko Prasetyo')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
-                            <td class="py-3 px-4 border-b">
-                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
-                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-3 px-4 border-b">Faisal Rahman</td>
-                            <td class="py-3 px-4 border-b">Rp2.500.000</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Faisal Rahman')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
-                            <td class="py-3 px-4 border-b">
-                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
-                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-3 px-4 border-b">Gita Nirmala</td>
-                            <td class="py-3 px-4 border-b">Rp2.200.000</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('Gita Nirmala')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
-                            <td class="py-3 px-4 border-b">
-                                <a href="#" class="text-blue-500 hover:underline mr-2">[Edit]</a>
-                                <a href="#" class="text-red-500 hover:underline">[Hapus]</a>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
             <div class="flex justify-between items-center mt-4">
-                <p class="text-sm text-gray-600">Menampilkan 1-7 dari 128 adopter</p>
+                <p class="text-sm text-gray-600">Menampilkan {{ adopter_list.start_index }}-{{ adopter_list.end_index }} dari {{ adopter_list.paginator.count }} adopter</p>
                 <div class="flex space-x-2">
-                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">&laquo; Prev</button>
-                    <button class="px-3 py-1 bg-custom-medium text-white rounded-lg">1</button>
-                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">2</button>
-                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">3</button>
-                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">...</button>
-                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">18</button>
-                    <button class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">Next &raquo;</button>
+                    {% if adopter_list.has_previous %}
+                    <a href="?page={{ adopter_list.previous_page_number }}" class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">&laquo; Prev</a>
+                    {% endif %}
+
+                    {% for i in adopter_list.paginator.page_range %}
+                    <a href="?page={{ i }}" class="px-3 py-1 border border-custom-light rounded-lg {% if i == adopter_list.number %}bg-custom-medium text-white{% else %}hover:bg-custom-light{% endif %}">{{ i }}</a>
+                    {% endfor %}
+
+                    {% if adopter_list.has_next %}
+                    <a href="?page={{ adopter_list.next_page_number }}" class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">Next &raquo;</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -264,64 +222,26 @@
     </div>
 
     <script>
-        // Data dummy untuk riwayat adopsi
+        // Data riwayat adopsi dari database
         const adoptionHistoryData = {
-            'Ahmad Rizky': {
-                alamat: 'Jl. Merdeka No. 123, Jakarta Selatan',
-                kontak: '0812-3456-7890',
+            {% for adopter in adopter_list %}
+            '{{ adopter.nama_adopter }}': {
+                alamat: '{{ adopter.alamat|default:"-" }}',
+                kontak: '{{ adopter.no_telepon|default:"-" }}',
                 adoptions: [
-                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2025-02-26', tanggal_akhir: '2025-08-26', nominal: 'Rp850.000', status: 'ongoing' },
-                    { nama_hewan: 'Simba', jenis: 'Singa', tanggal_mulai: '2024-07-10', tanggal_akhir: '2024-10-10', nominal: 'Rp500.000', status: 'ended' },
-                    { nama_hewan: 'Nala', jenis: 'Zebra', tanggal_mulai: '2023-12-12', tanggal_akhir: '2024-12-12', nominal: 'Rp1.200.000', status: 'ended' },
-                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2023-01-01', tanggal_akhir: '2023-07-01', nominal: 'Rp800.000', status: 'ended' }
+                    {% for adoption in adopter.adoptions %}
+                    {
+                        nama_hewan: '{{ adoption.nama_hewan }}',
+                        jenis: '{{ adoption.jenis }}',
+                        tanggal_mulai: '{{ adoption.tanggal_mulai|date:"Y-m-d" }}',
+                        tanggal_akhir: '{{ adoption.tanggal_akhir|date:"Y-m-d" }}',
+                        nominal: 'Rp{{ adoption.nominal }}',
+                        status: '{{ adoption.status }}'
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
                 ]
-            },
-            'Bambang Supratman': {
-                alamat: 'Jl. Pahlawan No. 45, Bandung',
-                kontak: '0856-7890-1234',
-                adoptions: [
-                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2025-01-15', tanggal_akhir: '2025-07-15', nominal: 'Rp850.000', status: 'ongoing' },
-                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2024-05-10', tanggal_akhir: '2024-11-10', nominal: 'Rp800.000', status: 'ended' }
-                ]
-            },
-            'Cindy Wijaya': {
-                alamat: 'Jl. Diponegoro No. 78, Surabaya',
-                kontak: '0877-8901-2345',
-                adoptions: [
-                    { nama_hewan: 'Simba', jenis: 'Singa', tanggal_mulai: '2024-08-20', tanggal_akhir: '2025-02-20', nominal: 'Rp500.000', status: 'ongoing' },
-                    { nama_hewan: 'Nala', jenis: 'Zebra', tanggal_mulai: '2024-03-05', tanggal_akhir: '2024-09-05', nominal: 'Rp1.200.000', status: 'ended' }
-                ]
-            },
-            'Dewi Sartika': {
-                alamat: 'Jl. Veteran No. 32, Yogyakarta',
-                kontak: '0819-2345-6789',
-                adoptions: [
-                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2024-09-10', tanggal_akhir: '2025-03-10', nominal: 'Rp800.000', status: 'ongoing' }
-                ]
-            },
-            'Eko Prasetyo': {
-                alamat: 'Jl. Gatot Subroto No. 99, Semarang',
-                kontak: '0898-3456-7890',
-                adoptions: [
-                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2024-11-20', tanggal_akhir: '2025-05-20', nominal: 'Rp850.000', status: 'ongoing' },
-                    { nama_hewan: 'Simba', jenis: 'Singa', tanggal_mulai: '2024-02-15', tanggal_akhir: '2024-08-15', nominal: 'Rp500.000', status: 'ended' }
-                ]
-            },
-            'Faisal Rahman': {
-                alamat: 'Jl. Ahmad Yani No. 54, Medan',
-                kontak: '0878-4567-8901',
-                adoptions: [
-                    { nama_hewan: 'Nala', jenis: 'Zebra', tanggal_mulai: '2024-10-05', tanggal_akhir: '2025-04-05', nominal: 'Rp1.200.000', status: 'ongoing' }
-                ]
-            },
-            'Gita Nirmala': {
-                alamat: 'Jl. Sudirman No. 67, Makassar',
-                kontak: '0822-5678-9012',
-                adoptions: [
-                    { nama_hewan: 'Rio', jenis: 'Harimau', tanggal_mulai: '2024-12-15', tanggal_akhir: '2025-06-15', nominal: 'Rp800.000', status: 'ongoing' },
-                    { nama_hewan: 'Melly', jenis: 'Gajah', tanggal_mulai: '2024-04-25', tanggal_akhir: '2024-10-25', nominal: 'Rp850.000', status: 'ended' }
-                ]
-            }
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
         };
 
         function showAdoptionHistory(name) {
@@ -376,6 +296,45 @@
             const popup = document.getElementById('adoptionHistoryPopup');
             if (event.target === popup) {
                 popup.style.display = 'none';
+            }
+        }
+
+        // Fungsi untuk konfirmasi dan menghapus adopter
+        function confirmDeleteAdopter(adopterId, adopterName) {
+            console.log('Debug JS - confirmDeleteAdopter called.');
+            console.log('Debug JS - Adopter ID:', adopterId);
+            console.log('Debug JS - Adopter Name:', adopterName);
+
+            if (confirm(`Apakah Anda yakin ingin menghapus adopter ${adopterName}?\nPenghapusan hanya bisa dilakukan jika adopter tidak memiliki adopsi yang sedang berlangsung.`)) {
+                console.log('Debug JS - User confirmed deletion.');
+                // Kirim request DELETE ke Django view
+                console.log('Debug JS - Sending fetch request...');
+                fetch("{% url 'adoption_management:delete_adopter' %}", {
+                    method: 'POST', // Menggunakan POST karena DELETE mungkin punya isu CSRF
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        id_adopter: adopterId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Debug JS - Fetch response received:', data);
+                    if (data.success) {
+                        alert(`Adopter ${adopterName} berhasil dihapus.`);
+                        window.location.reload(); // Muat ulang halaman setelah berhasil
+                    } else {
+                        alert(`Gagal menghapus adopter ${adopterName}: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Debug JS - Fetch error:', error);
+                    alert('Terjadi kesalahan saat menghubungi server.');
+                });
+            } else {
+                console.log('Debug JS - User cancelled deletion.');
             }
         }
     </script>

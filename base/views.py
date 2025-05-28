@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.shortcuts import render, redirect
 from functools import wraps
+from django.conf import settings
 
 dotenv.load_dotenv()
 
@@ -157,6 +158,18 @@ def login(request):
 def logout(request):
     request.session.flush()
     return redirect('base:home')
+
+def profile(request):
+    return render(request, "profile.html")
+
+def profile_dokter(request):
+    return render(request, "profile_dokter.html")
+
+def profile_pengunjung(request):
+    return render(request, "profile_pengunjung.html")
+
+def profile_staff(request):
+    return render(request, "profile_staff.html")
 
 @session_required
 def dashboard(request):

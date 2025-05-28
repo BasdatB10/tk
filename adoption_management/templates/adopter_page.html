@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -34,7 +35,7 @@
         }
 
         .bg-texture {
-            background-image: url("/api/placeholder/1600/900");
+            background-image: url("{% static 'images/texture-bg.jpg' %}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -79,7 +80,7 @@
 
     <div class="bg-texture absolute top-0 left-0 right-0 h-full w-full -z-10"></div>
     
-    {% include "navbar_adopter.html" %}
+    {% include "navbar.html" %}
 
     <div class="container mx-auto p-6 bg-white my-8 rounded-lg shadow-lg">
         <div class="text-center mb-8">
@@ -89,48 +90,39 @@
 
         <h2 class="text-2xl font-semibold text-custom-darker mb-6">Hewan yang Sedang Anda Adopsi</h2>
 
-        <!-- Hewan 1 -->
-        <div class="border border-custom-light rounded-lg p-4 mb-6 hover:shadow-md transition">
-            <div class="flex flex-col md:flex-row">
-                <div class="md:w-1/4 mb-4 md:mb-0">
-                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9z7mrJYa7zsRfi6n26gjfhjzjvYMO3RfYMmFSJxJuaIo5y5-W7ih9VDxE1FZEineYw0EJYSmJ8Zi4P7o62NSOo0R7W2YyoL6UjKLhEoSEP_FuwdwnWFAIRHaZ-Uxq_LKGRf_xzYXK64tg/w640-h419/1644897149271573-0.png" alt="Foto Harimau Sumatra" class="rounded-lg w-full h-auto object-cover">
-                </div>
-                <div class="md:w-3/4 md:pl-6">
-                    <h3 class="text-xl font-bold text-custom-darker">Sari <span class="text-custom-dark text-sm font-normal">(ID: HTM-001)</span></h3>
-                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Jenis:</span> Harimau Sumatra</p>
-                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Kondisi:</span> Sehat, sedang dalam masa pemulihan setelah operasi kaki</p>
-                    <p class="text-custom-darkest mb-4"><span class="font-semibold">Usia:</span> 5 tahun</p>
-                    
-                    <div class="flex justify-end mt-2">
-                        <a href="#" onclick="openPopup('Sari', 'Harimau Sumatra', 'Sumatra', '2025-01-01', '2025-12-31')" class="text-custom-dark hover:text-custom-darker text-sm underline">[Lihat Detail]</a>
+        {% if error %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <span class="block sm:inline">{{ error }}</span>
+        </div>
+        {% endif %}
 
+        {% if hewan_list %}
+            {% for hewan in hewan_list %}
+            <div class="border border-custom-light rounded-lg p-4 mb-6 hover:shadow-md transition">
+                <div class="flex flex-col md:flex-row">
+                    <div class="md:w-1/4 mb-4 md:mb-0">
+                        <img src="{{ hewan.url_foto }}" alt="Foto {{ hewan.nama }}" class="rounded-lg w-full h-auto object-cover">
+                    </div>
+                    <div class="md:w-3/4 md:pl-6">
+                        <h3 class="text-xl font-bold text-custom-darker">{{ hewan.nama }} <span class="text-custom-dark text-sm font-normal">(ID: {{ hewan.id }})</span></h3>
+                        <p class="text-custom-darkest mb-2"><span class="font-semibold">Jenis:</span> {{ hewan.spesies }}</p>
+                        <p class="text-custom-darkest mb-2"><span class="font-semibold">Kondisi:</span> {{ hewan.status_kesehatan }}</p>
+                        <p class="text-custom-darkest mb-4"><span class="font-semibold">Usia:</span> {% if hewan.usia %}{{ hewan.usia }} tahun{% else %}-{% endif %}</p>
+                        
+                        <div class="flex justify-end mt-2">
+                            <a href="#" onclick="openPopup('{{ hewan.nama }}', '{{ hewan.spesies }}', '{{ hewan.nama_habitat }}', '{{ hewan.tgl_mulai_adopsi|date:'Y-m-d' }}', '{{ hewan.tgl_berhenti_adopsi|date:'Y-m-d' }}')" class="text-custom-dark hover:text-custom-darker text-sm underline">[Lihat Detail]</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Hewan 2 -->
-        <div class="border border-custom-light rounded-lg p-4 mb-6 hover:shadow-md transition">
-            <div class="flex flex-col md:flex-row">
-                <div class="md:w-1/4 mb-4 md:mb-0">
-                    <img src="https://www.wwf.id/sites/default/files/slider/9.ORANGUTAN_Fiona%20Rogers_copy.jpg" alt="Foto Orangutan" class="rounded-lg w-full h-auto object-cover">
-                </div>
-                <div class="md:w-3/4 md:pl-6">
-                    <h3 class="text-xl font-bold text-custom-darker">Jojo <span class="text-custom-dark text-sm font-normal">(ID: ORG-023)</span></h3>
-                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Jenis:</span> Orangutan Kalimantan</p>
-                    <p class="text-custom-darkest mb-2"><span class="font-semibold">Kondisi:</span> Sangat baik, aktif dan suka bermain</p>
-                    <p class="text-custom-darkest mb-4"><span class="font-semibold">Usia:</span> 3 tahun</p>
-                    
-                    <div class="flex justify-end mt-2">
-                        <a href="#" onclick="openPopup('Jojo', 'Orangutan Kalimantan', 'Kalimantan', '2025-02-01', '2026-02-01')" class="text-custom-dark hover:text-custom-darker text-sm underline">[Lihat Detail]</a>
-
-                    </div>
-                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-600">Anda belum mengadopsi satwa apapun.</p>
+                <a href="{% url 'adoption_management:manage_adopt' %}" class="inline-block mt-4 bg-custom-medium hover:bg-custom-dark text-white px-6 py-2 rounded-lg">Mulai Adopsi</a>
             </div>
-        </div>
+        {% endif %}
     </div>
-
-
 
     <footer class="bg-custom-darkest text-white p-6">
         <div class="container mx-auto text-center">

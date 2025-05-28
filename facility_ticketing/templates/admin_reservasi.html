@@ -318,8 +318,12 @@
             font-weight: 600;
         }
         
-        .status-terjadwal {
+        .status-konfirmasi {
             background-color: #28a745;
+            color: white;
+        }
+        .status-menunggu-pembayaran{
+            background-color: #d19f13;
             color: white;
         }
         
@@ -349,10 +353,8 @@
             <thead>
                 <tr>
                     <th>Username</th>
-                    <th>Nama Pengunjung</th>
                     <th>Nama Atraksi</th>
                     <th>Tanggal</th>
-                    <th>Jam</th>
                     <th>Jumlah Tiket</th>
                     <th>Status</th>
                     <th>Aksi</th>
@@ -363,14 +365,14 @@
                     {% for reservasi in reservasi_data %}
                     <tr>
                         <td>{{ reservasi.username }}</td>
-                        <td>{{ reservasi.nama_pengunjung }}</td>
-                        <td>{{ reservasi.nama_atraksi }}</td>
-                        <td>{{ reservasi.tanggal }}</td>
-                        <td>{{ reservasi.jam }}</td>
+                        <td>{{ reservasi.nama_fasilitas }}</td>
+                        <td>{{ reservasi.tanggal_kunjungan }}</td>
                         <td>{{ reservasi.jumlah_tiket }}</td>
                         <td>
-                            {% if reservasi.status == 'Terjadwal' %}
-                                <span class="status-badge status-terjadwal">Terjadwal</span>
+                            {% if reservasi.status == 'Menunggu Pembayaran' %}
+                                <span class="status-badge status-menunggu-pembayaran">Menunggu Pembayaran</span>
+                            {% elif reservasi.status == 'Konfirmasi' %}
+                                <span class="status-badge status-konfirmasi">Konfirmasi</span>
                             {% elif reservasi.status == 'Dibatalkan' %}
                                 <span class="status-badge status-dibatalkan">Dibatalkan</span>
                             {% endif %}
@@ -414,11 +416,11 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Nama Atraksi:</label>
-                    <input type="text" class="form-control readonly-info" id="namaAtraksi" readonly>
+                    <input type="text" class="form-control readonly-info" id="namaFasilitas" readonly>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Tanggal & Jam:</label>
-                    <input type="text" class="form-control readonly-info" id="tanggalJam" readonly>
+                    <label class="form-label">Tanggal Kunjungan:</label>
+                    <input type="text" class="form-control readonly-info" id="tanggalKunjungan" readonly>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Jumlah Tiket:</label>
@@ -427,13 +429,10 @@
                 <div class="form-group">
                     <label class="form-label">Status:</label>
                     <select class="form-control" id="status">
-                        <option value="Terjadwal">Terjadwal</option>
+                        <option value="Menunggu Pembayaran">Menunggu Pembayaran</option>
+                        <option value="Konfirmasi">Konfirmasi</option>
                         <option value="Dibatalkan">Dibatalkan</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Catatan Admin (opsional):</label>
-                    <textarea class="form-control" id="catatan" rows="3"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -449,10 +448,6 @@
             <div class="confirm-modal">
                 <h3 class="confirm-title">Batalkan Reservasi</h3>
                 <p class="confirm-message">Apakah anda yakin ingin membatalkan reservasi ini?</p>
-                <div class="form-group">
-                    <label class="form-label">Alasan Pembatalan:</label>
-                    <textarea class="form-control" id="reasonCancel" rows="3"></textarea>
-                </div>
                 <div class="confirm-buttons">
                     <button class="btn btn-secondary" onclick="closeModal('cancelModal')">Tidak</button>
                     <button class="btn btn-danger" onclick="cancelReservasi()">Ya, Batalkan</button>
@@ -466,12 +461,9 @@
         const reservasiData = [
             {% for reservasi in reservasi_data %}
             {
-                id: {{ reservasi.id }},
                 username: "{{ reservasi.username|escapejs }}",
-                namaPengunjung: "{{ reservasi.nama_pengunjung|escapejs }}",
-                namaAtraksi: "{{ reservasi.nama_atraksi|escapejs }}",
-                tanggal: "{{ reservasi.tanggal|escapejs }}",
-                jam: "{{ reservasi.jam|escapejs }}",
+                namaFasilitas: "{{ reservasi.nama_fasilitas|escapejs }}",
+                tanggalKunjungan: "{{ reservasi.tanggal_kunjungan|escapejs }}",
                 jumlahTiket: {{ reservasi.jumlah_tiket }},
                 status: "{{ reservasi.status|escapejs }}"
             }{% if not forloop.last %},{% endif %}
@@ -486,11 +478,10 @@
             const data = reservasiData[index];
             
             document.getElementById('username').value = data.username;
-            document.getElementById('namaAtraksi').value = data.namaAtraksi;
-            document.getElementById('tanggalJam').value = `${data.tanggal} ${data.jam}`;
+            document.getElementById('namaFasilitas').value = data.namaFasilitas;
+            document.getElementById('tanggalKunjungan').value = data.tanggalKunjungan;
             document.getElementById('jumlahTiket').value = data.jumlahTiket;
             document.getElementById('status').value = data.status;
-            document.getElementById('catatan').value = '';
             
             document.getElementById('editModal').style.display = 'flex';
         }
@@ -498,7 +489,6 @@
         // Show Cancel Confirmation
         function showCancelConfirmation(index) {
             currentReservationIndex = index;
-            document.getElementById('reasonCancel').value = '';
             document.getElementById('cancelModal').style.display = 'flex';
         }
         
@@ -509,41 +499,92 @@
         
         // Update Reservasi Status
         function updateReservasi() {
+            const data = reservasiData[currentReservationIndex];
             const status = document.getElementById('status').value;
-            const catatan = document.getElementById('catatan').value;
-            
-            alert(`Status reservasi berhasil diubah menjadi ${status}${catatan ? ' dengan catatan' : ''}`);
-            closeModal('editModal');
-            
-            // In a real application, you would update the data and refresh the table
-            // For demo, we can update the table manually
-            const statusCell = document.querySelectorAll('tbody tr')[currentReservationIndex].querySelector('td:nth-child(7)');
-            let badgeHTML = '';
-            
-            if (status === 'Terjadwal') {
-                badgeHTML = '<span class="status-badge status-terjadwal">Terjadwal</span>';
-            } else if (status === 'Dibatalkan') {
-                badgeHTML = '<span class="status-badge status-dibatalkan">Dibatalkan</span>';
-            }
-            
-            statusCell.innerHTML = badgeHTML;
+            fetch("{% url 'facility_ticketing:update_status_reservasi' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: new URLSearchParams({
+                    'username': data.username,
+                    'nama_fasilitas': data.namaFasilitas,
+                    'tanggal_kunjungan': data.tanggalKunjungan,
+                    'status': status
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    // Update UI
+                    const statusCell = document.querySelectorAll('tbody tr')[currentReservationIndex].querySelector('td:nth-child(5)');
+                    let badgeHTML = '';
+                    if (status === 'Menunggu Pembayaran') {
+                        badgeHTML = '<span class="status-badge status-menunggu-pembayaran">Menunggu Pembayaran</span>';
+                    } else if (status === 'Konfirmasi') {
+                        badgeHTML = '<span class="status-badge status-konfirmasi">Konfirmasi</span>';
+                    } else if (status === 'Dibatalkan') {
+                        badgeHTML = '<span class="status-badge status-dibatalkan">Dibatalkan</span>';
+                    }
+                    statusCell.innerHTML = badgeHTML;
+                    closeModal('editModal');
+                } else {
+                    alert('Gagal mengubah status: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengubah status');
+            });
         }
         
         // Cancel Reservasi
         function cancelReservasi() {
-            const reason = document.getElementById('reasonCancel').value;
-            
-            if (!reason) {
-                alert('Silakan masukkan alasan pembatalan');
-                return;
+            const data = reservasiData[currentReservationIndex];
+            fetch("{% url 'facility_ticketing:batalkan_reservasi' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: new URLSearchParams({
+                    'username': data.username,
+                    'nama_fasilitas': data.namaFasilitas,
+                    'tanggal_kunjungan': data.tanggalKunjungan
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    // Update UI
+                    const statusCell = document.querySelectorAll('tbody tr')[currentReservationIndex].querySelector('td:nth-child(5)');
+                    statusCell.innerHTML = '<span class="status-badge status-dibatalkan">Dibatalkan</span>';
+                    closeModal('cancelModal');
+                } else {
+                    alert('Gagal membatalkan reservasi: ' + result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat membatalkan reservasi');
+            });
+        }
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
             }
-            
-            alert(`Reservasi berhasil dibatalkan dengan alasan: ${reason}`);
-            closeModal('cancelModal');
-            
-            // Update the table to show cancelled status
-            const statusCell = document.querySelectorAll('tbody tr')[currentReservationIndex].querySelector('td:nth-child(7)');
-            statusCell.innerHTML = '<span class="status-badge status-dibatalkan">Dibatalkan</span>';
+            return cookieValue;
         }
     </script>
 </body>

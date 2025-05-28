@@ -14,4 +14,6 @@ urlpatterns = [
     path('manajemen-wahana/hapus/', views.hapus_wahana, name='hapus_wahana'),
     path('reservasi-pengunjung/', views.reservasi_pengunjung, name='reservasi_pengunjung'),
     path('admin-reservasi/', views.admin_reservasi, name='admin_reservasi'),
+    path('update-status-reservasi/', views.update_status_reservasi, name='update_status_reservasi'),
+    path('batalkan-reservasi/', views.batalkan_reservasi, name='batalkan_reservasi'),
 ]

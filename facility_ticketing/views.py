@@ -4,6 +4,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
 from datetime import date, datetime
+from django.http import JsonResponse
 
 # Create your views here.
 def manajemen_atraksi(request):
@@ -269,71 +270,115 @@ def reservasi_pengunjung(request):
     return render(request, 'reservasi_pengunjung.html', context)
 
 def admin_reservasi(request):
-    # Data reservasi untuk semua pengunjung (dengan username)
-    all_reservasi_data = [
-        {
-            'id': 1,
-            'username': 'anggita.desmawati17',
-            'nama_pengunjung': 'Anggita Desmawati',
-            'nama_atraksi': 'Taman Burung Tropis',
-            'tanggal': '2025-04-24',
-            'jam': '09:00',
-            'jumlah_tiket': 3,
-            'status': 'Terjadwal',
-        },
-        {
-            'id': 2,
-            'username': 'anggita.desmawati17',
-            'nama_pengunjung': 'Anggita Desmawati',
-            'nama_atraksi': 'Aquaarium Laut Dalam',
-            'tanggal': '2025-04-25',
-            'jam': '10:00',
-            'jumlah_tiket': 4,
-            'status': 'Terjadwal',
-        },
-        {
-            'id': 3,
-            'username': 'johndoe22',
-            'nama_pengunjung': 'John Doe',
-            'nama_atraksi': 'Safari Jeep',
-            'tanggal': '2025-04-26',
-            'jam': '10:30',
-            'jumlah_tiket': 2,
-            'status': 'Terjadwal',
-        },
-        {
-            'id': 4,
-            'username': 'maria.silva',
-            'nama_pengunjung': 'Maria Silva',
-            'nama_atraksi': 'Zona Interaktif Serangga',
-            'tanggal': '2025-04-27',
-            'jam': '13:00',
-            'jumlah_tiket': 5,
-            'status': 'Terjadwal',
-        },
-        {
-            'id': 5,
-            'username': 'robert.johnson',
-            'nama_pengunjung': 'Robert Johnson',
-            'nama_atraksi': 'Teater Satwa Malam',
-            'tanggal': '2025-04-28',
-            'jam': '14:00',
-            'jumlah_tiket': 2,
-            'status': 'Dibatalkan',
-        },
-        {
-            'id': 6,
-            'username': 'sarah.lee',
-            'nama_pengunjung': 'Sarah Lee',
-            'nama_atraksi': 'Kawasan Panda',
-            'tanggal': '2025-04-30',
-            'jam': '11:00',
-            'jumlah_tiket': 3,
-            'status': 'Terjadwal',
-        }
-    ]
-    
-    return render(request, 'admin_reservasi.html', {'reservasi_data': all_reservasi_data})
+    try:
+        conn = psycopg2.connect(
+            host=settings.DATABASES['default']['HOST'],
+            database=settings.DATABASES['default']['NAME'],
+            user=settings.DATABASES['default']['USER'],
+            password=settings.DATABASES['default']['PASSWORD'],
+            port=settings.DATABASES['default']['PORT']
+        )
+        cursor = conn.cursor()
+        cursor.execute("SET search_path TO sizopi;")
+
+        # Ambil data reservasi
+        cursor.execute('''
+            SELECT 
+                username_p,
+                nama_fasilitas,
+                tanggal_kunjungan,
+                jumlah_tiket,
+                status
+            FROM reservasi
+            ORDER BY tanggal_kunjungan DESC
+        ''')
+        rows = cursor.fetchall()
+        reservasi_data = []
+        for row in rows:
+            reservasi_data.append({
+                'username': row[0],
+                'nama_fasilitas': row[1],
+                'tanggal_kunjungan': row[2],
+                'jumlah_tiket': row[3],
+                'status': row[4]
+            })
+
+        cursor.close()
+        conn.close()
+        return render(request, 'admin_reservasi.html', {'reservasi_data': reservasi_data})
+    except Exception as e:
+        print('Error:', e)
+        return render(request, 'admin_reservasi.html', {'reservasi_data': [], 'error': str(e)})
+
+@csrf_exempt
+def update_status_reservasi(request):
+    if request.method == 'POST':
+        try:
+            conn = psycopg2.connect(
+                host=settings.DATABASES['default']['HOST'],
+                database=settings.DATABASES['default']['NAME'],
+                user=settings.DATABASES['default']['USER'],
+                password=settings.DATABASES['default']['PASSWORD'],
+                port=settings.DATABASES['default']['PORT']
+            )
+            cursor = conn.cursor()
+            cursor.execute("SET search_path TO sizopi;")
+            
+            username = request.POST.get('username')
+            nama_fasilitas = request.POST.get('nama_fasilitas')
+            tanggal_kunjungan = request.POST.get('tanggal_kunjungan')
+            status = request.POST.get('status')
+            
+            if status not in ['Menunggu Pembayaran', 'Konfirmasi', 'Dibatalkan']:
+                return JsonResponse({'status': 'error', 'message': 'Status tidak valid'})
+            
+            cursor.execute("""
+                UPDATE reservasi 
+                SET status = %s
+                WHERE username_p = %s AND nama_fasilitas = %s AND tanggal_kunjungan = %s
+            """, (status, username, nama_fasilitas, tanggal_kunjungan))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print('Error:', e)
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+@csrf_exempt
+def batalkan_reservasi(request):
+    if request.method == 'POST':
+        try:
+            conn = psycopg2.connect(
+                host=settings.DATABASES['default']['HOST'],
+                database=settings.DATABASES['default']['NAME'],
+                user=settings.DATABASES['default']['USER'],
+                password=settings.DATABASES['default']['PASSWORD'],
+                port=settings.DATABASES['default']['PORT']
+            )
+            cursor = conn.cursor()
+            cursor.execute("SET search_path TO sizopi;")
+            
+            username = request.POST.get('username')
+            nama_fasilitas = request.POST.get('nama_fasilitas')
+            tanggal_kunjungan = request.POST.get('tanggal_kunjungan')
+            
+            cursor.execute("""
+                UPDATE reservasi 
+                SET status = 'Dibatalkan'
+                WHERE username_p = %s AND nama_fasilitas = %s AND tanggal_kunjungan = %s
+            """, (username, nama_fasilitas, tanggal_kunjungan))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print('Error:', e)
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
 
 @csrf_exempt
 def tambah_atraksi(request):

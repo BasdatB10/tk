@@ -50,29 +50,29 @@
 
       <div class="flex space-x-4">
         {% if user.is_authenticated %}
-          {% if user.role == 'dokter_hewan' %}
+          {% if user_role == 'dokter_hewan' %}
             <a href="/dashboard/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="/medic/medical_record/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Rekam Medis Hewan</a>
             <a href="/userprofile/profile_view/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
-          {% elif user.role == 'penjaga_hewan' %}
+          {% elif user_role == 'penjaga_hewan' %}
             <a href="/dashboard/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="/medic/feeding_schedule/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Catatan Perawatan</a>
             <a href="/profile_staff/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
-          {% elif user.role == 'pelatih_pertunjukan' or user.role == 'pelatih_hewan' %}
+          {% elif user_role == 'pelatih_pertunjukan' or user_role == 'pelatih_hewan' %}
             <a href="/dashboard/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="/show/schedule/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Jadwal Pertunjukan</a>
             <a href="/userprofile/profile_view/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
-          {% elif user.role == 'staf_admin' %}
+          {% elif user_role == 'staf_admin' %}
             <a href="/dashboard/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="/visitor/manage/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Kelola Pengunjung</a>
             <a href="/adoption/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Kelola Adopsi</a>
             <a href="/adoption/adopter-list/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Kelola Adopter</a>
             <a href="/userprofile/profile_view/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
-          {% elif user.role == 'pengunjung' %}
+          {% elif user_role == 'pengunjung' %}
             <a href="/dashboard/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="/zoo/info/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Informasi Kebun Binatang</a>
             <a href="/userprofile/profile_view/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
-            {% if user.is_adopter %}
+            {% if is_adopter %}
               <a href="/adoption/adopter-page/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Hewan Adopsi</a>
             {% endif %}
           {% endif %}

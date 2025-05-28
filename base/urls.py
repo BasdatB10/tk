@@ -16,4 +16,5 @@ urlpatterns = [
     path('profile_pengunjung/', profile_pengunjung, name='profile_pengunjung'),
     path('profile_staff/', profile_staff, name='profile_staff'),
     path('adoption/', include('adoption_management.urls')),
+    path('navbar/', navbar, name='navbar'),
 ]

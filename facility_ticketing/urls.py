@@ -12,6 +12,12 @@ urlpatterns = [
     path('manajemen-wahana/tambah/', views.tambah_wahana, name='tambah_wahana'),
     path('manajemen-wahana/edit/', views.edit_wahana, name='edit_wahana'),
     path('manajemen-wahana/hapus/', views.hapus_wahana, name='hapus_wahana'),
-    path('reservasi-pengunjung/', views.reservasi_pengunjung, name='reservasi_pengunjung'),
+    path('reservasi-pengunjung/', views.reservasi_pengunjung_list_fasilitas, name='reservasi_pengunjung_list_fasilitas'),
+    path('reservasi-pengunjung/riwayat/', views.reservasi_pengunjung_riwayat, name='reservasi_pengunjung_riwayat'),
+    path('reservasi-pengunjung/tambah/', views.tambah_reservasi_pengunjung, name='tambah_reservasi_pengunjung'),
+    path('reservasi-pengunjung/edit/', views.edit_reservasi_pengunjung, name='edit_reservasi_pengunjung'),
+    path('reservasi-pengunjung/batal/', views.batal_reservasi_pengunjung, name='batal_reservasi_pengunjung'),
     path('admin-reservasi/', views.admin_reservasi, name='admin_reservasi'),
+    path('update-status-reservasi/', views.update_status_reservasi, name='update_status_reservasi'),
+    path('batalkan-reservasi/', views.batalkan_reservasi, name='batalkan_reservasi'),
 ]

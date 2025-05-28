@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Reservasi - Zoo Pintar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        .navbar-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar a {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            color: white;
+            background-color: #DD6D49;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .navbar a:hover {
+            background-color: #883526;
+            border-color: #883526;
+        }
+        .active-link {
+            background-color: #ED8764;
+            border-color: #ED8764;
+        }
+        :root {
+            --color-light-peach: #fad4b6;
+            --color-peach: #fbbe99;
+            --color-coral: #ed8764;
+            --color-dark-coral: #dd6d49;
+            --color-brown: #883526;
+            --color-dark-brown: #49241b;
+            --background-color: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-color: #333;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Geist', sans-serif;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--color-dark-coral);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--color-coral);
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--color-light-peach);
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .action-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-coral);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        .status-konfirmasi {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-menunggu-pembayaran{
+            background-color: #d19f13;
+            color: white;
+        }
+        
+        .status-dibatalkan {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar_pengunjung.html' %}
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Riwayat Reservasi</h1>
+                <div class="subtitle">Lihat dan kelola reservasi Anda</div>
+            </div>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        <table class="w-full border-collapse bg-white rounded-lg shadow mb-8">
+            <thead>
+                <tr>
+                    <th>Nama Fasilitas</th>
+                    <th>Tanggal Kunjungan</th>
+                    <th>Jumlah Tiket</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservasi in reservasi_data %}
+                <tr class="border-b last:border-b-0">
+                    <td class="px-4 py-2">{{ reservasi.nama_fasilitas }}</td>
+                    <td class="px-4 py-2">{{ reservasi.tanggal_kunjungan }}</td>
+                    <td class="px-4 py-2">{{ reservasi.jumlah_tiket }}</td>
+                    <td class="px-4 py-2">
+                        {% if reservasi.status == 'Menunggu Pembayaran' %}
+                            <span class="status-badge status-menunggu-pembayaran">Menunggu Pembayaran</span>
+                        {% elif reservasi.status == 'Konfirmasi' %}
+                            <span class="status-badge status-konfirmasi">Konfirmasi</span>
+                        {% elif reservasi.status == 'Dibatalkan' %}
+                            <span class="status-badge status-dibatalkan">Dibatalkan</span>
+                        {% else %}
+                            {{ reservasi.status }}
+                        {% endif %}
+                    </td>
+                    <td class="actions">
+                        {% if reservasi.status != 'Dibatalkan' %}
+                        <button class="action-btn" onclick="openEditModal">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89783 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <button class="action-btn" onclick="openCancelModal">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 6H5H21" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        {% else %}
+                        <span class="bg-gray-300 text-gray-600 font-semibold px-3 py-1 rounded">Dibatalkan</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <!-- Modal Edit -->
+                <div id="modalEdit{{ forloop.counter }}" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h5 class="text-lg font-semibold">Edit Reservasi - {{ reservasi.nama_fasilitas }}</h5>
+                            <button type="button" onclick="closeEditModal({{ forloop.counter }})" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                        </div>
+                        <form action="{% url 'facility_ticketing:edit_reservasi_pengunjung' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="nama_fasilitas" value="{{ reservasi.nama_fasilitas }}">
+                            <input type="hidden" name="tanggal_kunjungan" value="{{ reservasi.tanggal_kunjungan }}">
+                            <div class="mb-3 form-group">
+                                <label class="form-label">Jumlah Tiket</label>
+                                <input type="number" class="form-control" name="jumlah_tiket" min="1" value="{{ reservasi.jumlah_tiket }}" required>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button type="button" onclick="closeEditModal({{ forloop.counter }})" class="btn btn-secondary">Batal</button>
+                                <button type="submit" class="btn btn-primary">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Modal Batalkan -->
+                <div id="modalCancel{{ forloop.counter }}" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h5 class="text-lg font-semibold">Batalkan Reservasi - {{ reservasi.nama_fasilitas }}</h5>
+                            <button type="button" onclick="closeCancelModal({{ forloop.counter }})" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                        </div>
+                        <form action="{% url 'facility_ticketing:batal_reservasi_pengunjung' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="nama_fasilitas" value="{{ reservasi.nama_fasilitas }}">
+                            <input type="hidden" name="tanggal_kunjungan" value="{{ reservasi.tanggal_kunjungan }}">
+                            <p class="mb-4">Apakah Anda yakin ingin membatalkan reservasi ini?</p>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button type="button" onclick="closeCancelModal({{ forloop.counter }})" class="btn btn-secondary">Batal</button>
+                                <button type="submit" class="btn btn-danger">Ya, Batalkan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+    function openEditModal(idx) {
+        document.getElementById('modalEdit' + idx).classList.remove('hidden');
+    }
+    function closeEditModal(idx) {
+        document.getElementById('modalEdit' + idx).classList.add('hidden');
+    }
+    function openCancelModal(idx) {
+        document.getElementById('modalCancel' + idx).classList.remove('hidden');
+    }
+    function closeCancelModal(idx) {
+        document.getElementById('modalCancel' + idx).classList.add('hidden');
+    }
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('[id^=modalEdit], [id^=modalCancel]').forEach(modal => modal.classList.add('hidden'));
+        }
+    });
+    </script>
+</body>
+</html> 

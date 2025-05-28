@@ -171,7 +171,6 @@ def profile_pengunjung(request):
 def profile_staff(request):
     return render(request, "profile_staff.html")
 
-
 @session_required
 def dashboard(request):
     pengguna_data = [
@@ -245,78 +244,3 @@ def dashboard(request):
             filtered_data.append(user)
 
     return render(request, 'dashboard.html', {'user_data': filtered_data})
-
-def get_user_role_and_status(username):
-    """
-    Fungsi untuk mendapatkan role user dan status adopter
-    """
-    try:
-        conn = psycopg2.connect(
-            dbname=settings.DATABASES['default']['NAME'],
-            user=settings.DATABASES['default']['USER'],
-            password=settings.DATABASES['default']['PASSWORD'],
-            host=settings.DATABASES['default']['HOST'],
-            port=settings.DATABASES['default']['PORT']
-        )
-        cur = conn.cursor()
-        
-        # Cek role user
-        role = None
-        
-        # Cek di setiap tabel staff
-        cur.execute("SELECT 1 FROM SIZOPI.dokter_hewan WHERE username_dh = %s", (username,))
-        if cur.fetchone():
-            role = 'dokter_hewan'
-        else:
-            cur.execute("SELECT 1 FROM SIZOPI.penjaga_hewan WHERE username_ph = %s", (username,))
-            if cur.fetchone():
-                role = 'penjaga_hewan'
-            else:
-                cur.execute("SELECT 1 FROM SIZOPI.pelatih_pertunjukan WHERE username_pp = %s", (username,))
-                if cur.fetchone():
-                    role = 'pelatih_pertunjukan'
-                else:
-                    cur.execute("SELECT 1 FROM SIZOPI.pelatih_hewan WHERE username_ph = %s", (username,))
-                    if cur.fetchone():
-                        role = 'pelatih_hewan'
-                    else:
-                        cur.execute("SELECT 1 FROM SIZOPI.staf_admin WHERE username_sa = %s", (username,))
-                        if cur.fetchone():
-                            role = 'staf_admin'
-                        else:
-                            # Jika tidak ada di tabel staff, berarti pengunjung
-                            role = 'pengunjung'
-        
-        # Cek status adopter
-        cur.execute("SELECT 1 FROM SIZOPI.adopter WHERE username_adopter = %s", (username,))
-        is_adopter = cur.fetchone() is not None
-        
-        cur.close()
-        conn.close()
-        
-        return {
-            'role': role,
-            'is_adopter': is_adopter
-        }
-        
-    except Exception as e:
-        print(f"Error checking user role and adopter status: {e}")
-        return {
-            'role': None,
-            'is_adopter': False
-        }
-
-def navbar(request):
-    """
-    View untuk navbar yang menyertakan informasi role dan status adopter
-    """
-    if request.user.is_authenticated:
-        user_info = get_user_role_and_status(request.user.username)
-        return render(request, 'navbar.html', {
-            'user_role': user_info['role'],
-            'is_adopter': user_info['is_adopter']
-        })
-    return render(request, 'navbar.html', {
-        'user_role': None,
-        'is_adopter': False
-    })

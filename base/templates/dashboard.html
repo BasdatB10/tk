@@ -173,17 +173,9 @@
     </style>
 </head>
 <body>
-    {% if user_data.0.role == 'Staf Admin' %}
-        {% include 'navbar_staf_administrasi.html' %}
-    {% elif user_data.0.role == 'Dokter Hewan' %}
-        {% include 'navbar_dokter_hewan.html' %}
-    {% elif user_data.0.role == 'Penjaga Hewan' %}
-        {% include 'navbar_penjaga_hewan.html' %}
-    {% elif user_data.0.role == 'Pelatih Hewan' %}
-        {% include 'navbar_pelatih_pertunjukan.html' %}
-    {% else %}
-        {% include 'navbar_pengunjung.html' %}
-    {% endif %}
+    {% with request=request %}
+        {% include 'navbar.html' %}
+    {% endwith %}
     <div class="container">
         <header>
             <h1>Dashboard</h1>

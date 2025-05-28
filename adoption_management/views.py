@@ -170,11 +170,13 @@ def manage_adopt(request):
 
 
 def show_adopter_page(request):
-    # Pastikan user sudah login
-    if not request.user.is_authenticated:
-        return redirect('/login/')  # Menggunakan path absolut ke halaman login
+    # Pastikan user sudah login dengan mengecek session
+    if 'username' not in request.session:
+        print("Debug - User not logged in, redirecting to login")
+        return redirect('base:login')
 
-    username = request.user.username
+    username = request.session['username']
+    print(f"Debug - Username from session: {username}")
     
     conn = None
     cur = None
@@ -191,15 +193,18 @@ def show_adopter_page(request):
         # Cari id_adopter berdasarkan username
         cur.execute("SELECT id_adopter FROM SIZOPI.adopter WHERE username_adopter = %s", (username,))
         adopter_result = cur.fetchone()
+        print(f"Debug - Adopter result: {adopter_result}")
 
         if not adopter_result:
             # Jika user belum menjadi adopter, tampilkan pesan
+            print("Debug - User is not an adopter")
             return render(request, "adopter_page.html", {
                 "error": "Anda belum mengadopsi satwa apapun. Silakan kunjungi halaman adopsi untuk memulai.",
                 "hewan_list": []
             })
 
         id_adopter = adopter_result[0]
+        print(f"Debug - Found adopter_id: {id_adopter}")
 
         # Ambil data hewan yang diadopsi oleh adopter ini
         cur.execute("""
@@ -237,6 +242,7 @@ def show_adopter_page(request):
                 hewan_dict['usia'] = None
             hewan_list.append(hewan_dict)
 
+        print(f"Debug - Found {len(hewan_list)} adopted animals")
         return render(request, "adopter_page.html", {
             "hewan_list": hewan_list
         })

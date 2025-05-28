@@ -256,16 +256,19 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
             diagnosis_baru = request.POST.get('diagnosis_baru', '')
             pengobatan_baru = request.POST.get('pengobatan_baru', '')
             
+            # Update rekam medis dengan dokter yang sedang login
             cursor.execute("""
                 UPDATE CATATAN_MEDIS 
                 SET catatan_tindak_lanjut = %s,
                     diagnosis = COALESCE(NULLIF(%s, ''), diagnosis),
-                    pengobatan = COALESCE(NULLIF(%s, ''), pengobatan)
+                    pengobatan = COALESCE(NULLIF(%s, ''), pengobatan),
+                    username_dh = %s
                 WHERE id_hewan = %s AND tanggal_pemeriksaan = %s
             """, (
                 catatan_tindak_lanjut if catatan_tindak_lanjut else None,
                 diagnosis_baru,
                 pengobatan_baru,
+                request.session.get('username'),  # Update dengan dokter yang sedang login
                 id_hewan,
                 tanggal_pemeriksaan
             ))
@@ -302,9 +305,12 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
                 cm.status_kesehatan,
                 cm.catatan_tindak_lanjut,
                 h.nama as nama_hewan,
-                h.status_kesehatan as status_hewan_saat_ini
+                h.status_kesehatan as status_hewan_saat_ini,
+                p.nama_depan || ' ' || p.nama_belakang as nama_dokter_asli
             FROM CATATAN_MEDIS cm
             JOIN HEWAN h ON cm.id_hewan = h.id
+            JOIN DOKTER_HEWAN dh ON cm.username_dh = dh.username_DH
+            JOIN PENGGUNA p ON dh.username_DH = p.username
             WHERE cm.id_hewan = %s AND cm.tanggal_pemeriksaan = %s
         """, (id_hewan, tanggal_pemeriksaan))
         

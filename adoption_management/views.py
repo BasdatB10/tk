@@ -353,6 +353,7 @@ def daftar_user(request):
         email = request.POST.get("email")
         password = request.POST.get("password")
         nama_depan = request.POST.get("nama_depan")
+        nama_tengah = request.POST.get("nama_tengah")  # Ambil nama tengah, bisa None
         nama_belakang = request.POST.get("nama_belakang")
         no_telepon = request.POST.get("no_telepon")
         alamat = request.POST.get("alamat")
@@ -372,10 +373,10 @@ def daftar_user(request):
         cur = conn.cursor()
 
         try:
-            # Insert ke pengguna
+            # Insert ke pengguna dengan nama_tengah
             cur.execute(
-                "INSERT INTO SIZOPI.pengguna (username, email, password, nama_depan, nama_belakang, no_telepon) VALUES (%s, %s, %s, %s, %s, %s)",
-                (username, email, password, nama_depan, nama_belakang, no_telepon)
+                "INSERT INTO SIZOPI.pengguna (username, email, password, nama_depan, nama_tengah, nama_belakang, no_telepon) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (username, email, password, nama_depan, nama_tengah, nama_belakang, no_telepon)
             )
             
             # Insert ke pengunjung

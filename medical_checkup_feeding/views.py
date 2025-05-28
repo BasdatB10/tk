@@ -163,7 +163,7 @@ def add_medical_record(request):
             status_kesehatan = request.POST.get('status_kesehatan')
             diagnosis = request.POST.get('diagnosis', '')
             pengobatan = request.POST.get('pengobatan', '')
-            
+
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
             """, (request.session.get('username'),))
@@ -173,6 +173,8 @@ def add_medical_record(request):
                 cursor.close()
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_record')
+            
+            cursor.execute("SET client_min_messages TO NOTICE;")
             
             cursor.execute("""
                 INSERT INTO CATATAN_MEDIS 
@@ -193,6 +195,10 @@ def add_medical_record(request):
                 SET status_kesehatan = %s 
                 WHERE id = %s
             """, (status_kesehatan, id_hewan))
+
+            for notice in conn.notices:
+                if 'SUKSES:' in notice:
+                    messages.success(request, notice.strip())
             
             conn.commit()
             cursor.close()
@@ -486,6 +492,8 @@ def add_checkup_schedule(request):
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
             
+            cursor.execute("SET client_min_messages TO NOTICE;")
+            
             cursor.execute("""
                 INSERT INTO JADWAL_PEMERIKSAAN_KESEHATAN 
                 (id_hewan, tgl_pemeriksaan_selanjutnya, freq_pemeriksaan_rutin)
@@ -495,6 +503,10 @@ def add_checkup_schedule(request):
                 tgl_pemeriksaan_selanjutnya,
                 int(freq_pemeriksaan_rutin)
             ))
+            
+            for notice in conn.notices:
+                if 'SUKSES:' in notice:
+                    messages.success(request, notice.strip())
             
             conn.commit()
             cursor.close()
@@ -508,6 +520,7 @@ def add_checkup_schedule(request):
             return redirect('medical_checkup_feeding:medical_checkup')
     
     return redirect('medical_checkup_feeding:medical_checkup')
+            
 
 @dokter_hewan_required
 def edit_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):

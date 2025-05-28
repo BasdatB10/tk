@@ -127,6 +127,20 @@
             cursor: pointer;
             margin-right: 0.25rem;
         }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
     </style>
 </head>
 <body class="relative bg-white text-gray-800">
@@ -180,11 +194,28 @@
             
             <div id="medical-records" class="mt-8">
                 <h3 class="text-xl font-bold text-[#883526] mb-4">Riwayat Pemeriksaan</h3>
-                <div class="overflow-x-auto">
+                
+                <!-- Default state: Belum memilih hewan -->
+                <div id="no-animal-selected" class="empty-state">
+                    <h3>Silakan Pilih Hewan</h3>
+                    <p>Pilih hewan dari dropdown di atas untuk melihat riwayat rekam medisnya.</p>
+                </div>
+                
+                <!-- State: Hewan dipilih tapi belum ada rekam medis -->
+                <div id="no-records" class="empty-state hidden">
+                    <h3>Belum Ada Rekam Medis</h3>
+                    <p>Belum ada rekam medis yang tercatat untuk hewan ini.</p>
+                    <button onclick="document.getElementById('add-record-btn').click()" 
+                            class="form-button bg-[#FBBE99] text-white font-semibold">
+                        + Tambah Rekam Medis Pertama
+                    </button>
+                </div>
+                
+                <!-- Tabel rekam medis -->
+                <div id="records-table" class="overflow-x-auto hidden">
                     <table class="w-full">
                         <thead>
                             <tr>
-                                <th>Nama Hewan</th>
                                 <th>Tanggal Pemeriksaan</th>
                                 <th>Nama Dokter</th>
                                 <th>Status Kesehatan</th>
@@ -194,40 +225,8 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for record in medical_records %}
-                            <tr>
-                                <td>{{ record.7 }}</td>
-                                <td>{{ record.2|date:"d F Y" }}</td>
-                                <td>{{ record.9 }}</td>
-                                <td>
-                                    {% if record.5 == 'Sehat' %}
-                                        <span class="health-status-healthy">{{ record.5 }}</span>
-                                    {% elif record.5 == 'Sakit' %}
-                                        <span class="health-status-sick">{{ record.5 }}</span>
-                                    {% else %}
-                                        {{ record.5 }}
-                                    {% endif %}
-                                </td>
-                                <td>{{ record.3|default:"-" }}</td>
-                                <td>{{ record.4|default:"-" }}</td>
-                                <td>{{ record.6|default:"-" }}</td>
-                                <td>
-                                    {% if record.5 == 'Sakit' %}
-                                        <button onclick="editRecord('{{ record.0 }}', '{{ record.2 }}')" 
-                                                class="action-button bg-blue-500 text-white">Edit</button>
-                                    {% endif %}
-                                    <button onclick="deleteRecord('{{ record.0 }}', '{{ record.2 }}')" 
-                                            class="action-button bg-red-500 text-white">Hapus</button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="8" class="text-center text-gray-500 py-4">
-                                    Belum ada rekam medis yang tercatat.
-                                </td>
-                            </tr>
-                            {% endfor %}
+                        <tbody id="records-tbody">
+                            <!-- Data akan diisi via JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -328,7 +327,7 @@
     </div>
 
     <script>
-      
+        // Data hewan dan rekam medis dari backend
         const animalsData = {
             {% for animal in animals %}
                 '{{ animal.0 }}': {
@@ -340,21 +339,44 @@
             {% endfor %}
         };
         
+        // Data rekam medis dari backend
+        const medicalRecordsData = [
+            {% for record in medical_records %}
+                {
+                    id_hewan: '{{ record.0 }}',
+                    username_dh: '{{ record.1 }}',
+                    tanggal_pemeriksaan: '{{ record.2|date:"Y-m-d" }}',
+                    tanggal_display: '{{ record.2|date:"d F Y" }}',
+                    diagnosis: '{{ record.3|default:"-" }}',
+                    pengobatan: '{{ record.4|default:"-" }}',
+                    status_kesehatan: '{{ record.5 }}',
+                    catatan_tindak_lanjut: '{{ record.6|default:"-" }}',
+                    nama_hewan: '{{ record.7 }}',
+                    spesies: '{{ record.8 }}',
+                    nama_dokter: '{{ record.9 }}'
+                },
+            {% endfor %}
+        ];
+        
         const animalSelect = document.getElementById('animal-select');
         const animalInfo = document.getElementById('animal-info');
         const statusKesehatan = document.getElementById('status_kesehatan');
         const diagnosisSection = document.getElementById('diagnosis-section');
         
+        // Event listener untuk pemilihan hewan
         animalSelect.addEventListener('change', function() {
             const animalId = this.value;
             if (animalId && animalsData[animalId]) {
                 displayAnimalInfo(animalId);
+                loadMedicalRecords(animalId);
                 animalInfo.classList.remove('hidden');
             } else {
                 animalInfo.classList.add('hidden');
+                showNoAnimalSelected();
             }
         });
         
+        // Event listener untuk status kesehatan di modal
         statusKesehatan.addEventListener('change', function() {
             if (this.value === 'Sakit') {
                 diagnosisSection.classList.remove('hidden');
@@ -367,12 +389,16 @@
             }
         });
         
+        // Event listener untuk tombol tambah rekam medis
         document.getElementById('add-record-btn').addEventListener('click', function() {
             const animalId = animalSelect.value;
             if (!animalId) {
                 alert('Silakan pilih hewan terlebih dahulu.');
                 return;
             }
+            
+            // Set hewan yang dipilih di modal
+            document.getElementById('id_hewan').value = animalId;
             
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tanggal_pemeriksaan').value = today;
@@ -381,6 +407,7 @@
             document.getElementById('add-record-modal').classList.remove('hidden');
         });
         
+        // Event listener untuk close modal
         document.querySelectorAll('.close-modal').forEach(button => {
             button.addEventListener('click', function() {
                 document.querySelectorAll('.modal').forEach(modal => {
@@ -389,6 +416,7 @@
             });
         });
         
+        // Fungsi untuk menampilkan info hewan
         function displayAnimalInfo(animalId) {
             const animal = animalsData[animalId];
             document.getElementById('animal-name').textContent = animal.name;
@@ -405,6 +433,75 @@
             }
         }
         
+        // Fungsi untuk memuat rekam medis berdasarkan hewan yang dipilih
+        function loadMedicalRecords(animalId) {
+            const records = medicalRecordsData.filter(record => record.id_hewan === animalId);
+            
+            if (records.length === 0) {
+                showNoRecords();
+            } else {
+                showRecordsTable(records);
+            }
+        }
+        
+        // Fungsi untuk menampilkan state "belum memilih hewan"
+        function showNoAnimalSelected() {
+            document.getElementById('no-animal-selected').classList.remove('hidden');
+            document.getElementById('no-records').classList.add('hidden');
+            document.getElementById('records-table').classList.add('hidden');
+        }
+        
+        // Fungsi untuk menampilkan state "belum ada rekam medis"
+        function showNoRecords() {
+            document.getElementById('no-animal-selected').classList.add('hidden');
+            document.getElementById('no-records').classList.remove('hidden');
+            document.getElementById('records-table').classList.add('hidden');
+        }
+        
+        // Fungsi untuk menampilkan tabel rekam medis
+        function showRecordsTable(records) {
+            document.getElementById('no-animal-selected').classList.add('hidden');
+            document.getElementById('no-records').classList.add('hidden');
+            document.getElementById('records-table').classList.remove('hidden');
+            
+            const tbody = document.getElementById('records-tbody');
+            tbody.innerHTML = '';
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                
+                // Tentukan status kesehatan dengan styling
+                let statusHtml = record.status_kesehatan;
+                if (record.status_kesehatan === 'Sehat') {
+                    statusHtml = `<span class="health-status-healthy">${record.status_kesehatan}</span>`;
+                } else if (record.status_kesehatan === 'Sakit') {
+                    statusHtml = `<span class="health-status-sick">${record.status_kesehatan}</span>`;
+                }
+                
+                // Tentukan tombol aksi
+                let actionButtons = '';
+                if (record.status_kesehatan === 'Sakit') {
+                    actionButtons += `<button onclick="editRecord('${record.id_hewan}', '${record.tanggal_pemeriksaan}')" 
+                                        class="action-button bg-blue-500 text-white">Edit</button>`;
+                }
+                actionButtons += `<button onclick="deleteRecord('${record.id_hewan}', '${record.tanggal_pemeriksaan}')" 
+                                    class="action-button bg-red-500 text-white">Hapus</button>`;
+                
+                row.innerHTML = `
+                    <td>${record.tanggal_display}</td>
+                    <td>${record.nama_dokter}</td>
+                    <td>${statusHtml}</td>
+                    <td>${record.diagnosis}</td>
+                    <td>${record.pengobatan}</td>
+                    <td>${record.catatan_tindak_lanjut}</td>
+                    <td>${actionButtons}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Fungsi untuk edit record
         function editRecord(idHewan, tanggalPemeriksaan) {
             document.getElementById('edit-form').action = 
                 "{% url 'medical_checkup_feeding:edit_medical_record' '0' '0000-01-01' %}".replace('0/0000-01-01', idHewan + '/' + tanggalPemeriksaan);
@@ -412,12 +509,16 @@
             document.getElementById('edit-record-modal').classList.remove('hidden');
         }
         
+        // Fungsi untuk delete record
         function deleteRecord(idHewan, tanggalPemeriksaan) {
             document.getElementById('delete-form').action = 
                 "{% url 'medical_checkup_feeding:delete_medical_record' '0' '0000-01-01' %}".replace('0/0000-01-01', idHewan + '/' + tanggalPemeriksaan);
             
             document.getElementById('delete-record-modal').classList.remove('hidden');
         }
+        
+        // Inisialisasi halaman
+        showNoAnimalSelected();
     </script>
 </body>
 </html>

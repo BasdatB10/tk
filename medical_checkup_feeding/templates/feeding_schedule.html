@@ -277,8 +277,13 @@
                                         <button onclick="deleteSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}')" 
                                                 class="action-button bg-red-500 text-white">Hapus</button>
                                     {% elif pakan.4 == 'Selesai Diberikan' %}
-                                        <span class="text-gray-500">Sudah Selesai</span>
+                                      
+                                        <button onclick="editSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}', '{{ pakan.2 }}', '{{ pakan.3 }}')" 
+                                                class="action-button bg-blue-500 text-white">Edit</button>
+                                        <button onclick="deleteSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}')" 
+                                                class="action-button bg-red-500 text-white">Hapus</button>
                                     {% else %}
+                                        
                                         <button onclick="giveFeed('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}')" 
                                                 class="action-button bg-green-500 text-white">Beri Pakan</button>
                                         <button onclick="editSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}', '{{ pakan.2 }}', '{{ pakan.3 }}')" 

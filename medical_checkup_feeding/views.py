@@ -811,18 +811,7 @@ def edit_feeding_schedule(request, id_hewan, jadwal):
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
             
-            cursor.execute("""
-                SELECT status FROM PAKAN 
-                WHERE id_hewan = %s AND jadwal = %s
-            """, (id_hewan, jadwal))
-            
-            current_status = cursor.fetchone()
-            if not current_status or current_status[0] == 'Habis':
-                messages.error(request, 'Jadwal pakan yang sudah selesai diberikan tidak dapat diedit.')
-                cursor.close()
-                conn.close()
-                return redirect('medical_checkup_feeding:feeding_schedule')
-          
+            # Hapus validasi status 'Habis' - sekarang boleh edit yang sudah selesai
             jenis_pakan_baru = request.POST.get('jenis_pakan_baru')
             jumlah_pakan_baru = request.POST.get('jumlah_pakan_baru')
             jadwal_baru = request.POST.get('jadwal_baru')
@@ -830,7 +819,7 @@ def edit_feeding_schedule(request, id_hewan, jadwal):
             cursor.execute("""
                 UPDATE PAKAN 
                 SET jenis = %s, jumlah = %s, jadwal = %s
-                WHERE id_hewan = %s AND jadwal = %s AND status != 'Habis'
+                WHERE id_hewan = %s AND jadwal = %s
             """, (
                 jenis_pakan_baru,
                 int(jumlah_pakan_baru),
@@ -866,23 +855,12 @@ def delete_feeding_schedule(request, id_hewan, jadwal):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            cursor.execute("""
-                SELECT status FROM PAKAN 
-                WHERE id_hewan = %s AND jadwal = %s
-            """, (id_hewan, jadwal))
             
-            current_status = cursor.fetchone()
-            if not current_status or current_status[0] == 'Habis':
-                messages.error(request, 'Jadwal pakan yang sudah selesai diberikan tidak dapat dihapus.')
-                cursor.close()
-                conn.close()
-                return redirect('medical_checkup_feeding:feeding_schedule')
-         
             confirm = request.POST.get('confirm_delete')
             if confirm == 'YA':
                 cursor.execute("""
                     DELETE FROM PAKAN 
-                    WHERE id_hewan = %s AND jadwal = %s AND status != 'Habis'
+                    WHERE id_hewan = %s AND jadwal = %s
                 """, (id_hewan, jadwal))
                 
                 conn.commit()

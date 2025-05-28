@@ -192,16 +192,6 @@
             </div>
         </header>
 
-        <div class="role-switcher">
-            <select class="role-dropdown" id="roleDropdown" onchange="changeRole(this.value)">
-                <option value="pengunjung" {% if request.GET.role == 'pengunjung' or not request.GET.role %}selected{% endif %}>Pengunjung</option>
-                <option value="dokter hewan" {% if request.GET.role == 'dokter hewan' %}selected{% endif %}>Dokter Hewan</option>
-                <option value="penjaga hewan" {% if request.GET.role == 'penjaga hewan' %}selected{% endif %}>Penjaga Hewan</option>
-                <option value="pelatih hewan" {% if request.GET.role == 'pelatih hewan' %}selected{% endif %}>Pelatih Hewan</option>
-                <option value="staf admin" {% if request.GET.role == 'staf admin' %}selected{% endif %}>Staf Admin</option>
-            </select>
-        </div>
-
         <div class="profile-card">
             <div class="profile-pic">
                 <span>👤</span>
@@ -266,15 +256,20 @@
                     
                     <div class="info-row">
                         <div class="info-label">Riwayat Kunjungan</div>
-                        <div class="info-value">10 Januari 2025 <br> 25 Februari 2025 <br> 2 Maret 2025 <br> 15 April 2025</div>
+                        <div class="info-value">
+                            {% for kunjungan in user_data.0.riwayat_kunjungan %}
+                                {{ kunjungan }}<br>
+                            {% endfor %}
+                        </div>
                     </div>
                     
                     <div class="info-row">
                         <div class="info-label">Informasi Tiket Yang telah Dibeli</div>
-                        <div class="info-value">1. Tiket Masuk Reguler - 2x (Rp 50.000/tiket) - Dibeli: 15/04/2025<br>
-                            2. Tiket VIP Pengalaman Satwa - 1x (Rp 200.000/tiket) - Dibeli: 02/03/2025<br>
-                            3. Tiket Pertunjukan Lumba-lumba - 3x (Rp 75.000/tiket) - Dibeli: 25/02/2025<br>
-                            4. Tiket Wisata Edukasi Anak - 2x (Rp 60.000/tiket) - Dibeli: 10/01/2025</div>
+                        <div class="info-value">
+                            {% for tiket in user_data.0.tiket_dibeli %}
+                                {{ tiket }}<br>
+                            {% endfor %}
+                        </div>
                     </div>
                     {% endif %}
                     
@@ -315,17 +310,17 @@
                     
                     <div class="info-row">
                         <div class="info-label">Ringkasan Penjualan Tiket Hari Ini</div>
-                        <div class="info-value">Rp 12.500.000</div>
+                        <div class="info-value">{{ user_data.0.ringkasan_penjualan }}</div>
                     </div>
                     
                     <div class="info-row">
                         <div class="info-label">Jumlah Pengunjung Hari Ini</div>
-                        <div class="info-value">253 orang</div>
+                        <div class="info-value">{{ user_data.0.jumlah_pengunjung }}</div>
                     </div>
                     
                     <div class="info-row">
                         <div class="info-label">Laporan Pendapatan Mingguan</div>
-                        <div class="info-value">Rp 85.750.000</div>
+                        <div class="info-value">{{ user_data.0.laporan_mingguan }}</div>
                     </div>
                     {% endif %}
                     
@@ -342,48 +337,17 @@
                     
                     <div class="info-row">
                         <div class="info-label">Jumlah Hewan yang Dilatih</div>
-                        <div class="info-value">10</div>
+                        <div class="info-value">{{ user_data.0.jumlah_hewan }}</div>
                     </div>
                     
                     <div class="info-row">
                         <div class="info-label">Status Latihan Terakhir:</div>
-                        <div class="info-value">Selesai</div>
+                        <div class="info-value">{{ user_data.0.status_latihan }}</div>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        function changeRole(role) {
-            window.location.href = '?role=' + role;
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const navTabs = document.querySelectorAll('.nav-tab');
-            navTabs.forEach(tab => {
-                tab.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    navTabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const role = this.textContent.toLowerCase();
-                    document.getElementById('roleDropdown').value = role;
-                    
-                    window.location.href = '?role=' + role;
-                });
-            });
-            
-            const currentRole = document.getElementById('roleDropdown').value;
-            navTabs.forEach(tab => {
-                if (tab.textContent.toLowerCase() === currentRole) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
-            });
-        });
-    </script>
 </body>
 </html>

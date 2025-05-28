@@ -173,74 +173,217 @@ def profile_staff(request):
 
 @session_required
 def dashboard(request):
-    pengguna_data = [
-        {
-            'username': 'anggita.desmawati17',
-            'email': 'anggtadesma@gmail.com',
-            'password': 'angt09@a!23',
-            'nama_depan': 'Anggita',
-            'nama_tengah': 'Desmawati',
-            'nama_belakang': 'Wahyuni',
-            'no_telepon': '087191548622',
-            'role': 'Pengunjung',
-            'alamat': 'Jl. Merdeka No. 10, Jakarta',
-            'tgl_lahir': '1997-03-12',
-        },
-        {
-            'username': 'maximilian.benjamin',
-            'email': 'maximilian.benjamin@outlook.com',
-            'password': 'maxben@2021!',
-            'nama_depan': 'Maximilian',
-            'nama_tengah': 'Benjamin',
-            'nama_belakang': 'Santosa',
-            'no_telepon': '081234398770',
-            'role': 'Dokter Hewan',
-            'spesialisasi': 'Bedah Hewan',
-            'no_STR': 'STR-4928723',
-            'jumlah_hewan' : '1',
-        },
-        {
-            'username': 'simone.garcia15',
-            'email': 'simone.garcia15@gmail.com',
-            'password': 'simone@15Garcia',
-            'nama_depan': 'Simone',
-            'nama_tengah': 'Garcia',
-            'nama_belakang': 'Santos',
-            'no_telepon': '085745612323',
-            'role': 'Penjaga Hewan',
-            'id_staf': 'e8b0c0a7-69bc-4b6e-a5b1-efb5b3e4877b',
-            'jumlah_hewan' : '1',
-        },
-        {
-            'username': 'diana.rahmawati12',
-            'email': 'diana.rahmawati12@aol.com',
-            'password': 'diana@12!Rahma',
-            'nama_depan': 'Diana',
-            'nama_tengah': 'Rahmawati',
-            'nama_belakang': 'Putri',
-            'no_telepon': '087653412890',
-            'role': 'Pelatih Hewan',
-            'id_staf': 'f7a2c1c9-444f-4772-8b6b-8b9ffbda3954',
-            'jadwal_hari_ini' : '08:30',
-        },
-        {
-            'username': 'tiffany.margaretha09',
-            'email': 'tiffany.margaretha09@yahoo.com',
-            'password': 'tiffany09@Marg@tha',
-            'nama_depan': 'Tiffany',
-            'nama_tengah': 'Margaretha',
-            'nama_belakang': 'Sihotang',
-            'no_telepon': '085688493823',
-            'role': 'Staf Admin',
-            'id_staf': 'ed9cf85b-8494-4d75-88cc-17daac5f5086',
-        },
-    ]
-    
-    current_role = request.GET.get('role', 'pengunjung')  
-    filtered_data = []
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            port=os.getenv("DB_PORT")
+        )
+        cursor = conn.cursor()
+        cursor.execute("SET search_path TO SIZOPI;")
+        
+        username = request.session.get('username')
+        
+        # Cek role user
+        cursor.execute("""
+            SELECT 
+                CASE 
+                    WHEN EXISTS (SELECT 1 FROM PENGUNJUNG WHERE username_P = %s) THEN 'Pengunjung'
+                    WHEN EXISTS (SELECT 1 FROM DOKTER_HEWAN WHERE username_DH = %s) THEN 'Dokter Hewan'
+                    WHEN EXISTS (SELECT 1 FROM PENJAGA_HEWAN WHERE username_jh = %s) THEN 'Penjaga Hewan'
+                    WHEN EXISTS (SELECT 1 FROM PELATIH_HEWAN WHERE username_lh = %s) THEN 'Pelatih Hewan'
+                    WHEN EXISTS (SELECT 1 FROM STAF_ADMIN WHERE username_sa = %s) THEN 'Staf Admin'
+                END as role
+        """, (username, username, username, username, username))
+        
+        role = cursor.fetchone()[0]
+        
+        # Ambil data user berdasarkan role
+        if role == 'Pengunjung':
+            # Data pengunjung
+            cursor.execute("""
+                SELECT p.username, p.email, p.nama_depan, p.nama_tengah, p.nama_belakang, 
+                       p.no_telepon, pg.alamat, pg.tgl_lahir
+                FROM PENGGUNA p
+                JOIN PENGUNJUNG pg ON p.username = pg.username_P
+                WHERE p.username = %s
+            """, (username,))
+            user_data = cursor.fetchone()
 
-    for user in pengguna_data:
-        if user['role'].lower() == current_role.lower():
-            filtered_data.append(user)
+            # Riwayat kunjungan dari tabel RESERVASI
+            cursor.execute("""
+                SELECT DISTINCT tanggal_kunjungan
+                FROM RESERVASI
+                WHERE username_p = %s AND status != 'Dibatalkan'
+                ORDER BY tanggal_kunjungan DESC
+            """, (username,))
+            riwayat_kunjungan = [row[0].strftime('%d %B %Y') for row in cursor.fetchall()]
 
-    return render(request, 'dashboard.html', {'user_data': filtered_data})
+            # Tiket yang dibeli dari tabel RESERVASI
+            cursor.execute("""
+                SELECT r.nama_fasilitas, r.jumlah_tiket, r.tanggal_kunjungan,
+                       CASE 
+                           WHEN a.nama_atraksi IS NOT NULL THEN 'Atraksi'
+                           WHEN w.nama_wahana IS NOT NULL THEN 'Wahana'
+                       END as jenis_fasilitas
+                FROM RESERVASI r
+                LEFT JOIN ATRAKSI a ON r.nama_fasilitas = a.nama_atraksi
+                LEFT JOIN WAHANA w ON r.nama_fasilitas = w.nama_wahana
+                WHERE r.username_p = %s AND r.status != 'Dibatalkan'
+                ORDER BY r.tanggal_kunjungan DESC
+            """, (username,))
+            tiket_dibeli = []
+            for row in cursor.fetchall():
+                tiket_dibeli.append(f"{row[0]} ({row[3]}) - {row[1]}x - Dibeli: {row[2].strftime('%d/%m/%Y')}")
+
+            context = {
+                'user_data': [{
+                    'username': user_data[0],
+                    'email': user_data[1],
+                    'nama_depan': user_data[2],
+                    'nama_tengah': user_data[3],
+                    'nama_belakang': user_data[4],
+                    'no_telepon': user_data[5],
+                    'role': role,
+                    'alamat': user_data[6],
+                    'tgl_lahir': user_data[7],
+                    'riwayat_kunjungan': riwayat_kunjungan,
+                    'tiket_dibeli': tiket_dibeli
+                }]
+            }
+            
+        elif role == 'Dokter Hewan':
+            cursor.execute("""
+                SELECT p.username, p.email, p.nama_depan, p.nama_tengah, p.nama_belakang, 
+                       p.no_telepon, dh.no_STR, s.nama_spesialisasi,
+                       (SELECT COUNT(DISTINCT cm.id_hewan)
+                        FROM CATATAN_MEDIS cm
+                        WHERE cm.username_dh = dh.username_DH) as jumlah_hewan
+                FROM PENGGUNA p
+                JOIN DOKTER_HEWAN dh ON p.username = dh.username_DH
+                LEFT JOIN SPESIALISASI s ON dh.username_DH = s.username_SH
+                WHERE p.username = %s
+            """, (username,))
+            user_data = cursor.fetchone()
+            context = {
+                'user_data': [{
+                    'username': user_data[0],
+                    'email': user_data[1],
+                    'nama_depan': user_data[2],
+                    'nama_tengah': user_data[3],
+                    'nama_belakang': user_data[4],
+                    'no_telepon': user_data[5],
+                    'role': role,
+                    'no_STR': user_data[6],
+                    'spesialisasi': user_data[7],
+                    'jumlah_hewan': user_data[8]
+                }]
+            }
+            
+        elif role == 'Penjaga Hewan':
+            cursor.execute("""
+                SELECT p.username, p.email, p.nama_depan, p.nama_tengah, p.nama_belakang, 
+                       p.no_telepon, jh.id_staf,
+                       (SELECT COUNT(DISTINCT m.id_hewan)
+                        FROM MEMBERI m
+                        WHERE m.username_jh = jh.username_jh) as jumlah_hewan
+                FROM PENGGUNA p
+                JOIN PENJAGA_HEWAN jh ON p.username = jh.username_jh
+                WHERE p.username = %s
+            """, (username,))
+            user_data = cursor.fetchone()
+            context = {
+                'user_data': [{
+                    'username': user_data[0],
+                    'email': user_data[1],
+                    'nama_depan': user_data[2],
+                    'nama_tengah': user_data[3],
+                    'nama_belakang': user_data[4],
+                    'no_telepon': user_data[5],
+                    'role': role,
+                    'id_staf': user_data[6],
+                    'jumlah_hewan': user_data[7]
+                }]
+            }
+            
+        elif role == 'Pelatih Hewan':
+            cursor.execute("""
+                SELECT p.username, p.email, p.nama_depan, p.nama_tengah, p.nama_belakang, 
+                       p.no_telepon, lh.id_staf,
+                       (SELECT jp.nama_atraksi
+                        FROM JADWAL_PENUGASAN jp
+                        WHERE jp.username_lh = lh.username_lh
+                        AND jp.tgl_penugasan >= NOW()
+                        ORDER BY jp.tgl_penugasan ASC
+                        LIMIT 1) as jadwal_hari_ini,
+                       (SELECT COUNT(DISTINCT bp.id_hewan)
+                        FROM JADWAL_PENUGASAN jp
+                        JOIN BERPARTISIPASI bp ON jp.nama_atraksi = bp.nama_fasilitas
+                        WHERE jp.username_lh = lh.username_lh) as jumlah_hewan
+                FROM PENGGUNA p
+                JOIN PELATIH_HEWAN lh ON p.username = lh.username_lh
+                WHERE p.username = %s
+            """, (username,))
+            user_data = cursor.fetchone()
+            context = {
+                'user_data': [{
+                    'username': user_data[0],
+                    'email': user_data[1],
+                    'nama_depan': user_data[2],
+                    'nama_tengah': user_data[3],
+                    'nama_belakang': user_data[4],
+                    'no_telepon': user_data[5],
+                    'role': role,
+                    'id_staf': user_data[6],
+                    'jadwal_hari_ini': user_data[7],
+                    'jumlah_hewan': user_data[8]
+                }]
+            }
+            
+        elif role == 'Staf Admin':
+            cursor.execute("""
+                SELECT p.username, p.email, p.nama_depan, p.nama_tengah, p.nama_belakang, 
+                       p.no_telepon, sa.id_staf,
+                       (SELECT COALESCE(SUM(r.jumlah_tiket), 0)
+                        FROM RESERVASI r
+                        WHERE DATE(r.tanggal_kunjungan) = CURRENT_DATE
+                        AND r.status != 'Dibatalkan') as ringkasan_penjualan,
+                       (SELECT COUNT(DISTINCT r.username_p)
+                        FROM RESERVASI r
+                        WHERE DATE(r.tanggal_kunjungan) = CURRENT_DATE
+                        AND r.status != 'Dibatalkan') as jumlah_pengunjung,
+                       (SELECT COALESCE(SUM(ad.total_kontribusi), 0)
+                        FROM ADOPTER ad
+                        JOIN ADOPSI a ON ad.id_adopter = a.id_adopter
+                        WHERE a.tgl_mulai_adopsi >= CURRENT_DATE - INTERVAL '7 days'
+                          AND a.tgl_mulai_adopsi <= CURRENT_DATE) as laporan_mingguan
+                FROM PENGGUNA p
+                JOIN STAF_ADMIN sa ON p.username = sa.username_sa
+                WHERE p.username = %s
+            """, (username,))
+            user_data = cursor.fetchone()
+            context = {
+                'user_data': [{
+                    'username': user_data[0],
+                    'email': user_data[1],
+                    'nama_depan': user_data[2],
+                    'nama_tengah': user_data[3],
+                    'nama_belakang': user_data[4],
+                    'no_telepon': user_data[5],
+                    'role': role,
+                    'id_staf': user_data[6],
+                    'ringkasan_penjualan': f'{user_data[7]} tiket',
+                    'jumlah_pengunjung': f'{user_data[8]} orang',
+                    'laporan_mingguan': f' {user_data[9]}'
+                }]
+            }
+            
+        cursor.close()
+        conn.close()
+        return render(request, 'dashboard.html', context)
+        
+    except Exception as e:
+        print('Error:', e)
+        return render(request, 'dashboard.html', {'user_data': [], 'error': str(e)})

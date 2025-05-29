@@ -17,18 +17,72 @@
       z-index: 1000;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
+    body {
+      font-family: 'Manrope', sans-serif;
+      background-color: #FFF3EA;
+    }
+    .navbar a {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      color: white;
+      background-color: #DD6D49;
+      text-align: center;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .navbar a:hover {
+      background-color: #883526;
+      border-color: #883526;
+    }
+    .active-link {
+      background-color: #ED8764;
+      border-color: #ED8764;
+    }
   </style>
 </head>
 <body>
   <nav id="navbar" class="navbar bg-[#FAD4B6] p-4 shadow-md">
     <div class="container mx-auto flex justify-between items-center">
-      <div class="text-4xl font-extrabold text-[#49241B]" style="font-family: 'Manrope', sans-serif;">
+      <div class="text-4xl font-extrabold text-[#49241B] mr-6" style="font-family: 'Manrope', sans-serif;">
         SIZOPI
       </div>
 
       <div class="flex space-x-4">
-        <a href="/login/" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Login</a>
-        <a href="/register/" class="px-4 py-2 rounded-md bg-[#DD6D49] text-white hover:bg-[#883526] transition">Registrasi</a>
+        
+        
+        {% if is_authenticated %}
+          {% if user_role == 'dokter_hewan' %}
+            <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
+            <a href="{% url 'medical_checkup_feeding:medical_record' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Rekam Medis Hewan</a>
+            <a href="{% url 'userprofile:profile_view' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
+          {% elif user_role == 'penjaga_hewan' %}
+            <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
+            <a href="{% url 'medical_checkup_feeding:feeding_schedule' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Catatan Perawatan</a>
+            <a href="{% url 'base:profile_staff' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
+          {% elif user_role == 'pelatih_pertunjukan' or user_role == 'pelatih_hewan' %}
+            <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
+            <a href="{% url 'show:schedule' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Jadwal Pertunjukan</a>
+            <a href="{% url 'userprofile:profile_view' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
+          {% elif user_role == 'staf_admin' %}
+            <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
+            <a href="#" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Kelola Pengunjung</a>
+            <a href="{% url 'adoption_management:manage_adopt' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Kelola Adopsi</a>
+            <a href="{% url 'adoption_management:adopter-list' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Kelola Adopter</a>
+            <a href="{% url 'userprofile:profile_view' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
+          {% elif user_role == 'pengunjung' %}
+            <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
+            <a href="{% url 'zoo:info' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Informasi Kebun Binatang</a>
+            <a href="{% url 'userprofile:profile_view' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
+            {% if is_adopter %}
+              <a href="{% url 'adoption_management:adopter-page' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Hewan Adopsi</a>
+            {% endif %}
+          {% endif %}
+          <a href="{% url 'base:logout' %}" class="px-4 py-2 rounded-md bg-[#DD6D49] text-white hover:bg-[#883526] transition">Logout</a>
+        {% else %}
+          <a href="{% url 'base:login' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Login</a>
+          <a href="{% url 'base:register' %}" class="px-4 py-2 rounded-md bg-[#DD6D49] text-white hover:bg-[#883526] transition">Registrasi</a>
+        {% endif %}
       </div>
     </div>
   </nav>

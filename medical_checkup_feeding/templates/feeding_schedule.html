@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Jadwal Pakan | SIZOPI</title>
+    <title>Pemberian Pakan | SIZOPI</title>
     <style>
         body {
             font-family: 'Manrope', sans-serif;
@@ -26,10 +26,13 @@
         }
         .bg-texture {
             background-image: url("{% static 'images/texture-bg.jpg' %}");
-            background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0.15;
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat; 
+            opacity: 0.15;
         }
         .main-container { 
-            max-width: 1200px; 
+            max-width: 1400px; 
             width: 100%; 
             padding: 2rem; 
             background-color: white; 
@@ -51,31 +54,16 @@
             border: 1px solid #ccc; 
             border-radius: 8px; 
         }
-        input::placeholder, textarea::placeholder, select::placeholder { 
-            font-size: 0.8rem; color: #888; 
-        }
-        textarea { 
-            min-height: 80px; 
-            resize: none; 
-        }
         .form-button { 
             padding: 12px 24px; 
             font-size: 1rem; 
             border-radius: 8px; 
             cursor: pointer; 
+            border: none;
+            font-weight: 600;
         }
         .form-button:hover { 
-            background-color: #ED8764; 
-        }
-        .form-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); gap: 1rem; 
-        }
-        .form-grid input, .form-grid textarea, .form-grid select { 
-            padding-left: 0.5rem; 
-            padding-right: 0.5rem; 
-            font-size: 0.8rem; 
-            width: calc(100% - 16px); 
+            opacity: 0.9; 
         }
         .alert { 
             padding: 10px 15px; 
@@ -119,6 +107,7 @@
         table th { 
             background-color: #f8f9fa; 
             font-weight: 600; 
+            color: #883526;
         }
         .action-button { 
             padding: 6px 12px; 
@@ -126,21 +115,62 @@
             font-size: 0.875rem; 
             cursor: pointer; 
             margin-right: 0.25rem;
+            border: none;
+            font-weight: 500;
         }
         .status-waiting { 
             color: #f39c12; 
             font-weight: bold; 
+        }
+        .status-completed { 
+            color: #28a745; 
+            font-weight: bold; 
+        }
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            color: #883526;
+            border-bottom-color: #883526;
+            background-color: rgba(136, 53, 38, 0.1);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
         }
     </style>
 </head>
 <body class="relative bg-white text-gray-800">
     {% include "navbar_penjaga_hewan.html" %}
     <div id="bg" class="bg-texture absolute inset-0 -z-10"></div>
-    <div class="min-h-screen px-8 py-10 flex flex-col items-center max-w-7xl mx-auto">
+    <div class="min-h-screen px-8 py-10 flex flex-col items-center max-w-full mx-auto">
         <div class="main-container space-y-6 w-full">
             <h2 class="text-3xl md:text-4xl font-extrabold text-[#883526] drop-shadow-md leading-tight text-center">
-                Jadwal Pemberian Pakan
+                PEMBERIAN PAKAN HEWAN
             </h2>
+            
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }}">
@@ -149,42 +179,70 @@
                 {% endfor %}
             {% endif %}
 
-            <div class="flex items-center gap-4">
-                <label for="animal-select" class="text-lg font-semibold text-[#49241B]">Pilih Hewan:</label>
-                <select id="animal-select" class="w-64 text-lg">
-                    <option value="" disabled selected>-- Pilih Hewan --</option>
-                    {% for animal_id, display_name in animal_display_names.items %}
-                        <option value="{{ animal_id }}">{{ display_name }}</option>
-                    {% endfor %}
-                </select>
+            <!-- Tab Navigation -->
+            <div class="flex justify-center border-b border-gray-200">
+                <button class="tab-button active" onclick="switchTab('schedule')" id="schedule-tab">
+                    📅 Jadwal Pemberian Pakan
+                </button>
+                <button class="tab-button" onclick="switchTab('history')" id="history-tab">
+                    📊 Riwayat Pemberian Saya
+                </button>
             </div>
 
-            <div id="animal-info" class="bg-gray-50 p-6 rounded-lg shadow-sm mb-6 hidden">
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500">ID Hewan</p>
-                        <p class="font-semibold text-lg" id="animal-id">ID</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Nama</p>
-                        <p class="font-semibold text-lg" id="animal-name">Nama</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Spesies</p>
-                        <p class="font-semibold text-lg" id="animal-species">Spesies</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="schedules-content" class="space-y-6">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-[#883526]">Jadwal Pemberian Pakan (Menunggu)</h3>
-                    <button id="add-schedule-btn" class="form-button bg-[#FBBE99] text-white font-semibold" disabled>
-                        + Tambah Jadwal
+            <!-- Tab Content: Schedule -->
+            <div id="schedule-content" class="tab-content active">
+                <div class="flex items-center gap-4 justify-center mb-6">
+                    <label for="animal-select" class="text-lg font-semibold text-[#49241B]">Pilih Hewan:</label>
+                    <select id="animal-select" class="w-64 text-lg">
+                        <option value="">-- Pilih Hewan --</option>
+                        {% for animal in hewan_data %}
+                            <option value="{{ animal.0 }}">{{ animal.1 }} ({{ animal.2 }})</option>
+                        {% endfor %}
+                    </select>
+                    <button id="add-schedule-btn" class="form-button bg-[#FBBE99] text-white font-semibold">
+                        [+ Tambah Jadwal Pemberian Pakan]
                     </button>
                 </div>
 
-                <div class="overflow-x-auto">
+                <!-- Animal Info (hidden by default) -->
+                <div id="animal-info" class="bg-gray-50 p-6 rounded-lg shadow-sm mb-6 hidden">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">ID Hewan</p>
+                            <p class="font-semibold text-lg" id="animal-id">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Nama</p>
+                            <p class="font-semibold text-lg" id="animal-name">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Spesies</p>
+                            <p class="font-semibold text-lg" id="animal-species">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Status Kesehatan</p>
+                            <p class="font-semibold text-lg" id="animal-health">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Asal Hewan</p>
+                            <p class="font-semibold text-lg" id="animal-origin">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Habitat</p>
+                            <p class="font-semibold text-lg" id="animal-habitat">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state">
+                    <h3>Silakan Pilih Hewan</h3>
+                    <p>Pilih hewan dari dropdown di atas untuk melihat jadwal pemberian pakannya</p>
+                    <div class="text-6xl mb-4">🐾</div>
+                </div>
+
+                <!-- Table (hidden by default) -->
+                <div id="schedule-table" class="overflow-x-auto hidden">
                     <table class="w-full">
                         <thead>
                             <tr>
@@ -195,374 +253,348 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="schedules-table-body">
+                        <tbody id="feeding-table-body">
+                            {% for pakan in pakan_data %}
+                            <tr data-animal-id="{{ pakan.0 }}" style="display: none;">
+                                <td>{{ pakan.2 }}</td>
+                                <td>{{ pakan.3 }}</td>
+                                <td>{{ pakan.1|date:"Y-m-d H:i:s" }}</td>
+                                <td>
+                                    {% if pakan.4 == 'Menunggu Pemberian' %}
+                                        <span class="status-waiting">{{ pakan.4 }}</span>
+                                    {% elif pakan.4 == 'Selesai Diberikan' %}
+                                        <span class="status-completed">{{ pakan.4 }}</span>
+                                    {% else %}
+                                        <span class="status-waiting">Menunggu Pemberian</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if pakan.4 == 'Menunggu Pemberian' %}
+                                        <button onclick="giveFeed('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}')" 
+                                                class="action-button bg-green-500 text-white">Beri Pakan</button>
+                                        <button onclick="editSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}', '{{ pakan.2 }}', '{{ pakan.3 }}')" 
+                                                class="action-button bg-blue-500 text-white">Edit</button>
+                                        <button onclick="deleteSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}')" 
+                                                class="action-button bg-red-500 text-white">Hapus</button>
+                                    {% elif pakan.4 == 'Selesai Diberikan' %}
+                                        <span class="text-gray-500">Sudah Selesai</span>
+                                    {% else %}
+                                        <button onclick="giveFeed('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}')" 
+                                                class="action-button bg-green-500 text-white">Beri Pakan</button>
+                                        <button onclick="editSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}', '{{ pakan.2 }}', '{{ pakan.3 }}')" 
+                                                class="action-button bg-blue-500 text-white">Edit</button>
+                                        <button onclick="deleteSchedule('{{ pakan.0 }}', '{{ pakan.1|date:"Y-m-d H:i:s" }}')" 
+                                                class="action-button bg-red-500 text-white">Hapus</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
-                    <p id="no-schedules-message" class="text-center text-gray-500 py-4">
-                        Pilih hewan untuk melihat jadwal atau belum ada jadwal.
-                    </p>
+                    
+                    <!-- No data state for selected animal -->
+                    <div id="no-data-state" class="text-center py-8 text-gray-500 hidden">
+                        <div class="text-4xl mb-4">📋</div>
+                        <h3 class="text-xl font-semibold mb-2">Belum Ada Jadwal Pakan</h3>
+                        <p>Hewan yang dipilih belum memiliki jadwal pemberian pakan.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: History -->
+            <div id="history-content" class="tab-content">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Nama Hewan</th>
+                                <th>Spesies</th>
+                                <th>Asal Hewan</th>
+                                <th>Tanggal Lahir</th>
+                                <th>Habitat</th>
+                                <th>Status Kesehatan</th>
+                                <th>Jenis Pakan</th>
+                                <th>Jumlah (gram)</th>
+                                <th>Jadwal Pemberian</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in feeding_history %}
+                            <tr>
+                                <td>{{ record.5 }}</td>
+                                <td>{{ record.6 }}</td>
+                                <td>{{ record.7 }}</td>
+                                <td>{{ record.8|date:"d F Y" }}</td>
+                                <td>{{ record.9 }}</td>
+                                <td>
+                                    {% if record.10 == 'Sehat' %}
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">{{ record.10 }}</span>
+                                    {% elif record.10 == 'Sakit' %}
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">{{ record.10 }}</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">{{ record.10 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.2 }}</td>
+                                <td>{{ record.3 }}</td>
+                                <td>{{ record.1|date:"d F Y H:i" }}</td>
+                                <td>
+                                    <span class="status-completed">{{ record.4 }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center text-gray-500 py-8">
+                                    <div class="text-4xl mb-4">🍽️</div>
+                                    <h3 class="text-xl font-semibold mb-2">Belum Ada Riwayat</h3>
+                                    <p>Anda belum memberikan pakan kepada hewan manapun.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Modal Tambah Jadwal -->
     <div id="add-schedule-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Tambah Jadwal Pakan (<span id="modal-animal-name-add">Nama Hewan</span>)
+                FORM TAMBAH PEMBERIAN PAKAN
             </h3>
-            <form id="add-schedule-form" class="space-y-6">
-                <input type="hidden" id="add-animal-id" name="animal_id" />
+            <form method="post" action="{% url 'medical_checkup_feeding:add_feeding_schedule' %}" class="space-y-6">
+                {% csrf_token %}
                 <div>
-                    <label for="food-type" class="text-sm text-[#49241B]">Jenis Pakan:</label>
-                    <input type="text" id="food-type" name="food_type" class="text-lg" required />
+                    <label for="id_hewan" class="text-sm font-semibold text-[#49241B]">Pilih Hewan:</label>
+                    <select id="id_hewan" name="id_hewan" class="text-lg" required>
+                        <option value="">-- Pilih Hewan --</option>
+                        {% for animal in hewan_data %}
+                            <option value="{{ animal.0 }}">{{ animal.1 }} ({{ animal.2 }})</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div>
-                    <label for="food-amount" class="text-sm text-[#49241B]">Jumlah Pakan (gram):</label>
-                    <input type="number" id="food-amount" name="food_amount" min="1" class="text-lg" required />
+                    <label for="jenis_pakan" class="text-sm font-semibold text-[#49241B]">Jenis Pakan:</label>
+                    <input type="text" id="jenis_pakan" name="jenis_pakan" class="text-lg" placeholder="Contoh: Daging, Sayuran, Biji-bijian" required />
                 </div>
                 <div>
-                    <label for="schedule-datetime" class="text-sm text-[#49241B]">Jadwal:</label>
-                    <input type="datetime-local" id="schedule-datetime" name="schedule_datetime" class="text-lg" required />
+                    <label for="jumlah_pakan" class="text-sm font-semibold text-[#49241B]">Jumlah Pakan (gram):</label>
+                    <input type="number" id="jumlah_pakan" name="jumlah_pakan" min="1" class="text-lg" required />
+                </div>
+                <div>
+                    <label for="jadwal" class="text-sm font-semibold text-[#49241B]">Jadwal:</label>
+                    <input type="datetime-local" id="jadwal" name="jadwal" class="text-lg" required />
                 </div>
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">SIMPAN</button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">BATAL</button>
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white">SIMPAN</button>
+                    <button type="button" class="form-button bg-gray-500 text-white close-modal">BATAL</button>
                 </div>
             </form>
         </div>
     </div>
 
-
+    <!-- Modal Edit Jadwal -->
     <div id="edit-schedule-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Edit Jadwal Pakan (<span id="modal-animal-name-edit">Nama Hewan</span>)
+                EDIT PEMBERIAN PAKAN
             </h3>
-            <form id="edit-schedule-form" class="space-y-6">
-                <input type="hidden" id="edit-schedule-id" name="schedule_id" />
-                <input type="hidden" id="edit-animal-id" name="animal_id" />
-                 <div>
-                    <label for="edit-food-type" class="text-sm text-[#49241B]">Jenis Pakan Baru:</label>
-                    <input type="text" id="edit-food-type" name="food_type" class="text-lg" required />
+            <form method="post" id="edit-form" class="space-y-6">
+                {% csrf_token %}
+                <div>
+                    <label for="jenis_pakan_baru" class="text-sm font-semibold text-[#49241B]">Jenis Pakan Baru:</label>
+                    <input type="text" id="jenis_pakan_baru" name="jenis_pakan_baru" class="text-lg" required />
                 </div>
                 <div>
-                    <label for="edit-food-amount" class="text-sm text-[#49241B]">Jumlah Pakan Baru (gram):</label>
-                    <input type="number" id="edit-food-amount" name="food_amount" min="1" class="text-lg" required />
+                    <label for="jumlah_pakan_baru" class="text-sm font-semibold text-[#49241B]">Jumlah Pakan Baru (gram):</label>
+                    <input type="number" id="jumlah_pakan_baru" name="jumlah_pakan_baru" min="1" class="text-lg" required />
                 </div>
                 <div>
-                    <label for="edit-schedule-datetime" class="text-sm text-[#49241B]">Jadwal Baru:</label>
-                    <input type="datetime-local" id="edit-schedule-datetime" name="schedule_datetime" class="text-lg" required />
+                    <label for="jadwal_baru" class="text-sm font-semibold text-[#49241B]">Jadwal Baru:</label>
+                    <input type="datetime-local" id="jadwal_baru" name="jadwal_baru" class="text-lg" required />
                 </div>
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">SIMPAN</button>
-                    <button type="button" class="form-button bg-[#ED8764] text-white font-semibold close-modal">BATAL</button>
+                    <button type="submit" class="form-button bg-[#FBBE99] text-white">SIMPAN</button>
+                    <button type="button" class="form-button bg-gray-500 text-white close-modal">BATAL</button>
                 </div>
             </form>
         </div>
     </div>
 
-
-    <div id="delete-schedule-modal" class="modal hidden">
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="delete-modal" class="modal hidden">
         <div class="form-container bg-white">
             <h3 class="text-2xl font-bold text-[#883526] drop-shadow-md leading-tight text-center mb-6">
-                Hapus Jadwal Pakan
+                HAPUS PEMBERIAN PAKAN
             </h3>
-            <p class="text-center text-lg mb-6">Apakah anda yakin ingin menghapus jadwal pakan ini?</p>
-            <form id="delete-schedule-form" class="space-y-6">
-                <input type="hidden" id="delete-schedule-id" name="schedule_id" />
-                <input type="hidden" id="delete-animal-id" name="animal_id" />
+            <p class="text-center mb-6 text-lg">Apakah anda yakin ingin menghapus data pemberian pakan ini?</p>
+            <form method="post" id="delete-form" class="space-y-6">
+                {% csrf_token %}
+                <input type="hidden" name="confirm_delete" value="YA" />
                 <div class="flex justify-center gap-4 pt-4">
-                    <button type="submit" class="form-button bg-[#dc3545] text-white font-semibold">YA</button>
-                    <button type="button" class="form-button bg-[#6c757d] text-white font-semibold close-modal">TIDAK</button>
+                    <button type="submit" class="form-button bg-red-500 text-white">YA</button>
+                    <button type="button" class="form-button bg-gray-500 text-white close-modal">TIDAK</button>
                 </div>
             </form>
         </div>
     </div>
 
-
-    {{ pakan_data|json_script:"pakan-data" }}
-    {{ hewan_data|json_script:"hewan-data" }}
-
     <script>
-    
-        const allPakanData = JSON.parse(document.getElementById('pakan-data').textContent); // Contains only 'Tersedia' status
-        const allHewanData = JSON.parse(document.getElementById('hewan-data').textContent);
+        // Data hewan dari backend
+        const hewanData = {
+            {% for animal in hewan_data %}
+                '{{ animal.0 }}': {
+                    id: '{{ animal.0 }}',
+                    nama: '{{ animal.1 }}',
+                    spesies: '{{ animal.2 }}',
+                    status_kesehatan: '{{ animal.3 }}',
+                    asal_hewan: '{{ animal.4 }}',
+                    nama_habitat: '{{ animal.5 }}'
+                },
+            {% endfor %}
+        };
 
-        const hewanMap = {};
-        allHewanData.forEach(animal => {
-            if (animal && animal.id) {
-                hewanMap[animal.id] = animal;
-            }
-        });
-
-        const animalSchedules = {};
-        allPakanData.forEach((record, index) => {
-            const animalId = record.id_hewan;
-            if (!animalSchedules[animalId]) {
-                animalSchedules[animalId] = [];
-            }
-            animalSchedules[animalId].push({
-                id: record.id_pakan || `temp_${animalId}_${index}`, 
-                foodType: record.jenis,
-                amount: parseInt(record.jumlah),
-                schedule: record.jadwal.replace(' ', 'T'), 
-                status: "waiting" 
+        // Tab switching function
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
             });
-        });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-content').classList.add('active');
+            
+            // Add active class to selected tab button
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
 
-        const animalSelect = document.getElementById('animal-select');
-        const animalInfo = document.getElementById('animal-info');
-        const schedulesTableBody = document.getElementById('schedules-table-body');
-        const noSchedulesMessage = document.getElementById('no-schedules-message');
-        const addScheduleBtn = document.getElementById('add-schedule-btn');
-        const addScheduleModal = document.getElementById('add-schedule-modal');
-        const editScheduleModal = document.getElementById('edit-schedule-modal');
-        const deleteScheduleModal = document.getElementById('delete-schedule-modal');
-
-   
-        animalSelect.addEventListener('change', function() {
+        // Event listeners
+        document.getElementById('animal-select').addEventListener('change', function() {
             const animalId = this.value;
-            if (animalId && hewanMap[animalId]) {
-                displayAnimalInfo(animalId);
-                loadFeedingSchedules(animalId);
-                animalInfo.classList.remove('hidden');
-                addScheduleBtn.disabled = false; 
+            const tableBody = document.getElementById('feeding-table-body');
+            const animalInfo = document.getElementById('animal-info');
+            const emptyState = document.getElementById('empty-state');
+            const scheduleTable = document.getElementById('schedule-table');
+            const noDataState = document.getElementById('no-data-state');
+            
+            if (animalId) {
+                // Show animal info
+                const animal = hewanData[animalId];
+                if (animal) {
+                    document.getElementById('animal-id').textContent = animal.id;
+                    document.getElementById('animal-name').textContent = animal.nama;
+                    document.getElementById('animal-species').textContent = animal.spesies;
+                    document.getElementById('animal-health').textContent = animal.status_kesehatan;
+                    document.getElementById('animal-origin').textContent = animal.asal_hewan;
+                    document.getElementById('animal-habitat').textContent = animal.nama_habitat;
+                    animalInfo.classList.remove('hidden');
+                }
+                
+                // Hide empty state, show table
+                emptyState.classList.add('hidden');
+                scheduleTable.classList.remove('hidden');
+                
+                // Filter table rows
+                const rows = tableBody.querySelectorAll('tr');
+                let hasVisibleRows = false;
+                
+                rows.forEach(row => {
+                    const rowAnimalId = row.getAttribute('data-animal-id');
+                    if (rowAnimalId === animalId) {
+                        row.style.display = '';
+                        hasVisibleRows = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide no data state
+                if (hasVisibleRows) {
+                    noDataState.classList.add('hidden');
+                } else {
+                    noDataState.classList.remove('hidden');
+                }
             } else {
+                // Show empty state, hide table and animal info
+                emptyState.classList.remove('hidden');
+                scheduleTable.classList.add('hidden');
                 animalInfo.classList.add('hidden');
-                schedulesTableBody.innerHTML = ''; 
-                noSchedulesMessage.textContent = 'Pilih hewan untuk melihat jadwal.';
-                noSchedulesMessage.classList.remove('hidden');
-                addScheduleBtn.disabled = true; 
+                noDataState.classList.add('hidden');
             }
         });
 
-      
-        addScheduleBtn.addEventListener('click', function() {
-            const animalId = animalSelect.value;
-            if (!animalId || !hewanMap[animalId]) {
-                alert('Silakan pilih hewan yang valid terlebih dahulu.');
-                return;
-            }
-
-            document.getElementById('add-schedule-form').reset();
-            document.getElementById('add-animal-id').value = animalId;
-            document.getElementById('modal-animal-name-add').textContent = hewanMap[animalId].nama || `ID: ${animalId.slice(0,5)}...`;
-
+        document.getElementById('add-schedule-btn').addEventListener('click', function() {
             const now = new Date();
-            const minDatetime = now.toISOString().slice(0, 16);
-            document.getElementById('schedule-datetime').min = minDatetime;
-
-            addScheduleModal.classList.remove('hidden');
+            now.setMinutes(now.getMinutes() + 30); // Set minimum 30 minutes from now
+            document.getElementById('jadwal').min = now.toISOString().slice(0, 16);
+            
+            // Set selected animal if any
+            const selectedAnimal = document.getElementById('animal-select').value;
+            if (selectedAnimal) {
+                document.getElementById('id_hewan').value = selectedAnimal;
+            }
+            
+            document.getElementById('add-schedule-modal').classList.remove('hidden');
         });
 
         document.querySelectorAll('.close-modal').forEach(button => {
             button.addEventListener('click', function() {
-                addScheduleModal.classList.add('hidden');
-                editScheduleModal.classList.add('hidden');
-                deleteScheduleModal.classList.add('hidden');
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.add('hidden');
+                });
             });
         });
 
-        document.getElementById('add-schedule-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const animalId = document.getElementById('add-animal-id').value;
-            const foodType = document.getElementById('food-type').value;
-            const amount = parseInt(document.getElementById('food-amount').value);
-            const schedule = document.getElementById('schedule-datetime').value;
-
-            const newScheduleId = `temp_${animalId}_${Date.now()}`; 
-            const newSchedule = {
-                id: newScheduleId,
-                foodType: foodType,
-                amount: amount,
-                schedule: schedule,
-                status: "waiting"
-            };
-
-            if (!animalSchedules[animalId]) {
-                animalSchedules[animalId] = [];
-            }
-            animalSchedules[animalId].push(newSchedule);
-            loadFeedingSchedules(animalId);
-            addScheduleModal.classList.add('hidden');
-            alert('Jadwal pemberian pakan berhasil ditambahkan!');
-        });
-
-        document.getElementById('edit-schedule-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const animalId = document.getElementById('edit-animal-id').value;
-            const scheduleId = document.getElementById('edit-schedule-id').value;
-            const foodType = document.getElementById('edit-food-type').value;
-            const amount = parseInt(document.getElementById('edit-food-amount').value);
-            const schedule = document.getElementById('edit-schedule-datetime').value;
-
-            if (animalSchedules[animalId]) {
-                 const scheduleIndex = animalSchedules[animalId].findIndex(s => s.id === scheduleId);
-                 if (scheduleIndex !== -1) {
-                    animalSchedules[animalId][scheduleIndex] = {
-                        ...animalSchedules[animalId][scheduleIndex], 
-                        foodType: foodType,
-                        amount: amount,
-                        schedule: schedule,
-                    };
-                 }
-            }
-
-            loadFeedingSchedules(animalId);
-            editScheduleModal.classList.add('hidden');
-            alert('Jadwal pemberian pakan berhasil diperbarui!');
-        });
-
-        document.getElementById('delete-schedule-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const animalId = document.getElementById('delete-animal-id').value;
-            const scheduleId = document.getElementById('delete-schedule-id').value;
-            if (animalSchedules[animalId]) {
-                animalSchedules[animalId] = animalSchedules[animalId].filter(s => s.id !== scheduleId);
-            }
-            loadFeedingSchedules(animalId);
-            deleteScheduleModal.classList.add('hidden');
-            alert('Jadwal pemberian pakan berhasil dihapus!');
-        });
-
-        function displayAnimalInfo(animalId) {
-            const animal = hewanMap[animalId];
-            document.getElementById('animal-id').textContent = animal.id.slice(0, 8) + '...';
-            document.getElementById('animal-name').textContent = animal.nama || 'N/A';
-            document.getElementById('animal-species').textContent = animal.spesies || 'N/A';
+        function editSchedule(idHewan, jadwal, jenis, jumlah) {
+            document.getElementById('jenis_pakan_baru').value = jenis;
+            document.getElementById('jumlah_pakan_baru').value = jumlah;
+            
+            // Format datetime for input
+            const date = new Date(jadwal);
+            const formattedDate = date.toISOString().slice(0, 16);
+            document.getElementById('jadwal_baru').value = formattedDate;
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+            document.getElementById('jadwal_baru').min = now.toISOString().slice(0, 16);
+            
+            document.getElementById('edit-form').action = 
+                "{% url 'medical_checkup_feeding:edit_feeding_schedule' '0' '0000-01-01T00:00:00' %}".replace('0/0000-01-01T00:00:00', idHewan + '/' + encodeURIComponent(jadwal));
+            
+            document.getElementById('edit-schedule-modal').classList.remove('hidden');
         }
 
-        function loadFeedingSchedules(animalId) {
-            const schedules = animalSchedules[animalId] || [];
-            schedulesTableBody.innerHTML = '';
+        function deleteSchedule(idHewan, jadwal) {
+            document.getElementById('delete-form').action = 
+                "{% url 'medical_checkup_feeding:delete_feeding_schedule' '0' '0000-01-01T00:00:00' %}".replace('0/0000-01-01T00:00:00', idHewan + '/' + encodeURIComponent(jadwal));
+            
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
 
-            if (schedules.length === 0) {
-                noSchedulesMessage.textContent = 'Belum ada jadwal pemberian pakan untuk hewan ini.';
-                noSchedulesMessage.classList.remove('hidden');
-            } else {
-                noSchedulesMessage.classList.add('hidden');
-
-                schedules.forEach(schedule => {
-                    const row = document.createElement('tr');
-
-                    const dateObj = new Date(schedule.schedule);
-                    const formattedDateTime = dateObj.toLocaleString('id-ID', {
-                        day: 'numeric', month: 'long', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit', hour12: false
-                    });
-
-                    const statusClass = 'status-waiting';
-                    const statusText = 'Menunggu Pemberian';
-                    row.innerHTML = `
-                        <td>${schedule.foodType}</td>
-                        <td>${schedule.amount}</td>
-                        <td>${formattedDateTime}</td>
-                        <td class="${statusClass}">${statusText}</td>
-                        <td>
-                            <button class="action-button bg-[#28a745] text-white feed-animal" data-id="${schedule.id}" data-animal-id="${animalId}">Beri Pakan</button>
-                            <button class="action-button bg-[#FBBE99] text-white edit-schedule" data-id="${schedule.id}" data-animal-id="${animalId}">Edit</button>
-                            <button class="action-button bg-[#dc3545] text-white delete-schedule" data-id="${schedule.id}" data-animal-id="${animalId}">Hapus</button>
-                        </td>
-                    `;
-
-                    schedulesTableBody.appendChild(row);
-                });
-                attachActionListeners();
+        function giveFeed(idHewan, jadwal) {
+            if (confirm('Apakah Anda yakin ingin memberikan pakan ini sekarang?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{% url 'medical_checkup_feeding:give_feeding' '0' '0000-01-01T00:00:00' %}".replace('0/0000-01-01T00:00:00', idHewan + '/' + encodeURIComponent(jadwal));
+                
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = '{{ csrf_token }}';
+                form.appendChild(csrf);
+                
+                document.body.appendChild(form);
+                form.submit();
             }
         }
-
-        function attachActionListeners() {
-             document.querySelectorAll('.edit-schedule').forEach(button => {
-                button.replaceWith(button.cloneNode(true));
-            });
-            document.querySelectorAll('.edit-schedule').forEach(button => {
-                button.addEventListener('click', function() {
-                    openEditModal(this.dataset.animalId, this.dataset.id);
-                });
-            });
-
-             document.querySelectorAll('.delete-schedule').forEach(button => {
-                button.replaceWith(button.cloneNode(true));
-            });
-            document.querySelectorAll('.delete-schedule').forEach(button => {
-                button.addEventListener('click', function() {
-                    openDeleteModal(this.dataset.animalId, this.dataset.id);
-                });
-            });
-
-            document.querySelectorAll('.feed-animal').forEach(button => {
-                button.replaceWith(button.cloneNode(true));
-            });
-            document.querySelectorAll('.feed-animal').forEach(button => {
-                button.addEventListener('click', function() {
-                    feedAnimal(this.dataset.animalId, this.dataset.id);
-                });
-            });
-        }
-
-
-        function openEditModal(animalId, scheduleId) {
-            if (!animalSchedules[animalId]) return;
-            const schedule = animalSchedules[animalId].find(s => s.id === scheduleId);
-            if (schedule && hewanMap[animalId]) {
-                document.getElementById('edit-schedule-id').value = scheduleId;
-                document.getElementById('edit-animal-id').value = animalId;
-                document.getElementById('modal-animal-name-edit').textContent = hewanMap[animalId].nama || `ID: ${animalId.slice(0,5)}...`;
-                document.getElementById('edit-food-type').value = schedule.foodType;
-                document.getElementById('edit-food-amount').value = schedule.amount;
-                let scheduleDateTime = schedule.schedule;
-                 try {
-                     const date = new Date(scheduleDateTime);
-                     if (!isNaN(date)) {
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const hours = String(date.getHours()).padStart(2, '0');
-                        const minutes = String(date.getMinutes()).padStart(2, '0');
-                        scheduleDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                     } else {
-                         console.warn("Invalid date format for schedule:", schedule.schedule);
-                         scheduleDateTime = ''; 
-                     }
-                 } catch (e) {
-                    console.error("Error processing date:", e);
-                    scheduleDateTime = '';
-                 }
-                document.getElementById('edit-schedule-datetime').value = scheduleDateTime;
-                const now = new Date();
-                const minDatetime = now.toISOString().slice(0, 16);
-                document.getElementById('edit-schedule-datetime').min = minDatetime;
-
-                editScheduleModal.classList.remove('hidden');
-            } else {
-                 console.error("Could not find schedule or animal for edit:", animalId, scheduleId);
-                 alert("Gagal membuka edit: data tidak ditemukan.");
-            }
-        }
-
-        function openDeleteModal(animalId, scheduleId) {
-            document.getElementById('delete-schedule-id').value = scheduleId;
-            document.getElementById('delete-animal-id').value = animalId;
-            deleteScheduleModal.classList.remove('hidden');
-        }
-
-        function feedAnimal(animalId, scheduleId) {
-            if (!animalSchedules[animalId]) return;
-
-            const scheduleIndex = animalSchedules[animalId].findIndex(s => s.id === scheduleId);
-            if (scheduleIndex !== -1) {
-                const schedule = animalSchedules[animalId][scheduleIndex];
-                animalSchedules[animalId].splice(scheduleIndex, 1);
-                loadFeedingSchedules(animalId);
-                alert(`Pemberian pakan ${schedule.foodType} untuk ${hewanMap[animalId]?.nama || 'hewan'} telah dicatat!`);
-            }
-        }
-        addScheduleBtn.disabled = true;
-
     </script>
 </body>
 </html>

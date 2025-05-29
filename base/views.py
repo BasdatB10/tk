@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.shortcuts import render, redirect
 from functools import wraps
+from django.conf import settings
 
 dotenv.load_dotenv()
 
@@ -169,7 +170,6 @@ def profile_pengunjung(request):
 
 def profile_staff(request):
     return render(request, "profile_staff.html")
-
 
 @session_required
 def dashboard(request):

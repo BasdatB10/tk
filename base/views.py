@@ -321,7 +321,23 @@ def dashboard(request):
                        (SELECT COUNT(DISTINCT bp.id_hewan)
                         FROM JADWAL_PENUGASAN jp
                         JOIN BERPARTISIPASI bp ON jp.nama_atraksi = bp.nama_fasilitas
-                        WHERE jp.username_lh = lh.username_lh) as jumlah_hewan
+                        WHERE jp.username_lh = lh.username_lh) as jumlah_hewan,
+                       (SELECT 
+                           CASE 
+                               WHEN jp.tgl_penugasan IS NULL AND f.jadwal > NOW() THEN 'UPCOMING'
+                               WHEN jp.tgl_penugasan IS NULL AND f.jadwal <= NOW() THEN 'DUE'
+                               WHEN jp.tgl_penugasan IS NOT NULL THEN 'FINISHED'
+                           END
+                        FROM FASILITAS f
+                        LEFT JOIN JADWAL_PENUGASAN jp ON f.nama = jp.nama_atraksi 
+                            AND jp.username_lh = lh.username_lh
+                        WHERE f.nama IN (
+                            SELECT jp2.nama_atraksi 
+                            FROM JADWAL_PENUGASAN jp2 
+                            WHERE jp2.username_lh = lh.username_lh
+                        )
+                        ORDER BY f.jadwal DESC
+                        LIMIT 1) as status_latihan
                 FROM PENGGUNA p
                 JOIN PELATIH_HEWAN lh ON p.username = lh.username_lh
                 WHERE p.username = %s
@@ -338,7 +354,8 @@ def dashboard(request):
                     'role': role,
                     'id_staf': user_data[6],
                     'jadwal_hari_ini': user_data[7],
-                    'jumlah_hewan': user_data[8]
+                    'jumlah_hewan': user_data[8],
+                    'status_latihan': user_data[9]
                 }]
             }
             

@@ -170,6 +170,25 @@
         .user-email svg {
             margin-right: 10px;
         }
+        .status-upcoming {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-due {
+            background-color: #d19f13;
+            color: white;
+        }
+        .status-finished {
+            background-color: #2196F3;
+            color: white;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -342,7 +361,17 @@
                     
                     <div class="info-row">
                         <div class="info-label">Status Latihan Terakhir:</div>
-                        <div class="info-value">{{ user_data.0.status_latihan }}</div>
+                        <div class="info-value">
+                            {% if user_data.0.status_latihan == 'UPCOMING' %}
+                                <span class="status-badge status-upcoming">UPCOMING</span>
+                            {% elif user_data.0.status_latihan == 'DUE' %}
+                                <span class="status-badge status-due">DUE</span>
+                            {% elif user_data.0.status_latihan == 'FINISHED' %}
+                                <span class="status-badge status-finished">FINISHED</span>
+                            {% else %}
+                                {{ user_data.0.status_latihan }}
+                            {% endif %}
+                        </div>
                     </div>
                     {% endif %}
                 </div>

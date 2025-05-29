@@ -4,6 +4,7 @@ from . import views
 app_name = 'facility_ticketing'
 
 urlpatterns = [
+    path('kelola-pengunjung/', views.kelola_pengunjung, name='kelola_pengunjung'),
     path('manajemen-atraksi/', views.manajemen_atraksi, name='manajemen_atraksi'),
     path('manajemen-atraksi/tambah/', views.tambah_atraksi, name='tambah_atraksi'),
     path('manajemen-atraksi/edit/', views.edit_atraksi, name='edit_atraksi'),

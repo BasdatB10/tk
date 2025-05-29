@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Pengunjung - Zoo Pintar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .navbar {
+            transition: all 0.3s ease;
+        }
+        .navbar-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navbar a {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            color: white;
+            background-color: #DD6D49;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .navbar a:hover {
+            background-color: #883526;
+            border-color: #883526;
+        }
+        .active-link {
+            background-color: #ED8764;
+            border-color: #ED8764;
+        }
+        :root {
+            --color-light-peach: #fad4b6;
+            --color-peach: #fbbe99;
+            --color-coral: #ed8764;
+            --color-dark-coral: #dd6d49;
+            --color-brown: #883526;
+            --color-dark-brown: #49241b;
+            --background-color: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-color: #333;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Geist', sans-serif;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--color-light-peach);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Kelola Pengunjung</h1>
+                <div class="subtitle">Kelola informasi dan aktivitas pengunjung di Zoo Pintar</div>
+            </div>
+        </div>
+
+        <div class="card-container">
+            <a href="{% url 'facility_ticketing:manajemen_wahana' %}" class="card">
+                <div class="card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#DD6D49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="#DD6D49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="#DD6D49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Manajemen Wahana</h3>
+                <p class="card-description">Kelola informasi wahana, kapasitas, jadwal, dan peraturan untuk pengunjung.</p>
+            </a>
+
+            <a href="{% url 'facility_ticketing:manajemen_atraksi' %}" class="card">
+                <div class="card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#DD6D49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="#DD6D49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="#DD6D49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Manajemen Atraksi</h3>
+                <p class="card-description">Kelola atraksi hewan, jadwal, dan penugasan pelatih untuk pengunjung.</p>
+            </a>
+
+            <a href="{% url 'facility_ticketing:admin_reservasi' %}" class="card">
+                <div class="card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 7V3M16 7V3M7 11H17M5 21H19C20.1046 21 21 20.1046 21 19V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V19C3 20.1046 3.89543 21 5 21Z" stroke="#DD6D49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Manajemen Reservasi</h3>
+                <p class="card-description">Kelola reservasi pengunjung, konfirmasi pembayaran, dan status tiket.</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html> 

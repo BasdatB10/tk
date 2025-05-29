@@ -655,3 +655,8 @@ def hapus_wahana(request):
             print('Hapus wahana error:', e)
         return redirect('facility_ticketing:manajemen_wahana')
     return redirect('facility_ticketing:manajemen_wahana')
+
+@session_required
+@admin_required
+def kelola_pengunjung(request):
+    return render(request, 'kelola_pengunjung.html')

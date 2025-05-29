@@ -1,5 +1,7 @@
-# Berikut adalah pembagian pengerjaan fitur dari masing-masing anggota:
-- **Anggun Sasmitha Dewi (2306165673)**: Membuat halaman Fitur Wajib (Profile) serta Fitur Manajemen Kesehatan dan Perawatan Satwa
-- **Fikar Hilmi Adhrevi (2306203873)**: Mengerjakan Fitur Wajib Dashboard Serta Fitur Manajemen Atraksi dan Wahana dan  Layanan Pengunjung
-- **Sulthan Adrin Pasha Siregar (2306201306)**: Mengerjakan navigation bar, fitur CRU Manajemen Data Adopsi, dan fitur RD - Manajemen Data Adopter dan Riwayat Adopsi
-- **Nabil Zahid Rahman (2306203324)**: Membuat pgdump dan dokumen dari 22 tabel dan relasinya dengan tabel lain, membuat desain frontend, view, dan routing dari fitur homepage, register, login, dan manajemen satwa habitat.
+Pembagian tugas:
+| No | NPM        | Nama Anggota                | Deskripsi Tugas                                                                                                                                          |
+|----|------------|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | 2306165673 | Anggun Sasmitha Dewi        | Membuat trigger, inisiasi supabase, integrasi db-backend, dan frontend untuk fitur Profile dan Manajemen Kesehatan dan Perawatan Hewan                   |
+| 2  | 2306203873 | Fikar Hilmi Adhrevi         | Membuat trigger, backend, dan frontend untuk fitur Dashboard dan Manajemen Atraksi dan Layanan Pengunjung, melakukan deployment                         |
+| 3  | 2306201306 | Sulthan Adrin Pasha Siregar | Membuat trigger, backend, dan frontend untuk fitur manajemen data adopsi serta logic navbar, melakukan deployment                                       |
+| 4  | 2306203324 | Nabil Zahid Rahman          | Membuat trigger dan integrasi db-backend untuk fitur registrasi, login, dan manajemen data satwa habitat                                                |

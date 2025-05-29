@@ -262,8 +262,8 @@ def show_adopter_page(request):
             adopter_details['alamat'] = pengunjung_pengguna_data[0]
             adopter_details['no_telepon'] = pengunjung_pengguna_data[1]
 
-        # Tambahkan id_adopter ke adopter_details
-        adopter_details['id_adopter'] = id_adopter
+        # Konversi UUID ke string sebelum menambahkannya ke dictionary
+        adopter_details['id_adopter'] = str(id_adopter)
 
         print(f"Debug - Found adopter details: {adopter_details}")
 

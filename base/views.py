@@ -159,18 +159,6 @@ def logout(request):
     request.session.flush()
     return redirect('base:home')
 
-def profile(request):
-    return render(request, "profile.html")
-
-def profile_dokter(request):
-    return render(request, "profile_dokter.html")
-
-def profile_pengunjung(request):
-    return render(request, "profile_pengunjung.html")
-
-def profile_staff(request):
-    return render(request, "profile_staff.html")
-
 @session_required
 def dashboard(request):
     try:

@@ -55,11 +55,12 @@
           {% if user_role == 'dokter_hewan' %}
             <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="{% url 'medical_checkup_feeding:medical_record' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Rekam Medis Hewan</a>
+            <a href="{% url 'medical_checkup_feeding:medical_checkup' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Jadwal Pemeriksaan Hewan</a>
             <a href="{% url 'userprofile:profile_view' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
           {% elif user_role == 'penjaga_hewan' %}
             <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="{% url 'medical_checkup_feeding:feeding_schedule' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Catatan Perawatan</a>
-            <a href="{% url 'base:profile_staff' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
+            <a href="{% url 'userprofile:profile_view' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
           {% elif user_role == 'pelatih_pertunjukan' or user_role == 'pelatih_hewan' %}
             <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
             <a href="{% url 'show:schedule' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Jadwal Pertunjukan</a>

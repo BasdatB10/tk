@@ -163,7 +163,7 @@ def add_medical_record(request):
             status_kesehatan = request.POST.get('status_kesehatan')
             diagnosis = request.POST.get('diagnosis', '')
             pengobatan = request.POST.get('pengobatan', '')
-            
+
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
             """, (request.session.get('username'),))
@@ -173,6 +173,8 @@ def add_medical_record(request):
                 cursor.close()
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_record')
+            
+            cursor.execute("SET client_min_messages TO NOTICE;")
             
             cursor.execute("""
                 INSERT INTO CATATAN_MEDIS 
@@ -193,6 +195,10 @@ def add_medical_record(request):
                 SET status_kesehatan = %s 
                 WHERE id = %s
             """, (status_kesehatan, id_hewan))
+
+            for notice in conn.notices:
+                if 'SUKSES:' in notice:
+                    messages.success(request, notice.strip())
             
             conn.commit()
             cursor.close()
@@ -256,16 +262,19 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
             diagnosis_baru = request.POST.get('diagnosis_baru', '')
             pengobatan_baru = request.POST.get('pengobatan_baru', '')
             
+            # Update rekam medis dengan dokter yang sedang login
             cursor.execute("""
                 UPDATE CATATAN_MEDIS 
                 SET catatan_tindak_lanjut = %s,
                     diagnosis = COALESCE(NULLIF(%s, ''), diagnosis),
-                    pengobatan = COALESCE(NULLIF(%s, ''), pengobatan)
+                    pengobatan = COALESCE(NULLIF(%s, ''), pengobatan),
+                    username_dh = %s
                 WHERE id_hewan = %s AND tanggal_pemeriksaan = %s
             """, (
                 catatan_tindak_lanjut if catatan_tindak_lanjut else None,
                 diagnosis_baru,
                 pengobatan_baru,
+                request.session.get('username'),  # Update dengan dokter yang sedang login
                 id_hewan,
                 tanggal_pemeriksaan
             ))
@@ -302,9 +311,12 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
                 cm.status_kesehatan,
                 cm.catatan_tindak_lanjut,
                 h.nama as nama_hewan,
-                h.status_kesehatan as status_hewan_saat_ini
+                h.status_kesehatan as status_hewan_saat_ini,
+                p.nama_depan || ' ' || p.nama_belakang as nama_dokter_asli
             FROM CATATAN_MEDIS cm
             JOIN HEWAN h ON cm.id_hewan = h.id
+            JOIN DOKTER_HEWAN dh ON cm.username_dh = dh.username_DH
+            JOIN PENGGUNA p ON dh.username_DH = p.username
             WHERE cm.id_hewan = %s AND cm.tanggal_pemeriksaan = %s
         """, (id_hewan, tanggal_pemeriksaan))
         
@@ -480,6 +492,8 @@ def add_checkup_schedule(request):
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
             
+            cursor.execute("SET client_min_messages TO NOTICE;")
+            
             cursor.execute("""
                 INSERT INTO JADWAL_PEMERIKSAAN_KESEHATAN 
                 (id_hewan, tgl_pemeriksaan_selanjutnya, freq_pemeriksaan_rutin)
@@ -489,6 +503,10 @@ def add_checkup_schedule(request):
                 tgl_pemeriksaan_selanjutnya,
                 int(freq_pemeriksaan_rutin)
             ))
+            
+            for notice in conn.notices:
+                if 'SUKSES:' in notice:
+                    messages.success(request, notice.strip())
             
             conn.commit()
             cursor.close()
@@ -502,6 +520,7 @@ def add_checkup_schedule(request):
             return redirect('medical_checkup_feeding:medical_checkup')
     
     return redirect('medical_checkup_feeding:medical_checkup')
+            
 
 @dokter_hewan_required
 def edit_checkup_schedule(request, id_hewan, tgl_pemeriksaan_selanjutnya):
@@ -792,18 +811,7 @@ def edit_feeding_schedule(request, id_hewan, jadwal):
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
             
-            cursor.execute("""
-                SELECT status FROM PAKAN 
-                WHERE id_hewan = %s AND jadwal = %s
-            """, (id_hewan, jadwal))
-            
-            current_status = cursor.fetchone()
-            if not current_status or current_status[0] == 'Habis':
-                messages.error(request, 'Jadwal pakan yang sudah selesai diberikan tidak dapat diedit.')
-                cursor.close()
-                conn.close()
-                return redirect('medical_checkup_feeding:feeding_schedule')
-          
+            # Hapus validasi status 'Habis' - sekarang boleh edit yang sudah selesai
             jenis_pakan_baru = request.POST.get('jenis_pakan_baru')
             jumlah_pakan_baru = request.POST.get('jumlah_pakan_baru')
             jadwal_baru = request.POST.get('jadwal_baru')
@@ -811,7 +819,7 @@ def edit_feeding_schedule(request, id_hewan, jadwal):
             cursor.execute("""
                 UPDATE PAKAN 
                 SET jenis = %s, jumlah = %s, jadwal = %s
-                WHERE id_hewan = %s AND jadwal = %s AND status != 'Habis'
+                WHERE id_hewan = %s AND jadwal = %s
             """, (
                 jenis_pakan_baru,
                 int(jumlah_pakan_baru),
@@ -847,23 +855,12 @@ def delete_feeding_schedule(request, id_hewan, jadwal):
             )
             cursor = conn.cursor()
             cursor.execute("SET search_path TO SIZOPI;")
-            cursor.execute("""
-                SELECT status FROM PAKAN 
-                WHERE id_hewan = %s AND jadwal = %s
-            """, (id_hewan, jadwal))
             
-            current_status = cursor.fetchone()
-            if not current_status or current_status[0] == 'Habis':
-                messages.error(request, 'Jadwal pakan yang sudah selesai diberikan tidak dapat dihapus.')
-                cursor.close()
-                conn.close()
-                return redirect('medical_checkup_feeding:feeding_schedule')
-         
             confirm = request.POST.get('confirm_delete')
             if confirm == 'YA':
                 cursor.execute("""
                     DELETE FROM PAKAN 
-                    WHERE id_hewan = %s AND jadwal = %s AND status != 'Habis'
+                    WHERE id_hewan = %s AND jadwal = %s
                 """, (id_hewan, jadwal))
                 
                 conn.commit()

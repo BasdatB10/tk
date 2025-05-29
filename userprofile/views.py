@@ -89,9 +89,11 @@ def get_user_profile_data(username):
                 'middle_name': user_data[3] or '',
                 'last_name': user_data[4],
                 'phone': user_data[5]
-            }
+            },
+            'is_authenticated': True  # Tambahkan ini untuk navbar
         }
         
+        # Cek role pengunjung
         cursor.execute("""
             SELECT alamat, tgl_lahir 
             FROM PENGUNJUNG 
@@ -104,6 +106,7 @@ def get_user_profile_data(username):
             profile_data['user']['address'] = pengunjung_data[0]
             profile_data['user']['dob'] = pengunjung_data[1]
         else:
+            # Cek role dokter hewan
             cursor.execute("""
                 SELECT no_STR 
                 FROM DOKTER_HEWAN 
@@ -131,20 +134,39 @@ def get_user_profile_data(username):
                 else:
                     profile_data['user']['specialization'] = 'mamalia_besar'
             else:
+                # Cek role staff secara terpisah
+                # Cek penjaga hewan
                 cursor.execute("""
                     SELECT id_staf FROM PENJAGA_HEWAN WHERE username_jh = %s
-                    UNION
-                    SELECT id_staf FROM PELATIH_HEWAN WHERE username_lh = %s
-                    UNION
-                    SELECT id_staf FROM STAF_ADMIN WHERE username_sa = %s
-                """, (username, username, username))
-                staff_data = cursor.fetchone()
+                """, (username,))
+                penjaga_data = cursor.fetchone()
                 
-                if staff_data:
-                    profile_data['user_role'] = 'staff'
-                    profile_data['user']['id_staf'] = staff_data[0]
+                if penjaga_data:
+                    profile_data['user_role'] = 'penjaga_hewan'
+                    profile_data['user']['id_staf'] = penjaga_data[0]
                 else:
-                    profile_data['user_role'] = 'unknown'
+                    # Cek pelatih hewan  
+                    cursor.execute("""
+                        SELECT id_staf FROM PELATIH_HEWAN WHERE username_lh = %s
+                    """, (username,))
+                    pelatih_data = cursor.fetchone()
+                    
+                    if pelatih_data:
+                        profile_data['user_role'] = 'pelatih_hewan'
+                        profile_data['user']['id_staf'] = pelatih_data[0]
+                    else:
+                        # Cek staf admin
+                        cursor.execute("""
+                            SELECT id_staf FROM STAF_ADMIN WHERE username_sa = %s
+                        """, (username,))
+                        admin_data = cursor.fetchone()
+                        
+                        if admin_data:
+                            profile_data['user_role'] = 'staf_admin'
+                            profile_data['user']['id_staf'] = admin_data[0]
+                        else:
+                            # Jika tidak ada role yang cocok, set default
+                            profile_data['user_role'] = 'unknown'
         
         cursor.close()
         conn.close()
@@ -153,7 +175,7 @@ def get_user_profile_data(username):
     except Exception as e:
         print(f"Error getting user profile: {e}")
         return None
-
+       
 def update_profile(username, post_data):
     """Update user profile"""
     try:

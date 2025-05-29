@@ -10,6 +10,21 @@ dotenv.load_dotenv()
 def animal(request):
     if 'username' not in request.session:
         return redirect('base:home')
+    
+    username = request.session['username']
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM SIZOPI.DOKTER_HEWAN WHERE username_DH = %s
+                UNION
+                SELECT 1 FROM SIZOPI.PENJAGA_HEWAN WHERE username_jh = %s
+                UNION
+                SELECT 1 FROM SIZOPI.STAF_ADMIN WHERE username_sa = %s
+            );
+        """, [username, username, username])
+        is_authorized = cursor.fetchone()[0]
+    if not is_authorized:
+        return redirect('base:dashboard')
 
     if request.method == "POST":
         try:
@@ -140,6 +155,21 @@ def animal_delete(request):
 def habitat(request):
     if 'username' not in request.session:
         return redirect('base:home')
+    
+    username = request.session['username']
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM SIZOPI.DOKTER_HEWAN WHERE username_DH = %s
+                UNION
+                SELECT 1 FROM SIZOPI.PENJAGA_HEWAN WHERE username_jh = %s
+                UNION
+                SELECT 1 FROM SIZOPI.STAF_ADMIN WHERE username_sa = %s
+            );
+        """, [username, username, username])
+        is_authorized = cursor.fetchone()[0]
+    if not is_authorized:
+        return redirect('base:dashboard')
 
     if request.method == "POST":
         try:
@@ -237,9 +267,6 @@ def habitat_delete(request):
         return redirect('animal_habitat_management:habitat')
 
 def habitat_detail(request):
-    if 'username' not in request.session:
-        return redirect('base:home')
-
     if request.method == "POST":
         try:
             conn = psycopg2.connect(

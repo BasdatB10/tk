@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.shortcuts import render, redirect
 from functools import wraps
-from django.conf import settings
+from django.db import connection
 
 dotenv.load_dotenv()
 
@@ -18,7 +18,17 @@ def session_required(view_func):
 def home(request):
     if 'username' in request.session:
         return redirect('base:dashboard')
-    return render(request, "home.html")
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) FROM SIZOPI.HEWAN;")
+        jumlah_hewan = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM SIZOPI.PENGGUNA;")
+        jumlah_pengguna = cursor.fetchone()[0]
+
+    return render(request, "home.html", {
+        'jumlah_hewan': jumlah_hewan,
+        'jumlah_pengguna': jumlah_pengguna,
+    })
 
 @csrf_protect
 def register(request):

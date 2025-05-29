@@ -49,8 +49,6 @@
       </div>
 
       <div class="flex space-x-4">
-        
-        
         {% if is_authenticated %}
           {% if user_role == 'dokter_hewan' %}
             <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>

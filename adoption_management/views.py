@@ -62,13 +62,31 @@ def manage_adopt(request):
     
     # Ambil data hewan dengan left join seperti biasa
     cur.execute("""
+        WITH latest_adopsi AS (
+            SELECT 
+                id_hewan,
+                MAX(tgl_berhenti_adopsi) as latest_end_date
+            FROM SIZOPI.adopsi
+            GROUP BY id_hewan
+        ),
+        earliest_adopsi AS (
+            SELECT 
+                id_hewan,
+                MIN(tgl_mulai_adopsi) as earliest_start_date
+            FROM SIZOPI.adopsi
+            GROUP BY id_hewan
+        )
         SELECT 
             h.id, h.nama, h.spesies, h.asal_hewan, h.tanggal_lahir, h.status_kesehatan, h.nama_habitat, h.url_foto,
-            a.id_adopter, a.tgl_mulai_adopsi, a.tgl_berhenti_adopsi, a.status_pembayaran, a.kontribusi_finansial,
+            a.id_adopter, ea.earliest_start_date as tgl_mulai_adopsi, la.latest_end_date as tgl_berhenti_adopsi, 
+            a.status_pembayaran, a.kontribusi_finansial,
             ad.username_adopter
         FROM SIZOPI.hewan h
         LEFT JOIN SIZOPI.adopsi a ON h.id = a.id_hewan
         LEFT JOIN SIZOPI.adopter ad ON a.id_adopter = ad.id_adopter
+        LEFT JOIN latest_adopsi la ON h.id = la.id_hewan
+        LEFT JOIN earliest_adopsi ea ON h.id = ea.id_hewan
+        WHERE a.tgl_berhenti_adopsi = la.latest_end_date OR a.tgl_berhenti_adopsi IS NULL
     """)
     
     columns = [desc[0] for desc in cur.description]
@@ -206,8 +224,79 @@ def show_adopter_page(request):
         id_adopter = adopter_result[0]
         print(f"Debug - Found adopter_id: {id_adopter}")
 
+        # Ambil nama adopter (individu atau organisasi)
+        cur.execute("""
+            SELECT COALESCE(i.nama, o.nama_organisasi)
+            FROM SIZOPI.adopter a
+            LEFT JOIN SIZOPI.individu i ON a.id_adopter = i.id_adopter
+            LEFT JOIN SIZOPI.organisasi o ON a.id_adopter = o.id_adopter
+            WHERE a.username_adopter = %s
+        """, (username,))
+        adopter_name_result = cur.fetchone()
+        adopter_name = adopter_name_result[0] if adopter_name_result else "Nama Adopter Tidak Ditemukan"
+        print(f"Debug - Found adopter name: {adopter_name}")
+
+        # Ambil detail adopter (tipe, NIK/NPP, alamat, telepon)
+        adopter_details = {'tipe': None, 'nik': None, 'npp': None, 'alamat': None, 'no_telepon': None}
+        
+        # Cek tipe adopter dan ambil detail spesifik
+        cur.execute("SELECT nik, nama FROM SIZOPI.individu WHERE id_adopter = %s", (id_adopter,))
+        individu_data = cur.fetchone()
+        if individu_data:
+            adopter_details['tipe'] = 'individu'
+            adopter_details['nik'] = individu_data[0]
+            # Nama sudah diambil sebelumnya
+
+        if not adopter_details['tipe']:
+             cur.execute("SELECT npp, nama_organisasi FROM SIZOPI.organisasi WHERE id_adopter = %s", (id_adopter,))
+             organisasi_data = cur.fetchone()
+             if organisasi_data:
+                 adopter_details['tipe'] = 'organisasi'
+                 adopter_details['npp'] = organisasi_data[0]
+                 # Nama sudah diambil sebelumnya
+
+        # Ambil alamat dan no_telepon dari tabel pengguna/pengunjung berdasarkan username
+        cur.execute("SELECT p.alamat, pg.no_telepon FROM SIZOPI.pengunjung p JOIN SIZOPI.pengguna pg ON p.username_p = pg.username WHERE p.username_p = %s", (username,))
+        pengunjung_pengguna_data = cur.fetchone()
+        if pengunjung_pengguna_data:
+            adopter_details['alamat'] = pengunjung_pengguna_data[0]
+            adopter_details['no_telepon'] = pengunjung_pengguna_data[1]
+
+        # Konversi UUID ke string sebelum menambahkannya ke dictionary
+        adopter_details['id_adopter'] = str(id_adopter)
+
+        print(f"Debug - Found adopter details: {adopter_details}")
+
+        # Konversi adopter_details ke JSON string untuk dilewatkan ke template
+        adopter_details_json = json.dumps(adopter_details)
+        print(f"Debug - Adopter details as JSON string: {adopter_details_json}")
+
         # Ambil data hewan yang diadopsi oleh adopter ini
         cur.execute("""
+            WITH latest_adopsi AS (
+                SELECT 
+                    id_hewan,
+                    MAX(tgl_berhenti_adopsi) as latest_end_date
+                FROM SIZOPI.adopsi
+                WHERE id_adopter = %s
+                GROUP BY id_hewan
+            ),
+            earliest_adopsi AS (
+                SELECT 
+                    id_hewan,
+                    MIN(tgl_mulai_adopsi) as earliest_start_date
+                FROM SIZOPI.adopsi
+                WHERE id_adopter = %s
+                GROUP BY id_hewan
+            ),
+            total_kontribusi AS (
+                SELECT 
+                    id_hewan,
+                    SUM(kontribusi_finansial) as total_kontribusi
+                FROM SIZOPI.adopsi
+                WHERE id_adopter = %s
+                GROUP BY id_hewan
+            )
             SELECT 
                 h.id,
                 h.nama,
@@ -217,15 +306,19 @@ def show_adopter_page(request):
                 h.status_kesehatan,
                 h.nama_habitat,
                 h.url_foto,
-                a.tgl_mulai_adopsi,
-                a.tgl_berhenti_adopsi,
+                ea.earliest_start_date as tgl_mulai_adopsi,
+                la.latest_end_date as tgl_berhenti_adopsi,
                 a.status_pembayaran,
-                a.kontribusi_finansial
+                tc.total_kontribusi as kontribusi_finansial
             FROM SIZOPI.hewan h
             JOIN SIZOPI.adopsi a ON h.id = a.id_hewan
+            JOIN latest_adopsi la ON h.id = la.id_hewan
+            JOIN earliest_adopsi ea ON h.id = ea.id_hewan
+            JOIN total_kontribusi tc ON h.id = tc.id_hewan
             WHERE a.id_adopter = %s
-            ORDER BY a.tgl_mulai_adopsi DESC
-        """, (id_adopter,))
+            AND a.tgl_berhenti_adopsi = la.latest_end_date
+            ORDER BY ea.earliest_start_date DESC
+        """, (id_adopter, id_adopter, id_adopter, id_adopter))
 
         columns = [desc[0] for desc in cur.description]
         hewan_list = []
@@ -243,8 +336,43 @@ def show_adopter_page(request):
             hewan_list.append(hewan_dict)
 
         print(f"Debug - Found {len(hewan_list)} adopted animals")
+
+        # Ambil data rekam medis untuk setiap hewan
+        for hewan in hewan_list:
+            cur.execute("""
+                SELECT
+                    cm.tanggal_pemeriksaan,
+                    pg.nama_depan || COALESCE(' ' || pg.nama_tengah, '') || ' ' || pg.nama_belakang as nama_dokter,
+                    cm.status_kesehatan,
+                    cm.diagnosis,
+                    cm.pengobatan,
+                    cm.catatan_tindak_lanjut
+                FROM SIZOPI.catatan_medis cm
+                JOIN SIZOPI.dokter_hewan dh ON cm.username_dh = dh.username_dh
+                JOIN SIZOPI.pengguna pg ON dh.username_dh = pg.username
+                WHERE cm.id_hewan = %s
+                ORDER BY cm.tanggal_pemeriksaan DESC
+            """, (hewan['id'],))
+
+            rekam_medis_columns = [desc[0] for desc in cur.description]
+            rekam_medis_list_raw = cur.fetchall()
+            
+            # Format data rekam medis agar sesuai dengan JSON (tanggal jadi string)
+            rekam_medis_list_formatted = []
+            for rm_row in rekam_medis_list_raw:
+                rm_dict = dict(zip(rekam_medis_columns, rm_row))
+                # Konversi tanggal ke string YYYY-MM-DD
+                if isinstance(rm_dict['tanggal_pemeriksaan'], datetime.date):
+                    rm_dict['tanggal_pemeriksaan'] = rm_dict['tanggal_pemeriksaan'].isoformat()
+                rekam_medis_list_formatted.append(rm_dict)
+
+            # Gunakan json.dumps untuk mengubah list dictionary Python menjadi string JSON valid
+            hewan['rekam_medis'] = json.dumps(rekam_medis_list_formatted)
+
         return render(request, "adopter_page.html", {
-            "hewan_list": hewan_list
+            "hewan_list": hewan_list,
+            "adopter_name": adopter_name,
+            "adopter_details_json": adopter_details_json # Gunakan nama baru untuk JSON string
         })
 
     except Exception as e:
@@ -298,27 +426,44 @@ def show_adopter_list(request):
         for row in adopter_rows:
             adopter_dict = dict(zip(columns, row))
 
+            # Ambil data adopsi dengan agregasi dan filter (hanya yang semua periodenya Lunas)
+            # Query ini hanya perlu mendapatkan data adopsi, tidak memfilter adopter utama
             cur.execute("""
+                WITH aggregated_adopsi AS (
+                    SELECT
+                        id_hewan,
+                        MIN(tgl_mulai_adopsi) as earliest_start_date,
+                        MAX(tgl_berhenti_adopsi) as latest_end_date,
+                        SUM(kontribusi_finansial) as total_kontribusi_hewan,
+                        COUNT(*) as total_periods,
+                        COUNT(*) FILTER (WHERE status_pembayaran = 'Lunas') as lunas_periods
+                    FROM SIZOPI.adopsi
+                    WHERE id_adopter = %s
+                    GROUP BY id_hewan
+                )
                 SELECT
+                    h.id as id_hewan,
                     h.nama as nama_hewan,
                     h.spesies as jenis,
-                    a.tgl_mulai_adopsi as tanggal_mulai,
-                    a.tgl_berhenti_adopsi as tanggal_akhir,
-                    a.kontribusi_finansial as nominal,
-                    a.status_pembayaran as status_pembayaran
-                FROM SIZOPI.adopsi a
-                JOIN SIZOPI.hewan h ON a.id_hewan = h.id
-                WHERE a.id_adopter = %s
-                ORDER BY a.tgl_mulai_adopsi DESC
+                    aa.earliest_start_date as tanggal_mulai,
+                    aa.latest_end_date as tanggal_akhir,
+                    aa.total_kontribusi_hewan as nominal,
+                    (aa.total_periods = aa.lunas_periods) as all_lunas
+                FROM SIZOPI.hewan h
+                JOIN aggregated_adopsi aa ON h.id = aa.id_hewan
+                -- Tetap filter di sini agar hanya mendapatkan adopsi yang semua periodenya Lunas
+                WHERE (aa.total_periods = aa.lunas_periods)
+                ORDER BY aa.earliest_start_date DESC
             """, (adopter_dict['id_adopter'],))
 
             adoption_columns = [desc[0] for desc in cur.description]
             adoptions = []
             for adoption_row in cur.fetchall():
                 adoption_dict = dict(zip(adoption_columns, adoption_row))
+                adoption_dict['status'] = 'Lunas' # Status dummy, karena kita hanya mengambil yang Lunas
                 adoptions.append(adoption_dict)
 
-            adopter_dict['adoptions'] = adoptions
+            adopter_dict['adoptions'] = adoptions # Adopsi list per adopter
             adopter_list.append(adopter_dict)
 
         # --- Query Top 5 Adopter ---
@@ -339,8 +484,19 @@ def show_adopter_list(request):
             top_adopters_dict = dict(zip(top_adopters_columns, row))
             top_5_adopters.append(top_adopters_dict)
 
+        # Paginasi (jika diperlukan)
+        page = request.GET.get('page', 1)
+        paginator = Paginator(adopter_list, 10) # 10 adopter per halaman
+
+        try:
+            adopter_list_page = paginator.page(page)
+        except PageNotAnInteger:
+            adopter_list_page = paginator.page(1)
+        except EmptyPage:
+            adopter_list_page = paginator.page(paginator.num_pages)
+
         return render(request, "adopter_list.html", {
-            "adopter_list": adopter_list,
+            "adopter_list": adopter_list_page, # Gunakan objek Paginator.page
             "top_5_adopters": top_5_adopters
         })
 
@@ -639,34 +795,26 @@ def update_adopter_status(request):
             id_adopter = adopter_result[0]
             print(f"Debug - Found adopter_id: {id_adopter}")
 
-            # Ambil status lama dari tabel adopsi
-            cur.execute(
-                "SELECT status_pembayaran FROM SIZOPI.adopsi WHERE id_hewan = %s AND id_adopter = %s",
-                (id_hewan, id_adopter)
-            )
-            old_status_result = cur.fetchone()
-            old_status = old_status_result[0] if old_status_result else None
-
-            print(f"Debug - Old status: {old_status}")
-
-            # Update status_pembayaran di tabel adopsi - Ini yang memicu trigger SQL
-            cur.execute(
-                "UPDATE SIZOPI.adopsi SET status_pembayaran = %s WHERE id_hewan = %s AND id_adopter = %s",
-                (new_status, id_hewan, id_adopter)
-            )
+            # Update status_pembayaran di tabel adopsi untuk row dengan tanggal berakhir terbaru
+            cur.execute("""
+                UPDATE SIZOPI.adopsi 
+                SET status_pembayaran = %s 
+                WHERE id_hewan = %s 
+                AND id_adopter = %s 
+                AND tgl_berhenti_adopsi = (
+                    SELECT MAX(tgl_berhenti_adopsi) 
+                    FROM SIZOPI.adopsi 
+                    WHERE id_hewan = %s 
+                    AND id_adopter = %s
+                )
+            """, (new_status, id_hewan, id_adopter, id_hewan, id_adopter))
             print(f"Debug - Updated adopsi status to {new_status}")
 
-            # Logika update total_kontribusi di tabel adopter Dihapus
-            # Karena ini akan diurus sepenuhnya oleh trigger SQL
-            # ... (kode update total_kontribusi dihapus di sini) ...
-
             conn.commit()
-            print("Debug - Changes committed to database (hanya update status_pembayaran)")
+            print("Debug - Changes committed to database")
 
             cur.close()
             conn.close()
-
-            # Trigger SQL seharusnya berjalan secara otomatis setelah commit
 
             return JsonResponse({"success": True})
 
@@ -688,13 +836,12 @@ def stop_adoption(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            username = data.get("username")
             id_hewan = data.get("id_hewan")
 
-            print(f"Debug - Stop adoption data received: username={username}, id_hewan={id_hewan}")
+            print(f"Debug - Stop adoption data received: id_hewan={id_hewan}")
 
-            if not all([username, id_hewan]):
-                return JsonResponse({"success": False, "error": "Data tidak lengkap."}, status=400)
+            if not id_hewan:
+                return JsonResponse({"success": False, "error": "ID Hewan tidak disediakan."}, status=400)
 
             conn = psycopg2.connect(
                 dbname=settings.DATABASES['default']['NAME'],
@@ -705,24 +852,12 @@ def stop_adoption(request):
             )
             cur = conn.cursor()
 
-            # 1. Cari id_adopter berdasarkan username
-            cur.execute("SELECT id_adopter FROM SIZOPI.adopter WHERE username_adopter = %s", (username,))
-            adopter_result = cur.fetchone()
-
-            if not adopter_result:
-                cur.close()
-                conn.close()
-                return JsonResponse({"success": False, "error": "Adopter tidak ditemukan."}, status=404)
-
-            id_adopter = adopter_result[0]
-            print(f"Debug - Found adopter_id: {id_adopter}")
-
-            # 2. Hapus data adopsi berdasarkan id_hewan dan id_adopter
+            # Hapus semua data adopsi untuk hewan ini
             cur.execute(
-                "DELETE FROM SIZOPI.adopsi WHERE id_hewan = %s AND id_adopter = %s",
-                (id_hewan, id_adopter)
+                "DELETE FROM SIZOPI.adopsi WHERE id_hewan = %s",
+                (id_hewan,)
             )
-            print(f"Debug - Deleted adoption record for hewan_id={id_hewan} and adopter_id={id_adopter}")
+            print(f"Debug - Deleted all adoption records for hewan_id={id_hewan}")
 
             conn.commit()
             print("Debug - Changes committed to database")
@@ -734,7 +869,8 @@ def stop_adoption(request):
 
         except Exception as e:
             print(f"Debug - Error occurred: {str(e)}")
-            conn.rollback()
+            if 'conn' in locals() and conn:
+                conn.rollback()
             if 'cur' in locals() and cur:
                 cur.close()
             if 'conn' in locals() and conn:
@@ -796,6 +932,82 @@ def delete_adopter(request):
             if 'cur' in locals():
                 cur.close()
             if 'conn' in locals():
+                conn.close()
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+    return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)
+
+@csrf_exempt # Izinkan POST request tanpa CSRF token (untuk Fetch API)
+def proses_perpanjang_adopsi(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            id_hewan = data.get('id_hewan')
+            id_adopter = data.get('id_adopter')
+            nominal = data.get('nominal')
+            periode = data.get('periode') # dalam bulan
+
+            print(f"Debug - Perpanjangan data received: hewan={id_hewan}, adopter={id_adopter}, nominal={nominal}, periode={periode}")
+
+            if not all([id_hewan, id_adopter, nominal is not None, periode is not None]):
+                return JsonResponse({"success": False, "error": "Data tidak lengkap."}, status=400)
+            
+            conn = psycopg2.connect(
+                dbname=settings.DATABASES['default']['NAME'],
+                user=settings.DATABASES['default']['USER'],
+                password=settings.DATABASES['default']['PASSWORD'],
+                host=settings.DATABASES['default']['HOST'],
+                port=settings.DATABASES['default']['PORT']
+            )
+            cur = conn.cursor()
+
+            # 1. Cari tanggal berakhir adopsi saat ini untuk hewan dan adopter ini
+            cur.execute("SELECT tgl_berhenti_adopsi FROM SIZOPI.adopsi WHERE id_hewan = %s AND id_adopter = %s ORDER BY tgl_berhenti_adopsi DESC LIMIT 1", (id_hewan, id_adopter))
+            current_adopsi_end_date_row = cur.fetchone()
+
+            if not current_adopsi_end_date_row:
+                 # Ini seharusnya tidak terjadi jika tombol perpanjang hanya muncul untuk adopsi yang ada
+                 cur.close()
+                 conn.close()
+                 return JsonResponse({"success": False, "error": "Data adopsi saat ini tidak ditemukan."}, status=404)
+
+            current_adopsi_end_date = current_adopsi_end_date_row[0]
+            print(f"Debug - Current adopsi end date: {current_adopsi_end_date}")
+
+            # 2. Hitung tanggal mulai dan tanggal berakhir baru
+            # Tanggal mulai baru adalah sehari setelah tanggal berakhir adopsi saat ini
+            new_start_date = current_adopsi_end_date + datetime.timedelta(days=1)
+
+            # Hitung tanggal berakhir baru berdasarkan periode (kira-kira 30 hari per bulan)
+            # Bisa disesuaikan dengan logika yang lebih tepat jika diperlukan
+            days_periode = {3: 90, 6: 180, 12: 365}.get(periode, periode*30) # Fallback ke *30 jika nilai tidak standar
+            new_end_date = new_start_date + datetime.timedelta(days=days_periode -1 ) # Kurangi 1 hari karena mulai inklusif
+            print(f"Debug - New adopsi period: {new_start_date} to {new_end_date}")
+
+            # 3. Sisipkan record adopsi baru
+            cur.execute(
+                "INSERT INTO SIZOPI.adopsi (id_adopter, id_hewan, tgl_mulai_adopsi, tgl_berhenti_adopsi, status_pembayaran, kontribusi_finansial) VALUES (%s, %s, %s, %s, %s, %s)",
+                (id_adopter, id_hewan, new_start_date, new_end_date, 'Tertunda', nominal) # Status awal 'Tertunda'
+            )
+            print("Debug - New adopsi record inserted.")
+
+            conn.commit()
+            print("Debug - Changes committed to database.")
+            
+            cur.close()
+            conn.close()
+
+            # Trigger database akan otomatis mengupdate total_kontribusi saat status berubah
+
+            return JsonResponse({"success": True})
+
+        except Exception as e:
+            print(f"Debug - Error occurred during perpanjangan: {str(e)}")
+            if 'conn' in locals() and conn:
+                conn.rollback()
+            if 'cur' in locals() and cur:
+                cur.close()
+            if 'conn' in locals() and conn:
                 conn.close()
             return JsonResponse({"success": False, "error": str(e)}, status=500)
 

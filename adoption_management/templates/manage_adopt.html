@@ -1,0 +1,887 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Program Adopsi Satwa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        custom: {
+                            lightest: '#FAD4B6',
+                            light: '#FBBE99',
+                            medium: '#ED8764',
+                            dark: '#DD6D49',
+                            darker: '#883526',
+                            darkest: '#49241B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .bg-texture {
+            background-image: url("{% static 'images/texture-bg.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+        }
+        
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .popup-content {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-custom-lightest">
+
+    <div class="bg-texture absolute top-0 left-0 right-0 h-full w-full -z-10"></div>
+    
+    {% include "navbar.html" %}
+
+
+    <div class="container mx-auto p-6 bg-white my-8 rounded-lg shadow-lg">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-custom-darker mb-2">Program Adopsi Satwa: Bantu Mereka dengan Cinta</h1>
+        </div>
+
+        <h2 class="text-2xl font-semibold text-custom-darker mb-6">Pantau Status Adopsi Hewan</h2>
+
+        {% for hewan in hewan_list %}
+    <div class="border border-custom-light rounded-lg p-4 mb-6 hover:shadow-md transition">
+        <div class="flex flex-col md:flex-row">
+            <div class="md:w-1/4 mb-4 md:mb-0">
+                <img src="{{ hewan.url_foto }}" alt="Foto {{ hewan.spesies }}" 
+                     class="rounded-lg w-full h-48 object-cover">
+            </div>
+            <div class="md:w-3/4 md:pl-6">
+                <h3 class="text-xl font-bold text-custom-darker">{{ hewan.nama }}</h3>
+                <p class="text-custom-darkest mb-2"><span class="font-semibold">Jenis:</span> {{ hewan.spesies }}</p>
+                <p class="text-custom-darkest mb-2"><span class="font-semibold">Asal:</span> {{ hewan.asal_hewan }}</p>
+                <p class="text-custom-darkest mb-2"><span class="font-semibold">Tanggal Lahir:</span> {{ hewan.tanggal_lahir }}</p>
+                <p class="text-custom-darkest mb-2"><span class="font-semibold">Status Kesehatan:</span> {{ hewan.status_kesehatan }}</p>
+                <p class="text-custom-darkest mb-2"><span class="font-semibold">Habitat:</span> {{ hewan.nama_habitat }}</p>
+
+                <div class="flex justify-end mt-2">
+                    {% if hewan.sudah_diadopsi %}
+                        <span class="bg-custom-light text-custom-darker font-medium py-1 px-3 rounded-full text-sm mr-2">[Diadopsi]</span>
+                        <a href="#" 
+                           class="text-custom-dark hover:text-custom-darker text-sm underline detail-btn"
+                           data-animal="{{ hewan.nama }}"
+                           data-type="{{ hewan.spesies }}"
+                           data-adopter="{{ hewan.username_adopter|default:'-' }}"
+                           data-start="{{ hewan.tgl_mulai_adopsi|default:'-' }}"
+                           data-end="{{ hewan.tgl_berhenti_adopsi|default:'-' }}"
+                           data-nominal="{{ hewan.kontribusi_finansial|default:'-' }}"
+                           data-status="{{ hewan.status_pembayaran|default:'Menunggu' }}"
+                           data-id-hewan="{{ hewan.id }}"
+                        >[Lihat Detail]</a>
+                    {% else %}
+                        <span class="bg-custom-medium text-white font-medium py-1 px-3 rounded-full text-sm mr-2">[Tidak Diadopsi]</span>
+                        <a href="#" 
+                           class="text-custom-dark hover:text-custom-darker text-sm underline daftar-adopter-btn"
+                           data-id-hewan="{{ hewan.id }}"
+                           data-nama-hewan="{{ hewan.nama }}"
+                           data-jenis-hewan="{{ hewan.spesies }}"
+                        >[Daftarkan Adopter]</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+    
+
+        
+    </div>
+
+    <!-- Popup Detail Adopsi -->
+    <div id="detailPopup" class="popup-overlay">
+        <div class="popup-content p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-custom-darker">Detail Adopsi Hewan</h2>
+                <button id="closePopup" class="text-custom-dark hover:text-custom-darker font-bold">[Tutup]</button>
+            </div>
+            
+            <div class="space-y-3 mb-6">
+                <p><span class="font-semibold">Nama hewan:</span> <span id="animalName"></span></p>
+                <p><span class="font-semibold">Jenis hewan:</span> <span id="animalType"></span></p>
+                <p><span class="font-semibold">Adopter saat ini:</span> <span id="adopterName"></span></p>
+                <p><span class="font-semibold">Tanggal mulai adopsi:</span> <span id="startDate"></span></p>
+                <p><span class="font-semibold">Tanggal akhir adopsi:</span> <span id="endDate"></span></p>
+                <p><span class="font-semibold">Nominal kontribusi:</span> <span id="nominalAmount"></span></p>
+                
+                <div class="flex items-center">
+                    <span class="font-semibold mr-2">Status Pembayaran:</span>
+                    <select id="paymentStatus" class="border border-custom-light rounded px-2 py-1 text-sm bg-white">
+                        <option value="Menunggu">Menunggu</option>
+                        <option value="Lunas">Lunas</option>
+                    </select>
+                    <button id="saveStatus" class="ml-2 bg-custom-medium hover:bg-custom-dark text-white px-3 py-1 rounded-md text-sm">[Simpan Status]</button>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button id="stopAdoption" class="bg-custom-dark hover:bg-custom-darker text-white font-medium py-2 px-6 rounded-lg">[Hentikan Adopsi]</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="registrationPopup" class="popup-overlay">
+        <div class="popup-content p-6">
+            <form method="POST" action="{% url 'adoption_management:cek_adopter' %}" id="adopterCheckForm">
+                {% csrf_token %}
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-custom-darker">Pendataan Adopter</h2>
+                    <button type="button" id="closeRegistration" class="text-custom-dark hover:text-custom-darker font-bold">[Tutup]</button>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block mb-1 font-semibold">Username calon adopter:</label>
+                        <input type="text" name="username" class="w-full border border-custom-light rounded px-3 py-2" placeholder="[Isian]" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block mb-1 font-semibold">Calon Adopter akan mengadopsi satwa sebagai:</label>
+                        <div class="flex space-x-6 mt-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="tipe" value="individu" class="mr-2" required>
+                                Individu
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="tipe" value="organisasi" class="mr-2" required>
+                                Organisasi
+                            </label>
+                        </div>
+                    </div>
+                    <input type="hidden" name="id_hewan" id="adopterIdHewan">
+                </div>
+                
+                <div class="flex justify-between">
+                    <button type="button" id="cancelRegistration" class="text-custom-dark hover:text-custom-darker font-medium py-2 px-6 border border-custom-light rounded-lg">[Batal]</button>
+                    <button type="submit" class="bg-custom-dark hover:bg-custom-darker text-white font-medium py-2 px-6 rounded-lg">[Verifikasi Akun]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="individualFormPopup" class="popup-overlay" style="display:none;">
+        <div class="popup-content p-6 max-h-[90vh] overflow-y-auto">
+            <form method="POST" action="{% url 'adoption_management:daftar_adopter' %}" id="individualForm">
+                {% csrf_token %}
+                <input type="hidden" name="tipe" value="individu" />
+                <input type="hidden" name="id_hewan" id="individualIdHewan" />
+                <input type="hidden" name="username" id="individualUsername" />
+                
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-custom-darker">FORM ADOPSI INDIVIDU</h2>
+                    <button type="button" class="close-form text-custom-dark hover:text-custom-darker font-bold">[Tutup]</button>
+                </div>
+                
+                <!-- Prefill data user jika ada -->
+                {% if pengguna_data %}
+                <div>
+                    <label class="block text-sm" for="individualName">Nama:</label>
+                    <input type="text" id="individualName" name="nama" value="{% if adopter_specific_data and adopter_specific_data.nama %}{{ adopter_specific_data.nama }}{% elif pengguna_data %}{{ pengguna_data.nama_depan }} {{ pengguna_data.nama_belakang }}{% endif %}"
+                           class="w-full border border-custom-light rounded px-3 py-2" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm" for="individualPhone">Nomor telepon:</label>
+                    <input type="text" id="individualPhone" name="telepon"
+                           value="{{ pengguna_data.no_telepon }}"
+                           class="w-full border border-custom-light rounded px-3 py-2" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm" for="individualNIK">NIK:</label>
+                    <input type="text" id="individualNIK" name="nik" value="{{ adopter_specific_data.nik|default:'' }}" class="w-full border border-custom-light rounded px-3 py-2" placeholder="[Isian NIK]" {% if adopter_specific_data and adopter_specific_data.nik %}readonly{% else %}required{% endif %}>
+                </div>
+                {% endif %}
+                
+                <div class="space-y-3 mb-6">
+                    <p class="font-medium">Pihak di bawah ini,</p>
+                    <div class="space-y-2">
+                        <div>
+                            <label class="block text-sm" for="individualAddress">Alamat:</label>
+                            <textarea id="individualAddress" name="alamat" class="w-full border border-custom-light rounded px-3 py-2" placeholder="[alamat di pengunjung]" {% if adopter_specific_data and adopter_specific_data.alamat %}readonly{% else %}required{% endif %}>{% if adopter_specific_data and adopter_specific_data.alamat %}{{ adopter_specific_data.alamat }}{% elif pengguna_data and pengguna_data.alamat %}{{ pengguna_data.alamat }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    
+                    <p>(selanjutnya disebut sebagai Adopter)</p>
+                    <p>dengan ini menyatakan kepedulian dan minat untuk mengadopsi secara simbolis satwa</p>
+                    
+                    <div>
+                        <label class="block text-sm" for="individualAnimalName">Nama Hewan:</label>
+                        <input type="text" id="individualAnimalName" name="nama_hewan" class="w-full border border-custom-light rounded px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm" for="individualAnimalType">Jenis:</label>
+                        <input type="text" id="individualAnimalType" name="jenis_hewan" class="w-full border border-custom-light rounded px-3 py-2" readonly>
+                    </div>
+                    
+                    <p>Adopter juga bersedia memberikan kontribusi finansial kepada pihak taman safari sebagai dukungan untuk pemeliharaan satwa:</p>
+                    
+                    <div class="space-y-2">
+                        <div>
+                            <label class="block text-sm" for="individualNominal">Nominal:</label>
+                            <input type="number" id="individualNominal" name="kontribusi" class="w-full border border-custom-light rounded px-3 py-2" placeholder="[Isian]" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm" for="individualPeriod">Untuk periode adopsi selama:</label>
+                            <select id="individualPeriod" name="periode" class="w-full border border-custom-light rounded px-3 py-2" required>
+                                <option value="3">3 bulan</option>
+                                <option value="6">6 bulan</option>
+                                <option value="12">12 bulan</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center space-x-4">
+                    <button type="submit" id="individualSubmit" class="bg-custom-dark hover:bg-custom-darker text-white font-medium py-2 px-6 rounded-lg">Submit Form</button>
+                    <button type="button" class="cancel-form text-custom-dark hover:text-custom-darker font-medium py-2 px-6 border border-custom-light rounded-lg">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    
+    <!-- Popup Form Adopsi untuk Organisasi -->
+    <div id="organizationFormPopup" class="popup-overlay" style="display:none;">
+        <div class="popup-content p-6 max-h-[90vh] overflow-y-auto">
+            <form method="POST" action="{% url 'adoption_management:daftar_adopter' %}" id="organizationForm">
+                {% csrf_token %}
+                <input type="hidden" name="tipe" value="organisasi" />
+                <input type="hidden" name="id_hewan" id="orgIdHewan">
+                <input type="hidden" name="username" id="orgUsername">
+                
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-custom-darker">FORM ADOPSI ORGANISASI</h2>
+                    <button type="button" class="close-form text-custom-dark hover:text-custom-darker font-bold">[Tutup]</button>
+                </div>
+                
+                <label class="block mb-1 font-semibold" for="orgName">Nama Organisasi:</label>
+                <input type="text" id="orgName" name="nama_organisasi" value="{{ adopter_specific_data.nama_organisasi|default:'' }}" class="w-full border border-custom-light rounded px-3 py-2 mb-3" placeholder="[Isian Nama Organisasi]" {% if adopter_specific_data and adopter_specific_data.nama_organisasi %}readonly{% else %}required{% endif %}>
+                
+                <label class="block mb-1 font-semibold" for="orgNPP">NPP:</label>
+                <input type="text" id="orgNPP" name="npp" value="{{ adopter_specific_data.npp|default:'' }}" class="w-full border border-custom-light rounded px-3 py-2 mb-3" placeholder="[Isian NPP]" {% if adopter_specific_data and adopter_specific_data.npp %}readonly{% else %}required{% endif %}>
+                
+                <label class="block mb-1 font-semibold" for="orgAddress">Alamat:</label>
+                <textarea id="orgAddress" name="alamat" class="w-full border border-custom-light rounded px-3 py-2 mb-3" placeholder="[Alamat]" {% if adopter_specific_data and adopter_specific_data.alamat %}readonly{% endif %}>{% if adopter_specific_data and adopter_specific_data.alamat %}{{ adopter_specific_data.alamat }}{% elif pengguna_data and pengguna_data.alamat %}{{ pengguna_data.alamat }}{% endif %}</textarea>
+                
+                <label class="block mb-1 font-semibold" for="orgPhone">Kontak:</label>
+                <input type="text" id="orgPhone" name="telepon" value="{{ pengguna_data.no_telepon|default:'' }}" class="w-full border border-custom-light rounded px-3 py-2 mb-3" placeholder="[Isian Kontak]" readonly>
+                
+                <label class="block mb-1 font-semibold" for="orgNominal">Nominal Kontribusi:</label>
+                <input type="number" id="orgNominal" name="kontribusi" class="w-full border border-custom-light rounded px-3 py-2 mb-3" required>
+                
+                <label class="block mb-1 font-semibold" for="orgPeriod">Periode Adopsi (bulan):</label>
+                <select id="orgPeriod" name="periode" class="w-full border border-custom-light rounded px-3 py-2 mb-4" required>
+                    <option value="3">3 bulan</option>
+                    <option value="6">6 bulan</option>
+                    <option value="12">12 bulan</option>
+                </select>
+                
+                <div>
+                    <label class="block text-sm" for="orgAnimalName">Nama Hewan:</label>
+                    <input type="text" id="orgAnimalName" name="nama_hewan" class="w-full border border-custom-light rounded px-3 py-2" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm" for="orgAnimalType">Jenis:</label>
+                    <input type="text" id="orgAnimalType" name="jenis_hewan" class="w-full border border-custom-light rounded px-3 py-2" readonly>
+                </div>
+                
+                <div class="flex justify-center space-x-4">
+                    <button type="submit" class="bg-custom-dark hover:bg-custom-darker text-white font-medium py-2 px-6 rounded-lg">Submit Form</button>
+                    <button type="button" class="cancel-form text-custom-dark hover:text-custom-darker font-medium py-2 px-6 border border-custom-light rounded-lg">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+
+    
+
+    <footer class="bg-custom-darkest text-white p-6">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 Program Adopsi Satwa. Semua hak dilindungi.</p>
+            <p class="mt-2 text-custom-lightest">Membantu melestarikan satwa Indonesia dengan cinta dan kepedulian.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Popup functionalities
+        document.addEventListener('DOMContentLoaded', function() {
+            const detailBtns = document.querySelectorAll('.detail-btn');
+            const popup = document.getElementById('detailPopup');
+            const closeBtn = document.getElementById('closePopup');
+            const saveStatusBtn = document.getElementById('saveStatus');
+            const stopAdoptionBtn = document.getElementById('stopAdoption');
+            
+            // Fields to populate
+            const animalName = document.getElementById('animalName');
+            const animalType = document.getElementById('animalType');
+            const adopterName = document.getElementById('adopterName');
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+            const nominalAmount = document.getElementById('nominalAmount');
+            const paymentStatus = document.getElementById('paymentStatus');
+            
+            let currentAdoptionData = {}; // Variable to store data of the currently viewed adoption
+            
+            // Open popup with data
+            detailBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Get data from button attributes and store
+                    currentAdoptionData = {
+                        idHewan: this.dataset.idHewan,
+                        animalName: this.dataset.animal,
+                        animalType: this.dataset.type,
+                        adopterUsername: this.dataset.adopter,
+                        startDate: this.dataset.start,
+                        endDate: this.dataset.end,
+                        nominalAmount: parseInt(this.dataset.nominal),
+                        status: this.dataset.status.toLowerCase()
+                    };
+
+                    // Populate popup fields
+                    animalName.textContent = currentAdoptionData.animalName;
+                    animalType.textContent = currentAdoptionData.animalType;
+                    adopterName.textContent = currentAdoptionData.adopterUsername;
+                    startDate.textContent = currentAdoptionData.startDate;
+                    endDate.textContent = currentAdoptionData.endDate;
+                    nominalAmount.textContent = currentAdoptionData.nominalAmount;
+                    
+                    // Set select value
+                    paymentStatus.value = currentAdoptionData.status;
+                    
+                    // Show popup
+                    popup.style.display = 'flex';
+                });
+            });
+            
+            // Close popup
+            closeBtn.addEventListener('click', function() {
+                popup.style.display = 'none';
+                currentAdoptionData = {}; // Clear stored data
+            });
+            
+            // Handle click outside popup to close
+            popup.addEventListener('click', function(e) {
+                if (e.target === popup) {
+                    popup.style.display = 'none';
+                    currentAdoptionData = {}; // Clear stored data
+                }
+            });
+            
+            // Handle save status
+            saveStatusBtn.addEventListener('click', function() {
+                const newStatus = paymentStatus.value;
+                const nominal = currentAdoptionData.nominalAmount;
+                const username = currentAdoptionData.adopterUsername;
+                const idHewan = currentAdoptionData.idHewan;
+
+                // Only update total kontribusi if status is changed to 'lunas'
+                if (newStatus === 'Lunas') {
+                    // Send data to Django view
+                    fetch("{% url 'adoption_management:update_adopter_status' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            id_hewan: idHewan,
+                            new_status: newStatus,
+                            nominal: nominal
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Status pembayaran dan total kontribusi berhasil diperbarui!');
+                            window.location.reload();
+                        } else {
+                            alert('Gagal memperbarui status pembayaran dan total kontribusi: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat menghubungi server.');
+                    });
+                } else if (newStatus !== currentAdoptionData.status) {
+                    // If status changes but not to 'lunas', just update the status
+                    fetch("{% url 'adoption_management:update_adopter_status' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            id_hewan: idHewan,
+                            new_status: newStatus,
+                            nominal: 0
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Status pembayaran berhasil diperbarui!');
+                            window.location.reload();
+                        } else {
+                            alert('Gagal memperbarui status pembayaran: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat menghubungi server.');
+                    });
+                } else {
+                    alert('Tidak ada perubahan status.');
+                }
+            });
+            
+            // Handle stop adoption
+            stopAdoptionBtn.addEventListener('click', function() {
+                // Tampilkan popup konfirmasi
+                document.getElementById('confirmationPopup').style.display = 'flex';
+            });
+
+            // Event handler untuk tombol konfirmasi
+            document.getElementById('confirmStopAdoption').addEventListener('click', function() {
+                const username = currentAdoptionData.adopterUsername;
+                const idHewan = currentAdoptionData.idHewan;
+
+                // Kirim request untuk menghentikan adopsi
+                fetch("{% url 'adoption_management:stop_adoption' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        id_hewan: idHewan
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Adopsi berhasil dihentikan!');
+                        window.location.reload();
+                    } else {
+                        alert('Gagal menghentikan adopsi: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat menghubungi server.');
+                });
+
+                // Tutup semua popup
+                document.getElementById('detailPopup').style.display = 'none';
+                document.getElementById('confirmationPopup').style.display = 'none';
+            });
+
+            // Event handler untuk tombol batal
+            document.getElementById('cancelStopAdoption').addEventListener('click', function() {
+                // Tutup hanya popup konfirmasi
+                document.getElementById('confirmationPopup').style.display = 'none';
+            });
+
+            // Tutup popup konfirmasi saat klik di luar area popup
+            document.getElementById('confirmationPopup').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tambahkan variabel untuk popup pendaftaran
+            const registerBtns = document.querySelectorAll('a[href="#"][class*="text-custom-dark"][class*="underline"]:not(.detail-btn)');
+            const registrationPopup = document.getElementById('registrationPopup');
+            const closeRegistrationBtn = document.getElementById('closeRegistration');
+            const cancelRegistrationBtn = document.getElementById('cancelRegistration');
+            
+            // Open registration popup
+            registerBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    registrationPopup.style.display = 'flex';
+                });
+            });
+            
+            // Close registration popup
+            closeRegistrationBtn.addEventListener('click', function() {
+                registrationPopup.style.display = 'none';
+            });
+            
+            // Cancel registration
+            cancelRegistrationBtn.addEventListener('click', function() {
+                registrationPopup.style.display = 'none';
+            });
+            
+            // Handle click outside popup to close
+            registrationPopup.addEventListener('click', function(e) {
+                if (e.target === registrationPopup) {
+                    registrationPopup.style.display = 'none';
+                }
+            });
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referensi ke elemen radio button
+            const radioButtons = document.querySelectorAll('input[name="adopterType"]');
+            const individualFormPopup = document.getElementById('individualFormPopup');
+            const organizationFormPopup = document.getElementById('organizationFormPopup');
+            const closeFormButtons = document.querySelectorAll('.close-form');
+            const cancelFormButtons = document.querySelectorAll('.cancel-form');
+            
+            // Ketika tombol Verifikasi Akun diklik, tampilkan form sesuai dengan pilihan radio button
+            verifyAccountBtn.addEventListener('click', function() {
+                const selectedType = document.querySelector('input[name="adopterType"]:checked');
+                
+                if (!selectedType) {
+                    alert('Silakan pilih jenis adopter terlebih dahulu!');
+                    return;
+                }
+                
+                // Sembunyikan popup pendaftaran
+                document.getElementById('registrationPopup').style.display = 'none';
+                
+                // Tampilkan form yang sesuai
+                if (selectedType.value === 'individu') {
+                    individualFormPopup.style.display = 'flex';
+                } else if (selectedType.value === 'organisasi') {
+                    organizationFormPopup.style.display = 'flex';
+                }
+            });
+            
+            // Close form buttons
+            closeFormButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    individualFormPopup.style.display = 'none';
+                    organizationFormPopup.style.display = 'none';
+                });
+            });
+            
+            // Cancel form buttons
+            cancelFormButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    individualFormPopup.style.display = 'none';
+                    organizationFormPopup.style.display = 'none';
+                });
+            });
+            
+            // Handle click outside popup to close
+            individualFormPopup.addEventListener('click', function(e) {
+                if (e.target === individualFormPopup) {
+                    individualFormPopup.style.display = 'none';
+                }
+            });
+            
+            organizationFormPopup.addEventListener('click', function(e) {
+                if (e.target === organizationFormPopup) {
+                    organizationFormPopup.style.display = 'none';
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.daftar-adopter-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const idHewan = this.dataset.idHewan;
+                    const namaHewan = this.dataset.namaHewan;
+                    const jenisHewan = this.dataset.jenisHewan;
+
+                    // Isi hidden field di form cek adopter
+                    document.getElementById('adopterIdHewan').value = idHewan;
+                    // Isi hidden field dan field hewan di form individu/organisasi (saat popup muncul)
+                    // Ini akan dihandle oleh script di bagian bawah yang mengecek parameter GET
+
+                    document.getElementById('registrationPopup').style.display = 'flex';
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tampilkan popup registrasi user jika dibutuhkan (berdasarkan parameter GET)
+            window.showUserRegistrationPopup = function() {
+                document.getElementById('userRegistrationPopup').style.display = 'flex';
+            };
+            // Tombol tutup popup
+            document.querySelectorAll('.close-user-form').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('userRegistrationPopup').style.display = 'none';
+                });
+            });
+            // Tutup popup jika klik di luar konten
+            document.getElementById('userRegistrationPopup').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+  // Tombol Tutup di popup form Individu dan Organisasi
+  const closeFormButtons = document.querySelectorAll('.close-form');
+  closeFormButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Tutup kedua popup agar aman
+      document.getElementById('individualFormPopup').style.display = 'none';
+      document.getElementById('organizationFormPopup').style.display = 'none';
+    });
+  });
+
+  // Tombol Batal di popup form Individu dan Organisasi
+  const cancelFormButtons = document.querySelectorAll('.cancel-form');
+  cancelFormButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Tutup kedua popup agar aman
+      document.getElementById('individualFormPopup').style.display = 'none';
+      document.getElementById('organizationFormPopup').style.display = 'none';
+    });
+  });
+});
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ketika form cek adopter disubmit - Dihapus, biarkan form submit normal
+            // document.getElementById('adopterCheckForm').addEventListener('submit', function(e) {
+            //     e.preventDefault();
+            //     const formData = new FormData(this);
+
+            //     fetch(this.action, {
+            //         method: 'POST',
+            //         body: formData,
+            //         headers: {
+            //             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            //         }
+            //     })
+            //     .then(response => response.text())
+            //     .then(html => {
+            //         document.open();
+            //         document.write(html);
+            //         document.close();
+            //     });
+            // });
+
+            // Ketika popup registrasi user muncul (didorong oleh parameter GET)
+            // Logika ini akan dipindahkan ke bawah
+            // if (document.getElementById('userRegistrationPopup').style.display === 'flex') {
+            //     // Ambil data dari form cek adopter
+            //     const tipe = document.querySelector('input[name="tipe"]:checked').value;
+            //     const idHewan = document.getElementById('adopterIdHewan').value;
+
+            //     // Set ke form registrasi
+            //     document.getElementById('userRegTipe').value = tipe;
+            //     document.getElementById('userRegIdHewan').value = idHewan;
+            // }
+
+            // Ketika form registrasi user disubmit - Dihapus, biarkan form submit normal
+            // document.getElementById('userRegistrationForm').addEventListener('submit', function(e) {
+            //     e.preventDefault();
+            //     const formData = new FormData(this);
+
+            //     fetch(this.action, {
+            //         method: 'POST',
+            //         body: formData,
+            //         headers: {
+            //             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            //         }
+            //     })
+            //     .then(response => response.text())
+            //     .then(html => {
+            //         document.open();
+            //         document.write(html);
+            //         document.close();
+            //     });
+            // });
+        });
+    </script>
+
+
+    <!-- Popup Konfirmasi Penghentian Adopsi -->
+    <div id="confirmationPopup" class="popup-overlay" style="display: none;">
+        <div class="popup-content p-6">
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-bold text-custom-darker">Apakah Anda yakin ingin menghentikan adopsi ini?</h2>
+            </div>
+            
+            <div class="flex justify-center space-x-6">
+                <button id="confirmStopAdoption" class="bg-custom-dark hover:bg-custom-darker text-white font-medium py-2 px-8 rounded-lg transition">[Iya]</button>
+                <button id="cancelStopAdoption" class="border border-custom-light text-custom-dark hover:text-custom-darker font-medium py-2 px-8 rounded-lg transition">[Batal]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Registrasi User Baru -->
+    <div id="userRegistrationPopup" class="popup-overlay" style="display:none;">
+        <div class="popup-content p-6 max-h-[90vh] overflow-y-auto">
+            <form method="POST" action="{% url 'adoption_management:daftar_user' %}" id="userRegistrationForm">
+                {% csrf_token %}
+                <input type="hidden" name="tipe" id="userRegTipe">
+                <input type="hidden" name="id_hewan" id="userRegIdHewan">
+                <input type="hidden" name="username" id="userRegUsername">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-custom-darker">Registrasi Akun Pengunjung</h2>
+                    <button type="button" class="close-user-form text-custom-dark hover:text-custom-darker font-bold">[Tutup]</button>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">Username</label>
+                    <input type="text" name="username" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">Password</label>
+                    <input type="password" name="password" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">Nama Depan</label>
+                    <input type="text" name="nama_depan" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">Nama Tengah (Opsional)</label>
+                    <input type="text" name="nama_tengah" class="w-full border border-custom-light rounded px-3 py-2">
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">Nama Belakang</label>
+                    <input type="text" name="nama_belakang" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">No. Telepon</label>
+                    <input type="text" name="no_telepon" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">Alamat</label>
+                    <input type="text" name="alamat" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block mb-1 font-semibold">Tanggal Lahir</label>
+                    <input type="date" name="tgl_lahir" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-1 font-semibold">Email</label>
+                    <input type="email" name="email" class="w-full border border-custom-light rounded px-3 py-2" required>
+                </div>
+                <button type="submit" class="bg-custom-dark hover:bg-custom-darker text-white font-medium py-2 px-6 rounded-lg w-full">Daftar</button>
+            </form>
+        </div>
+    </div>
+
+    {% if show_user_registration %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showUserRegistrationPopup();
+        });
+    </script>
+    {% endif %}
+
+    {% if show_adopter_form %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tipe = urlParams.get('tipe');
+            const idHewan = urlParams.get('id_hewan');
+            const username = urlParams.get('username');
+
+            // Set hidden fields in both forms
+            document.getElementById('individualIdHewan').value = idHewan;
+            document.getElementById('individualUsername').value = username;
+            document.getElementById('orgIdHewan').value = idHewan;
+            document.getElementById('orgUsername').value = username;
+
+            // Fetch animal data and populate fields
+            // Ini memerlukan endpoint baru atau modifikasi manage_adopt untuk mengembalikan data hewan tunggal jika ada parameter id_hewan
+            // Untuk sementara, kita bisa mencoba mengambil data dari elemen di halaman jika memungkinkan
+            // Alternatif yang lebih baik adalah mem-passing data hewan yang relevan dari view manage_adopt
+            // Karena data hewan sudah di-load di `hewan_list`, kita bisa cari di situ.
+
+            const hewanList = [
+            {% for hewan in hewan_list %}
+                { id: "{{ hewan.id }}", nama: "{{ hewan.nama|escapejs }}", spesies: "{{ hewan.spesies|escapejs }}" },
+            {% endfor %}
+            ];
+
+            const selectedHewan = hewanList.find(hewan => hewan.id === idHewan);
+
+            if (selectedHewan) {
+                // Isi field nama dan jenis hewan di kedua form
+                if (document.getElementById('individualAnimalName')) {
+                    document.getElementById('individualAnimalName').value = selectedHewan.nama;
+                }
+                if (document.getElementById('individualAnimalType')) {
+                    document.getElementById('individualAnimalType').value = selectedHewan.spesies;
+                }
+                if (document.getElementById('orgAnimalName')) {
+                    document.getElementById('orgAnimalName').value = selectedHewan.nama;
+                }
+                if (document.getElementById('orgAnimalType')) {
+                    document.getElementById('orgAnimalType').value = selectedHewan.spesies;
+                }
+            }
+
+            if (tipe === 'individu') {
+                document.getElementById('individualFormPopup').style.display = 'flex';
+            } else if (tipe === 'organisasi') {
+                document.getElementById('organizationFormPopup').style.display = 'flex';
+            }
+
+            // Clean up URL parameters after showing the popup
+            if (history.replaceState) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('show_adopter_form');
+                url.searchParams.delete('username');
+                url.searchParams.delete('tipe');
+                url.searchParams.delete('id_hewan');
+                history.replaceState(null, '', url.toString());
+            }
+        });
+    </script>
+    {% endif %}
+
+</body>
+</html>

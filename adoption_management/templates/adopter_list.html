@@ -1,0 +1,403 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Program Adopsi Satwa - Halaman Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        custom: {
+                            lightest: '#FAD4B6',
+                            light: '#FBBE99',
+                            medium: '#ED8764',
+                            dark: '#DD6D49',
+                            darker: '#883526',
+                            darkest: '#49241B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .bg-texture {
+            background-image: url("{% static 'images/texture-bg.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+        }
+
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+        }
+    
+        .popup-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-custom-lightest">
+
+    <div class="bg-texture absolute top-0 left-0 right-0 h-full w-full -z-10"></div>
+    
+    {% include "navbar.html" %}
+
+    <div class="container mx-auto p-6 bg-white my-8 rounded-lg shadow-lg">
+        {% csrf_token %}
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-custom-darker mb-2">Panel Administrasi Program Adopsi Satwa</h1>
+            <p class="text-custom-darkest">Mengelola dan memantau para adopter untuk mendukung kelestarian satwa Indonesia.</p>
+        </div>
+
+        <!-- Panel Statistik -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-custom-lightest p-4 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-custom-darker mb-2">Total Adopter</h3>
+                <p class="text-3xl font-bold">128</p>
+                <p class="text-sm text-custom-dark">Naik 12% dari bulan lalu</p>
+            </div>
+            <div class="bg-custom-lightest p-4 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-custom-darker mb-2">Total Kontribusi</h3>
+                <p class="text-3xl font-bold">Rp98.500.000</p>
+                <p class="text-sm text-custom-dark">Naik 8% dari bulan lalu</p>
+            </div>
+            <div class="bg-custom-lightest p-4 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-custom-darker mb-2">Satwa Teradopsi</h3>
+                <p class="text-3xl font-bold">42</p>
+                <p class="text-sm text-custom-dark">Dari total 56 satwa</p>
+            </div>
+        </div>
+
+        <!-- Adopter dengan Kontribusi Tertinggi -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-custom-darker mb-4">Adopter dengan Total Kontribusi Tertinggi (Setahun Terakhir)</h2>
+            <div class="bg-white border border-custom-light rounded-lg p-6">
+                {% if top_5_adopters %}
+                    {% if top_5_adopters.0 %}
+                    <p class="text-green-600 font-semibold mb-4">SUKSES: Daftar Top 5 Adopter satu tahun terakhir berhasil diperbarui, dengan peringkat pertama dengan nama adopter "{{ top_5_adopters.0.nama_adopter }}" berkontribusi sebesar Rp{{ top_5_adopters.0.total_kontribusi_periode|floatformat:0|intcomma }}.</p>
+                    {% endif %}
+                <ol class="list-decimal pl-6 space-y-2">
+                    {% for adopter in top_5_adopters %}
+                    <li class="text-lg">{{ adopter.nama_adopter }} - Rp{{ adopter.total_kontribusi_periode|floatformat:0|intcomma }}</li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                <p class="text-gray-600">Belum ada data adopsi dalam satu tahun terakhir.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tabel Daftar Adopter -->
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-custom-darker">Daftar Adopter</h2>
+                <div class="flex space-x-2">
+                    <input type="text" placeholder="Cari adopter..." class="border border-custom-light rounded-lg px-4 py-2">
+                    <button class="bg-custom-medium hover:bg-custom-dark text-white px-4 py-2 rounded-lg">Cari</button>
+                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">Tambah Adopter</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-custom-light rounded-lg">
+                    <thead class="bg-custom-light">
+                        <tr>
+                            <th class="py-2 px-4 border-b text-left">Nama Adopter</th>
+                            <th class="py-2 px-4 border-b text-left">Total Kontribusi</th>
+                            <th class="py-2 px-4 border-b text-left">Riwayat Adopsi</th>
+                            <th class="py-2 px-4 border-b text-left">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for adopter in adopter_list %}
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-3 px-4 border-b">{{ adopter.nama_adopter }}</td>
+                            <td class="py-3 px-4 border-b">Rp{{ adopter.total_kontribusi|default:"0" }}</td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('{{ adopter.nama_adopter|escapejs }}', '{{ adopter.id_adopter }}')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b">
+                                <a href="#" onclick="event.preventDefault(); confirmDeleteAdopter('{{ adopter.id_adopter }}', '{{ adopter.nama_adopter|escapejs }}')" class="text-red-500 hover:underline">[Hapus]</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-between items-center mt-4">
+                <p class="text-sm text-gray-600">Menampilkan {{ adopter_list.start_index }}-{{ adopter_list.end_index }} dari {{ adopter_list.paginator.count }} adopter</p>
+                <div class="flex space-x-2">
+                    {% if adopter_list.has_previous %}
+                    <a href="?page={{ adopter_list.previous_page_number }}" class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">&laquo; Prev</a>
+                    {% endif %}
+
+                    {% for i in adopter_list.paginator.page_range %}
+                    <a href="?page={{ i }}" class="px-3 py-1 border border-custom-light rounded-lg {% if i == adopter_list.number %}bg-custom-medium text-white{% else %}hover:bg-custom-light{% endif %}">{{ i }}</a>
+                    {% endfor %}
+
+                    {% if adopter_list.has_next %}
+                    <a href="?page={{ adopter_list.next_page_number }}" class="px-3 py-1 border border-custom-light rounded-lg hover:bg-custom-light">Next &raquo;</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+
+    <!-- Popup Riwayat Adopsi -->
+    <div id="adoptionHistoryPopup" class="popup-overlay">
+        <div class="popup-content">
+            <span class="close-popup" onclick="closeAdoptionHistoryPopup()">&times;</span>
+            <div class="mb-6">
+                <a href="#" onclick="closeAdoptionHistoryPopup()" class="text-blue-500 hover:underline">[Kembali]</a>
+                <h2 class="text-2xl font-bold text-center mb-4">Riwayat Adopsi</h2>
+            </div>
+            
+            <div class="mb-6">
+                <p><strong>Nama Adopter:</strong> <span id="adopter-name"></span></p>
+                <p><strong>Alamat Adopter:</strong> <span id="adopter-address">Jl. Merdeka No.123, Jakarta</span></p>
+                <p><strong>Kontak Adopter:</strong> <span id="adopter-contact">0812-3456-7890</span></p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-custom-light rounded-lg">
+                    <thead class="bg-custom-light">
+                        <tr>
+                            <th class="py-2 px-4 border-b text-left">Nama Hewan</th>
+                            <th class="py-2 px-4 border-b text-left">Jenis Hewan</th>
+                            <th class="py-2 px-4 border-b text-left">Tanggal Mulai Adopsi</th>
+                            <th class="py-2 px-4 border-b text-left">Tanggal Akhir Adopsi</th>
+                            <th class="py-2 px-4 border-b text-left">Nominal Kontribusi</th>
+                            <th class="py-2 px-4 border-b text-left">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adoption-history-table">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data riwayat adopsi dari database
+        const adoptionHistoryData = {
+            {% for adopter in adopter_list %}
+            '{{ adopter.id_adopter }}': {
+                nama_adopter: '{{ adopter.nama_adopter|escapejs }}',
+                alamat: '{{ adopter.alamat|default:"-"|escapejs }}',
+                kontak: '{{ adopter.no_telepon|default:"-"|escapejs }}',
+                adoptions: [
+                    {% for adoption in adopter.adoptions %}
+                    {
+                        id_hewan: '{{ adoption.id_hewan }}',
+                        nama_hewan: '{{ adoption.nama_hewan|escapejs }}',
+                        jenis: '{{ adoption.jenis|escapejs }}',
+                        tanggal_mulai: '{{ adoption.tanggal_mulai|date:"Y-m-d" }}',
+                        tanggal_akhir: '{{ adoption.tanggal_akhir|date:"Y-m-d" }}',
+                        nominal: 'Rp{{ adoption.nominal }}'
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        function showAdoptionHistory(adopterName, adopterId) {
+            console.log('Debug JS - showAdoptionHistory called for:', adopterName, adopterId);
+            console.log('Debug JS - adoptionHistoryData for adopterId:', adoptionHistoryData[adopterId]);
+
+            const adopterData = adoptionHistoryData[adopterId];
+            if (!adopterData) {
+                console.error('Adopter data not found for ID:', adopterId);
+                return;
+            }
+
+            document.getElementById('adopter-name').textContent = adopterData.nama_adopter;
+            document.getElementById('adopter-address').textContent = adopterData.alamat;
+            document.getElementById('adopter-contact').textContent = adopterData.kontak;
+            
+            const tableBody = document.getElementById('adoption-history-table');
+            tableBody.innerHTML = '';
+            
+            if (adopterData.adoptions && adopterData.adoptions.length > 0) {
+                adopterData.adoptions.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-100';
+
+                    // Cek apakah tanggal akhir sudah lewat
+                    const endDate = new Date(item.tanggal_akhir);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Set time to start of day for comparison
+
+                    let actionHtml;
+                    if (endDate < today) {
+                        // Jika periode sudah berakhir, tampilkan tombol Hapus
+                        actionHtml = `<a href="#" onclick="event.preventDefault(); confirmDeleteAnimalAdoption('${adopterId}', '${item.id_hewan}', '${item.nama_hewan}')" class="text-red-500 hover:underline">[Hapus]</a>`;
+                    } else {
+                        // Jika periode masih berlangsung, tampilkan status
+                        actionHtml = `<span class="text-green-600 font-semibold">[Sedang Berlangsung]</span>`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="py-3 px-4 border-b">${item.nama_hewan}</td>
+                        <td class="py-3 px-4 border-b">${item.jenis}</td>
+                        <td class="py-3 px-4 border-b">${item.tanggal_mulai}</td>
+                        <td class="py-3 px-4 border-b">${item.tanggal_akhir}</td>
+                        <td class="py-3 px-4 border-b">${item.nominal}</td>
+                        <td class="py-3 px-4 border-b">
+                            ${actionHtml}
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" class="py-3 px-4 border-b text-center text-gray-600">Tidak ada riwayat adopsi yang sudah lunas penuh.</td>`;
+                tableBody.appendChild(row);
+            }
+            
+            const popup = document.getElementById('adoptionHistoryPopup');
+            popup.style.display = 'flex';
+        }
+        
+        function closeAdoptionHistoryPopup() {
+            const popup = document.getElementById('adoptionHistoryPopup');
+            popup.style.display = 'none';
+        }
+        
+        // Menutup popup jika mengklik di berada diluar konten popup
+        window.onclick = function(event) {
+            const popup = document.getElementById('adoptionHistoryPopup');
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        }
+
+        // Fungsi baru untuk konfirmasi dan menghapus adopsi per hewan
+        function confirmDeleteAnimalAdoption(adopterId, hewanId, namaHewan) {
+            console.log('Debug JS - confirmDeleteAnimalAdoption called.');
+            console.log('Debug JS - Adopter ID:', adopterId);
+            console.log('Debug JS - Hewan ID:', hewanId);
+            console.log('Debug JS - Nama Hewan:', namaHewan);
+
+            if (confirm(`Apakah Anda yakin ingin menghapus semua riwayat adopsi untuk hewan ${namaHewan} oleh adopter ini?`)) {
+                console.log('Debug JS - User confirmed deletion.');
+                fetch("{% url 'adoption_management:stop_adoption' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        id_adopter: adopterId,
+                        id_hewan: hewanId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Debug JS - Fetch response received:', data);
+                    if (data.success) {
+                        alert(`Semua riwayat adopsi untuk ${namaHewan} berhasil dihapus.`);
+                        window.location.reload();
+                    } else {
+                        alert('Gagal menghapus riwayat adopsi: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Debug JS - Fetch error:', error);
+                    alert('Terjadi kesalahan saat menghubungi server.');
+                });
+            }
+        }
+
+        // Fungsi untuk konfirmasi dan menghapus adopter
+        function confirmDeleteAdopter(adopterId, adopterName) {
+            console.log('Debug JS - confirmDeleteAdopter called.');
+            console.log('Debug JS - Adopter ID:', adopterId);
+            console.log('Debug JS - Adopter Name:', adopterName);
+
+            if (confirm(`Apakah Anda yakin ingin menghapus adopter ${adopterName}?\nPenghapusan hanya bisa dilakukan jika adopter tidak memiliki adopsi yang sedang berlangsung.`)) {
+                console.log('Debug JS - User confirmed deletion.');
+                // Kirim request DELETE ke Django view
+                console.log('Debug JS - Sending fetch request...');
+                fetch("{% url 'adoption_management:delete_adopter' %}", {
+                    method: 'POST', // Menggunakan POST karena DELETE mungkin punya isu CSRF
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        id_adopter: adopterId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Debug JS - Fetch response received:', data);
+                    if (data.success) {
+                        alert(`Adopter ${adopterName} berhasil dihapus.`);
+                        window.location.reload(); // Muat ulang halaman setelah berhasil
+                    } else {
+                        alert(`Gagal menghapus adopter ${adopterName}: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Debug JS - Fetch error:', error);
+                    alert('Terjadi kesalahan saat menghubungi server.');
+                });
+            } else {
+                console.log('Debug JS - User cancelled deletion.');
+            }
+        }
+    </script>
+    <footer class="bg-custom-darkest text-white p-6">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 Program Adopsi Satwa. Semua hak dilindungi.</p>
+            <p class="mt-2 text-custom-lightest">Panel Administrasi - Hanya untuk penggunaan internal.</p>
+        </div>
+    </footer>
+</body>
+</html>

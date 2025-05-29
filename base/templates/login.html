@@ -5,6 +5,8 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link href="https://fonts.googleapis.com/css2?family=Geist&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+	<script src="{% static 'alerts/alert.js' %}"></script>
+	<link rel="stylesheet" href="{% static 'alerts/alert.css' %}">
 	<script src="https://cdn.tailwindcss.com"></script>
 	<title>Login - SIZOPI</title>
 	<style>
@@ -77,5 +79,35 @@
 			</form>
 		</div>
 	</div>
+	<script>
+		const form = document.querySelector('form');
+		if (form) {
+			form.addEventListener("submit", async function (e) {
+				e.preventDefault();
+				const formData = new FormData(this);
+				try {
+					const response = await fetch("", {
+						method: "POST",
+						body: formData,
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+						}
+					});
+
+					const result = await response.json();
+					if (result.success) {
+						showAlert(result.message, () => {
+							window.location.href = '/dashboard/';
+						});
+					} else {
+						showAlert(result.message);
+					}
+				} catch (err) {
+					showAlert("Terjadi kesalahan saat proses login.");
+				}
+			});
+		}
+	</script>
 </body>
 </html>

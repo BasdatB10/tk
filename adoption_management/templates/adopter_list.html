@@ -154,7 +154,7 @@
                         <tr class="hover:bg-gray-100">
                             <td class="py-3 px-4 border-b">{{ adopter.nama_adopter }}</td>
                             <td class="py-3 px-4 border-b">Rp{{ adopter.total_kontribusi|default:"0" }}</td>
-                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('{{ adopter.nama_adopter }}')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
+                            <td class="py-3 px-4 border-b"><a href="#" onclick="showAdoptionHistory('{{ adopter.nama_adopter|escapejs }}', '{{ adopter.id_adopter }}')" class="text-blue-500 hover:underline">[Lihat Detail]</a></td>
                             <td class="py-3 px-4 border-b">
                                 <a href="#" onclick="event.preventDefault(); confirmDeleteAdopter('{{ adopter.id_adopter }}', '{{ adopter.nama_adopter|escapejs }}')" class="text-red-500 hover:underline">[Hapus]</a>
                             </td>
@@ -225,18 +225,19 @@
         // Data riwayat adopsi dari database
         const adoptionHistoryData = {
             {% for adopter in adopter_list %}
-            '{{ adopter.nama_adopter }}': {
-                alamat: '{{ adopter.alamat|default:"-" }}',
-                kontak: '{{ adopter.no_telepon|default:"-" }}',
+            '{{ adopter.id_adopter }}': {
+                nama_adopter: '{{ adopter.nama_adopter|escapejs }}',
+                alamat: '{{ adopter.alamat|default:"-"|escapejs }}',
+                kontak: '{{ adopter.no_telepon|default:"-"|escapejs }}',
                 adoptions: [
                     {% for adoption in adopter.adoptions %}
                     {
-                        nama_hewan: '{{ adoption.nama_hewan }}',
-                        jenis: '{{ adoption.jenis }}',
+                        id_hewan: '{{ adoption.id_hewan }}',
+                        nama_hewan: '{{ adoption.nama_hewan|escapejs }}',
+                        jenis: '{{ adoption.jenis|escapejs }}',
                         tanggal_mulai: '{{ adoption.tanggal_mulai|date:"Y-m-d" }}',
                         tanggal_akhir: '{{ adoption.tanggal_akhir|date:"Y-m-d" }}',
-                        nominal: 'Rp{{ adoption.nominal }}',
-                        status: '{{ adoption.status }}'
+                        nominal: 'Rp{{ adoption.nominal }}'
                     }{% if not forloop.last %},{% endif %}
                     {% endfor %}
                 ]
@@ -244,27 +245,40 @@
             {% endfor %}
         };
 
-        function showAdoptionHistory(name) {
-            document.getElementById('adopter-name').textContent = name;
-            document.getElementById('adopter-address').textContent = adoptionHistoryData[name].alamat;
-            document.getElementById('adopter-contact').textContent = adoptionHistoryData[name].kontak;
+        function showAdoptionHistory(adopterName, adopterId) {
+            console.log('Debug JS - showAdoptionHistory called for:', adopterName, adopterId);
+            console.log('Debug JS - adoptionHistoryData for adopterId:', adoptionHistoryData[adopterId]);
+
+            const adopterData = adoptionHistoryData[adopterId];
+            if (!adopterData) {
+                console.error('Adopter data not found for ID:', adopterId);
+                return;
+            }
+
+            document.getElementById('adopter-name').textContent = adopterData.nama_adopter;
+            document.getElementById('adopter-address').textContent = adopterData.alamat;
+            document.getElementById('adopter-contact').textContent = adopterData.kontak;
             
             const tableBody = document.getElementById('adoption-history-table');
             tableBody.innerHTML = '';
             
-            if (adoptionHistoryData[name] && adoptionHistoryData[name].adoptions) {
-                adoptionHistoryData[name].adoptions.forEach(item => {
+            if (adopterData.adoptions && adopterData.adoptions.length > 0) {
+                adopterData.adoptions.forEach(item => {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-gray-100';
-                    
-                    // Menentukan teks dan class untuk kolom aksi berdasarkan status
-                    let actionText, actionClass;
-                    if (item.status === 'ongoing') {
-                        actionText = '[Sedang Berlangsung]';
-                        actionClass = 'text-green-600 font-semibold';
+
+                    // Cek apakah tanggal akhir sudah lewat
+                    const endDate = new Date(item.tanggal_akhir);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Set time to start of day for comparison
+
+                    let actionHtml;
+                    if (endDate < today) {
+                        // Jika periode sudah berakhir, tampilkan tombol Hapus
+                        actionHtml = `<a href="#" onclick="event.preventDefault(); confirmDeleteAnimalAdoption('${adopterId}', '${item.id_hewan}', '${item.nama_hewan}')" class="text-red-500 hover:underline">[Hapus]</a>`;
                     } else {
-                        actionText = '[Hapus]';
-                        actionClass = 'text-blue-500 hover:underline';
+                        // Jika periode masih berlangsung, tampilkan status
+                        actionHtml = `<span class="text-green-600 font-semibold">[Sedang Berlangsung]</span>`;
                     }
                     
                     row.innerHTML = `
@@ -274,12 +288,16 @@
                         <td class="py-3 px-4 border-b">${item.tanggal_akhir}</td>
                         <td class="py-3 px-4 border-b">${item.nominal}</td>
                         <td class="py-3 px-4 border-b">
-                            <a href="#" class="${actionClass}">${actionText}</a>
+                            ${actionHtml}
                         </td>
                     `;
                     
                     tableBody.appendChild(row);
                 });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" class="py-3 px-4 border-b text-center text-gray-600">Tidak ada riwayat adopsi yang sudah lunas penuh.</td>`;
+                tableBody.appendChild(row);
             }
             
             const popup = document.getElementById('adoptionHistoryPopup');
@@ -296,6 +314,43 @@
             const popup = document.getElementById('adoptionHistoryPopup');
             if (event.target === popup) {
                 popup.style.display = 'none';
+            }
+        }
+
+        // Fungsi baru untuk konfirmasi dan menghapus adopsi per hewan
+        function confirmDeleteAnimalAdoption(adopterId, hewanId, namaHewan) {
+            console.log('Debug JS - confirmDeleteAnimalAdoption called.');
+            console.log('Debug JS - Adopter ID:', adopterId);
+            console.log('Debug JS - Hewan ID:', hewanId);
+            console.log('Debug JS - Nama Hewan:', namaHewan);
+
+            if (confirm(`Apakah Anda yakin ingin menghapus semua riwayat adopsi untuk hewan ${namaHewan} oleh adopter ini?`)) {
+                console.log('Debug JS - User confirmed deletion.');
+                fetch("{% url 'adoption_management:stop_adoption' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        id_adopter: adopterId,
+                        id_hewan: hewanId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Debug JS - Fetch response received:', data);
+                    if (data.success) {
+                        alert(`Semua riwayat adopsi untuk ${namaHewan} berhasil dihapus.`);
+                        window.location.reload();
+                    } else {
+                        alert('Gagal menghapus riwayat adopsi: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Debug JS - Fetch error:', error);
+                    alert('Terjadi kesalahan saat menghubungi server.');
+                });
             }
         }
 

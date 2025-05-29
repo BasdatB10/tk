@@ -13,4 +13,5 @@ urlpatterns = [
     path('update-adopter-status/', update_adopter_status, name='update_adopter_status'),
     path('stop-adoption/', stop_adoption, name='stop_adoption'),
     path('delete-adopter/', delete_adopter, name='delete_adopter'),
+    path('proses-perpanjang-adopsi/', proses_perpanjang_adopsi, name='proses_perpanjang_adopsi'),
 ]

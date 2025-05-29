@@ -703,7 +703,7 @@ def feeding_schedule(request):
         )
         cursor = conn.cursor()
         cursor.execute("SET search_path TO SIZOPI;")
-       
+     
         cursor.execute("""
             SELECT 
                 p.id_hewan,
@@ -723,9 +723,10 @@ def feeding_schedule(request):
             FROM PAKAN p
             JOIN HEWAN h ON p.id_hewan = h.id
             ORDER BY p.jadwal DESC
-            """)
+        """)
             
         pakan_data = cursor.fetchall()
+        
         cursor.execute("""
             SELECT id, nama, spesies, status_kesehatan, asal_hewan, nama_habitat
             FROM HEWAN
@@ -733,6 +734,7 @@ def feeding_schedule(request):
         """)
         
         hewan_data = cursor.fetchall()
+      
         cursor.execute("""
             SELECT 
                 p.id_hewan,
@@ -749,13 +751,9 @@ def feeding_schedule(request):
                 m.username_jh
             FROM PAKAN p
             JOIN HEWAN h ON p.id_hewan = h.id
-            LEFT JOIN MEMBERI m ON p.id_hewan = m.id_hewan
+            JOIN MEMBERI m ON p.id_hewan = m.id_hewan AND p.jadwal = m.jadwal
             WHERE p.status = 'Habis' 
-            AND EXISTS (
-                SELECT 1 FROM MEMBERI m2 
-                WHERE m2.id_hewan = p.id_hewan 
-                AND m2.username_jh = %s
-            )
+            AND m.username_jh = %s
             ORDER BY p.jadwal DESC
         """, (request.session.get('username'),))
         

@@ -79,7 +79,7 @@
           {% elif user_role == 'pengunjung' %}
             <a href="{% url 'base:dashboard' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Dashboard</a>
 
-            <a href="#" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Informasi Kebun Binatang</a>
+            
 
             <a href="{% url 'userprofile:profile_view' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Pengaturan Profil</a>
             <a href="{% url 'facility_ticketing:reservasi_pengunjung_list_fasilitas' %}" class="px-4 py-2 rounded-md bg-[#ED8764] text-white hover:bg-[#DD6D49] transition">Reservasi Tiket</a>

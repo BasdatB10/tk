@@ -290,16 +290,19 @@
             <form method="post" id="edit-form" class="space-y-6">
                 {% csrf_token %}
                 <div>
-                    <label for="catatan_tindak_lanjut" class="text-sm text-[#49241B]">Catatan Tindak Lanjut:</label>
-                    <textarea id="catatan_tindak_lanjut" name="catatan_tindak_lanjut" class="text-lg w-full"></textarea>
+                    <label for="diagnosis_baru" class="text-sm text-[#49241B]">Diagnosa: <span class="text-red-500">*</span></label>
+                    <textarea id="diagnosis_baru" name="diagnosis_baru" class="text-lg w-full" required 
+                            placeholder="Masukkan diagnosa baru atau perbarui diagnosa existing"></textarea>
                 </div>
                 <div>
-                    <label for="diagnosis_baru" class="text-sm text-[#49241B]">Diagnosa Baru:</label>
-                    <textarea id="diagnosis_baru" name="diagnosis_baru" class="text-lg w-full"></textarea>
+                    <label for="pengobatan_baru" class="text-sm text-[#49241B]">Pengobatan: <span class="text-red-500">*</span></label>
+                    <textarea id="pengobatan_baru" name="pengobatan_baru" class="text-lg w-full" required
+                            placeholder="Masukkan pengobatan baru atau perbarui pengobatan existing"></textarea>
                 </div>
                 <div>
-                    <label for="pengobatan_baru" class="text-sm text-[#49241B]">Pengobatan Baru:</label>
-                    <textarea id="pengobatan_baru" name="pengobatan_baru" class="text-lg w-full"></textarea>
+                    <label for="catatan_tindak_lanjut" class="text-sm text-[#49241B]">Catatan Tindak Lanjut: <span class="text-gray-500">(Opsional)</span></label>
+                    <textarea id="catatan_tindak_lanjut" name="catatan_tindak_lanjut" class="text-lg w-full"
+                            placeholder="Masukkan catatan tindak lanjut jika diperlukan"></textarea>
                 </div>
                 <div class="flex justify-center gap-4 pt-4">
                     <button type="submit" class="form-button bg-[#FBBE99] text-white font-semibold">SIMPAN</button>
@@ -501,9 +504,20 @@
         }
         
         
+        
         function editRecord(idHewan, tanggalPemeriksaan) {
+           
             document.getElementById('edit-form').action = 
                 "{% url 'medical_checkup_feeding:edit_medical_record' '0' '0000-01-01' %}".replace('0/0000-01-01', idHewan + '/' + tanggalPemeriksaan);
+            const record = medicalRecordsData.find(r => 
+                r.id_hewan === idHewan && r.tanggal_pemeriksaan === tanggalPemeriksaan
+            );
+            
+            if (record) {
+                document.getElementById('diagnosis_baru').value = record.diagnosis !== '-' ? record.diagnosis : '';
+                document.getElementById('pengobatan_baru').value = record.pengobatan !== '-' ? record.pengobatan : '';
+                document.getElementById('catatan_tindak_lanjut').value = record.catatan_tindak_lanjut !== '-' ? record.catatan_tindak_lanjut : '';
+            }
             
             document.getElementById('edit-record-modal').classList.remove('hidden');
         }

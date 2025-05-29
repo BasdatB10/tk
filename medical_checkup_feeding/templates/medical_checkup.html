@@ -231,15 +231,6 @@
                     <label for="add-examination-date" class="text-sm font-semibold text-[#49241B]">Tanggal Pemeriksaan Selanjutnya:</label>
                     <input type="date" id="add-examination-date" name="tgl_pemeriksaan_selanjutnya" required />
                 </div>
-                
-                <div>
-                    <label for="add-frequency" class="text-sm font-semibold text-[#49241B]">Frekuensi Pemeriksaan Rutin:</label>
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="add-frequency" name="freq_pemeriksaan_rutin" min="1" max="12" value="3" required />
-                        <span class="text-sm text-gray-600">(x bulan sekali)</span>
-                    </div>
-                </div>
-                
                 <div class="flex justify-center gap-4 pt-4">
                     <button type="submit" class="form-button bg-[#FBBE99] text-white">
                         SIMPAN
@@ -387,10 +378,6 @@
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('add-examination-date').min = tomorrow.toISOString().split('T')[0];
-            if (currentFrequency) {
-                document.getElementById('add-frequency').value = currentFrequency;
-            }
-            
             document.getElementById('add-schedule-modal').classList.remove('hidden');
         });
         

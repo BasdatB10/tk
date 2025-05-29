@@ -262,19 +262,31 @@ def edit_medical_record(request, id_hewan, tanggal_pemeriksaan):
             diagnosis_baru = request.POST.get('diagnosis_baru', '')
             pengobatan_baru = request.POST.get('pengobatan_baru', '')
             
-            # Update rekam medis dengan dokter yang sedang login
+            if not diagnosis_baru.strip():
+                messages.error(request, 'Diagnosa harus diisi.')
+                cursor.close()
+                conn.close()
+                return redirect('medical_checkup_feeding:medical_record')
+            
+            if not pengobatan_baru.strip():
+                messages.error(request, 'Pengobatan harus diisi.')
+                cursor.close()
+                conn.close()
+                return redirect('medical_checkup_feeding:medical_record')
+            
+           
             cursor.execute("""
                 UPDATE CATATAN_MEDIS 
-                SET catatan_tindak_lanjut = %s,
-                    diagnosis = COALESCE(NULLIF(%s, ''), diagnosis),
-                    pengobatan = COALESCE(NULLIF(%s, ''), pengobatan),
+                SET diagnosis = %s,
+                    pengobatan = %s,
+                    catatan_tindak_lanjut = %s,
                     username_dh = %s
                 WHERE id_hewan = %s AND tanggal_pemeriksaan = %s
             """, (
-                catatan_tindak_lanjut if catatan_tindak_lanjut else None,
-                diagnosis_baru,
-                pengobatan_baru,
-                request.session.get('username'),  # Update dengan dokter yang sedang login
+                diagnosis_baru.strip(),
+                pengobatan_baru.strip(),
+                catatan_tindak_lanjut.strip() if catatan_tindak_lanjut.strip() else None,
+                request.session.get('username'),  
                 id_hewan,
                 tanggal_pemeriksaan
             ))
@@ -449,7 +461,6 @@ def medical_checkup(request):
     except Exception as e:
         messages.error(request, f'Error loading medical checkup schedule: {str(e)}')
         return render(request, 'medical_checkup.html', {'animals_data': {}})
-    
 @dokter_hewan_required
 def add_checkup_schedule(request):
     """View untuk menambah jadwal pemeriksaan kesehatan baru"""
@@ -467,8 +478,7 @@ def add_checkup_schedule(request):
             
             id_hewan = request.POST.get('id_hewan')
             tgl_pemeriksaan_selanjutnya = request.POST.get('tgl_pemeriksaan_selanjutnya')
-            freq_pemeriksaan_rutin = request.POST.get('freq_pemeriksaan_rutin', 3) 
-          
+            
             cursor.execute("""
                 SELECT username_DH FROM DOKTER_HEWAN WHERE username_DH = %s
             """, (request.session.get('username'),))
@@ -478,16 +488,32 @@ def add_checkup_schedule(request):
                 cursor.close()
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
+           
+            cursor.execute("""
+                SELECT freq_pemeriksaan_rutin 
+                FROM JADWAL_PEMERIKSAAN_KESEHATAN 
+                WHERE id_hewan = %s 
+                LIMIT 1
+            """, (id_hewan,))
             
+            existing_freq = cursor.fetchone()
+            if existing_freq:
+                freq_pemeriksaan_rutin = existing_freq[0]
+            else:
+                freq_pemeriksaan_rutin = 3 
+           
             cursor.execute("""
                 SELECT COUNT(*) FROM JADWAL_PEMERIKSAAN_KESEHATAN 
-                WHERE id_hewan = %s
-            """, (id_hewan,))
+                WHERE id_hewan = %s AND tgl_pemeriksaan_selanjutnya = %s
+            """, (id_hewan, tgl_pemeriksaan_selanjutnya))
             
             existing_count = cursor.fetchone()[0]
             
             if existing_count > 0:
-                messages.error(request, 'Jadwal pemeriksaan untuk hewan ini sudah ada. Silakan edit jadwal yang sudah ada.')
+                cursor.execute("SELECT nama FROM HEWAN WHERE id = %s", (id_hewan,))
+                nama_hewan = cursor.fetchone()[0]
+                
+                messages.error(request, f'Jadwal pemeriksaan untuk hewan "{nama_hewan}" pada tanggal {tgl_pemeriksaan_selanjutnya} sudah ada. Silakan pilih tanggal yang berbeda.')
                 cursor.close()
                 conn.close()
                 return redirect('medical_checkup_feeding:medical_checkup')
@@ -501,7 +527,7 @@ def add_checkup_schedule(request):
             """, (
                 id_hewan,
                 tgl_pemeriksaan_selanjutnya,
-                int(freq_pemeriksaan_rutin)
+                freq_pemeriksaan_rutin
             ))
             
             for notice in conn.notices:
@@ -898,8 +924,7 @@ def give_feeding(request, id_hewan, jadwal):
             cursor.execute("""
                 INSERT INTO MEMBERI (id_hewan, jadwal, username_jh)
                 VALUES (%s, %s, %s)
-                ON CONFLICT (id_hewan) DO UPDATE SET
-                jadwal = EXCLUDED.jadwal,
+                ON CONFLICT (id_hewan, jadwal) DO UPDATE SET
                 username_jh = EXCLUDED.username_jh
             """, (id_hewan, jadwal, request.session.get('username')))
             

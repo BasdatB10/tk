@@ -43,7 +43,7 @@ def change_password_view(request):
         confirm_password = request.POST.get('confirm_password')
         
         success, message = change_password(
-            request.user.username,
+            username,
             old_password,
             new_password,
             confirm_password
